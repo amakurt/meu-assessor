@@ -1,0 +1,336 @@
+/**
+ * MEU ASSESSOR OS · FINANCES MODULE (MARTIN)
+ * Handles financial calculations, projection, 30 days in the green, budgets and Open Finance sync.
+ */
+
+class FinancesModule {
+    constructor(store) {
+        this.store = store;
+        this.currentFilter = 'all';
+
+        this.elements = {
+            kpiSaldoTotal: document.getElementById('kpiSaldoTotal'),
+            kpiReceitasMes: document.getElementById('kpiReceitasMes'),
+            kpiDespesasMes: document.getElementById('kpiDespesasMes'),
+            kpiContasPendentes: document.getElementById('kpiContasPendentes'),
+            kpiContasCount: document.getElementById('kpiContasCount'),
+            transactionsTableBody: document.getElementById('transactionsTableBody'),
+            transactionsCountBadge: document.getElementById('transactionsCountBadge'),
+            modalTransaction: document.getElementById('modalTransaction'),
+            formTransaction: document.getElementById('formTransaction'),
+            btnNewTransaction: document.getElementById('btnNewTransaction'),
+            modalCloseTransaction: document.getElementById('modalCloseTransaction'),
+            btnCancelTransaction: document.getElementById('btnCancelTransaction'),
+            btnSyncOpenFinance: document.getElementById('btnSyncOpenFinance'),
+            btnAddBank: document.getElementById('btnAddBank'),
+            // 36 Functionalities New Elements
+            martinProjectionBox: document.getElementById('martinProjectionBox'),
+            diasNoAzulContainer: document.getElementById('diasNoAzulContainer'),
+            budgetsListContainer: document.getElementById('budgetsListContainer')
+        };
+
+        this.init();
+    }
+
+    init() {
+        this.render();
+        this.store.subscribe(() => this.render());
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentFilter = btn.getAttribute('data-filter');
+                this.renderTransactions();
+            });
+        });
+
+        // Modal triggers
+        if (this.elements.btnNewTransaction && this.elements.modalTransaction) {
+            this.elements.btnNewTransaction.addEventListener('click', () => {
+                this.elements.modalTransaction.showModal();
+                const today = new Date().toISOString().split('T')[0];
+                const dateInput = document.getElementById('txDate');
+                if (dateInput) dateInput.value = today;
+            });
+        }
+
+        if (this.elements.modalCloseTransaction) {
+            this.elements.modalCloseTransaction.addEventListener('click', () => {
+                this.elements.modalTransaction.close();
+            });
+        }
+
+        if (this.elements.btnCancelTransaction) {
+            this.elements.btnCancelTransaction.addEventListener('click', () => {
+                this.elements.modalTransaction.close();
+            });
+        }
+
+        // Form submit
+        if (this.elements.formTransaction) {
+            this.elements.formTransaction.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const type = document.querySelector('input[name="txType"]:checked').value;
+                const desc = document.getElementById('txDescription').value;
+                const amount = parseFloat(document.getElementById('txAmount').value);
+                const date = document.getElementById('txDate').value;
+                const category = document.getElementById('txCategory').value;
+                const paymentMethod = document.getElementById('txPaymentMethod').value;
+
+                this.store.addTransaction({
+                    type,
+                    description: desc,
+                    amount,
+                    date,
+                    category,
+                    paymentMethod,
+                    status: 'conciliado',
+                    registeredBy: 'Painel Web (Manual)'
+                });
+
+                this.elements.formTransaction.reset();
+                this.elements.modalTransaction.close();
+                window.showToast?.('Lançamento adicionado com sucesso!');
+            });
+        }
+
+        // Open Finance sync
+        if (this.elements.btnSyncOpenFinance) {
+            this.elements.btnSyncOpenFinance.addEventListener('click', () => {
+                this.elements.btnSyncOpenFinance.disabled = true;
+                this.elements.btnSyncOpenFinance.innerHTML = '<span>🔄 Sincronizando com Banco Central...</span>';
+
+                setTimeout(() => {
+                    this.elements.btnSyncOpenFinance.disabled = false;
+                    this.elements.btnSyncOpenFinance.innerHTML = '<span class="btn-icon">🔄</span><span>Sincronizar Bancos Agora</span>';
+                    window.showToast?.('Open Finance atualizado! 114 instituições do Banco Central sincronizadas.');
+                }, 1000);
+            });
+        }
+
+        if (this.elements.btnAddBank) {
+            this.elements.btnAddBank.addEventListener('click', () => {
+                window.showToast?.('Selecione seu banco no painel Open Finance para autorização.');
+            });
+        }
+    }
+
+    render() {
+        this.renderKPIs();
+        this.renderTransactions();
+        this.renderProjection();
+        this.renderDiasNoAzul();
+        this.renderBudgets();
+    }
+
+    renderKPIs() {
+        const txs = this.store.state.transactions || [];
+        let totalReceitas = 0;
+        let totalDespesas = 0;
+        let contasPendentes = 0;
+        let pendentesCount = 0;
+
+        txs.forEach(t => {
+            if (t.type === 'receita') {
+                totalReceitas += t.amount;
+            } else if (t.type === 'despesa') {
+                totalDespesas += t.amount;
+                if (t.status === 'pendente') {
+                    contasPendentes += t.amount;
+                    pendentesCount++;
+                }
+            }
+        });
+
+        const saldo = totalReceitas - totalDespesas;
+
+        if (this.elements.kpiSaldoTotal) {
+            this.elements.kpiSaldoTotal.textContent = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        if (this.elements.kpiReceitasMes) {
+            this.elements.kpiReceitasMes.textContent = totalReceitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        if (this.elements.kpiDespesasMes) {
+            this.elements.kpiDespesasMes.textContent = totalDespesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        if (this.elements.kpiContasPendentes) {
+            this.elements.kpiContasPendentes.textContent = contasPendentes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        if (this.elements.kpiContasCount) {
+            this.elements.kpiContasCount.textContent = `${pendentesCount} boleto(s) a pagar`;
+        }
+    }
+
+    // 36 Funcionalidades: Projeção de Fim de Mês (Martin)
+    renderProjection() {
+        const container = document.getElementById('martinProjectionBox');
+        if (!container) return;
+
+        const txs = this.store.state.transactions || [];
+        const totalReceitas = txs.filter(t => t.type === 'receita').reduce((a, b) => a + b.amount, 0);
+        const totalDespesas = txs.filter(t => t.type === 'despesa').reduce((a, b) => a + b.amount, 0);
+        const saldoAtual = totalReceitas - totalDespesas;
+
+        const entradasPrevistas = 15200.00;
+        const saidasPrevistas = 4250.00;
+        const projecaoFimMes = saldoAtual + entradasPrevistas - saidasPrevistas;
+
+        container.innerHTML = `
+            <div class="projection-grid">
+                <div class="proj-item">
+                    <span class="proj-label">Caixa Atual em Conta</span>
+                    <span class="proj-val color-blue">${saldoAtual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                </div>
+                <div class="proj-operator">+</div>
+                <div class="proj-item">
+                    <span class="proj-label">Entradas Previstas</span>
+                    <span class="proj-val color-emerald">+ R$ ${entradasPrevistas.toFixed(2)}</span>
+                </div>
+                <div class="proj-operator">-</div>
+                <div class="proj-item">
+                    <span class="proj-label">Boletos a Vencer</span>
+                    <span class="proj-val color-rose">- R$ ${saidasPrevistas.toFixed(2)}</span>
+                </div>
+                <div class="proj-operator">=</div>
+                <div class="proj-item proj-final">
+                    <span class="proj-label">Projeção Fim do Mês</span>
+                    <span class="proj-val color-green">R$ ${projecaoFimMes.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // 36 Funcionalidades: Calendário de Dias no Azul (Martin)
+    renderDiasNoAzul() {
+        const container = document.getElementById('diasNoAzulContainer');
+        if (!container) return;
+
+        // 30 days grid of October
+        const days = [];
+        for (let i = 1; i <= 31; i++) {
+            // Days before today (19) have real outcome, mostly positive
+            const isPast = i <= 19;
+            const isDeficit = i === 7 || i === 14; // sample 2 deficit days
+            days.push({
+                day: i,
+                status: isPast ? (isDeficit ? 'vermelho' : 'azul') : 'futuro'
+            });
+        }
+
+        const diasAzulCount = days.filter(d => d.status === 'azul').length;
+        const diasAzulBadge = document.getElementById('diasAzulBadgeCount');
+        if (diasAzulBadge) diasAzulBadge.textContent = `${diasAzulCount} dias no azul`;
+
+        container.innerHTML = days.map(d => `
+            <div class="dia-azul-quadradinho dia-${d.status}" title="Dia ${d.day} de Outubro: ${d.status === 'azul' ? 'Superávit (No Azul)' : (d.status === 'vermelho' ? 'Déficit (No Vermelho)' : 'Previsto')}">
+                <span>${d.day}</span>
+            </div>
+        `).join('');
+    }
+
+    // 36 Funcionalidades: Orçamentos por Categoria com Teto e Alertas (Martin)
+    renderBudgets() {
+        const container = document.getElementById('budgetsListContainer');
+        if (!container) return;
+
+        const budgets = this.store.state.budgets || [];
+        container.innerHTML = budgets.map(b => {
+            const pct = Math.min(Math.round((b.spent / b.limit) * 100), 100);
+            const isWarning = pct >= 70 && pct < 100;
+            const isExceeded = pct >= 100;
+            const colorClass = isExceeded ? 'progress-danger' : (isWarning ? 'progress-warning' : 'progress-normal');
+
+            return `
+                <div class="budget-card-item">
+                    <div class="budget-card-top">
+                        <div>
+                            <span class="budget-category-title">${b.category}</span>
+                            <span class="budget-tag-alert ${isExceeded ? 'tag-danger' : (isWarning ? 'tag-warning' : 'tag-ok')}">
+                                ${isExceeded ? '⚠️ Teto Ultrapassado' : (isWarning ? '⚠️ 70% Atingido' : '✓ Sob Controle')}
+                            </span>
+                        </div>
+                        <div class="budget-values-box">
+                            <span class="budget-spent">R$ ${b.spent.toFixed(2)}</span>
+                            <span class="budget-limit">de R$ ${b.limit.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="budget-progress-track">
+                        <div class="budget-progress-fill ${colorClass}" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="budget-card-bottom">
+                        <span class="budget-pct">${pct}% utilizado</span>
+                        <span class="budget-remaining">Resta: R$ ${Math.max(0, b.limit - b.spent).toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderTransactions() {
+        if (!this.elements.transactionsTableBody) return;
+        let txs = this.store.state.transactions || [];
+
+        // Apply filter
+        if (this.currentFilter === 'receita') {
+            txs = txs.filter(t => t.type === 'receita');
+        } else if (this.currentFilter === 'despesa') {
+            txs = txs.filter(t => t.type === 'despesa');
+        } else if (this.currentFilter === 'pendente') {
+            txs = txs.filter(t => t.status === 'pendente');
+        }
+
+        if (this.elements.transactionsCountBadge) {
+            this.elements.transactionsCountBadge.textContent = `${txs.length} lançamentos`;
+        }
+
+        this.elements.transactionsTableBody.innerHTML = '';
+
+        if (txs.length === 0) {
+            this.elements.transactionsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        Nenhum lançamento encontrado nesta categoria.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        txs.forEach(t => {
+            const tr = document.createElement('tr');
+            const isReceita = t.type === 'receita';
+            const amountFormatted = (isReceita ? '+ ' : '- ') + t.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            const amountClass = isReceita ? 'tx-amount-positive' : 'tx-amount-negative';
+
+            const statusClass = t.status === 'conciliado' ? 'tx-conciliado' : (t.status === 'pendente' ? 'tx-pendente' : 'tx-pago');
+            const statusLabel = t.status === 'conciliado' ? '✓ Conciliado' : (t.status === 'pendente' ? '⏳ Pendente' : '✓ Pago');
+
+            // Format date BR
+            let dateStr = t.date;
+            if (dateStr && dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+
+            tr.innerHTML = `
+                <td><span class="tx-status-pill ${statusClass}">${statusLabel}</span></td>
+                <td><strong>${t.description}</strong></td>
+                <td><span class="badge">${t.category}</span></td>
+                <td>${t.paymentMethod}</td>
+                <td>${dateStr}</td>
+                <td><span style="font-size: 11.5px; color: var(--text-muted);">${t.registeredBy}</span></td>
+                <td class="text-right ${amountClass}">${amountFormatted}</td>
+                <td class="text-center">
+                    <button class="btn btn-ghost btn-sm" style="padding: 2px 6px;" title="Detalhes do Lançamento">👁️</button>
+                </td>
+            `;
+
+            this.elements.transactionsTableBody.appendChild(tr);
+        });
+    }
+}
+
+// Global instance
+window.financesModule = new FinancesModule(window.appStore);

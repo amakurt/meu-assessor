@@ -1,0 +1,15 @@
+{
+  "name": "meu-assessor-os",
+  "version": "1.0.0",
+  "description": "Plataforma de Assessoria Executiva de IA no WhatsApp com Controle de Finanças, Agenda, Tarefas e Equipe",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "cors": "^2.8.5"
+  }
+}

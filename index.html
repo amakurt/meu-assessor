@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Meu Assessor OS · Assessoria Completa de IA no WhatsApp</title>
+    <meta name="description" content="Plataforma de gestão executiva integrada ao WhatsApp com assessores de IA para finanças, agenda, tarefas, projetos, notas e documentos.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app-layout" id="appLayout">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-brand">
+                    <img src="images/logo-meu-assessor.svg" alt="Meu Assessor" class="brand-logo">
+                    <span class="brand-badge">PRO</span>
+                </a>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Fechar menu">✕</button>
+            </div>
+
+            <!-- WhatsApp Live Status Widget -->
+            <div class="whatsapp-status-card" id="whatsappStatusCard">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <div class="status-texts">
+                        <span class="status-title">WhatsApp Ativo</span>
+                        <span class="status-subtitle" id="waConnectedNumber">+55 (11) 98765-4321</span>
+                    </div>
+                </div>
+                <div class="status-pill">Meta API Oficial</div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav" aria-label="Navegação do Sistema">
+                <div class="nav-section-title">Central Executiva</div>
+                <button class="nav-item active" data-tab="chat" id="tabNavChat">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-label">Conversa WhatsApp</span>
+                    <span class="nav-badge count" id="badgeUnread">3</span>
+                </button>
+                <button class="nav-item" data-tab="financas" id="tabNavFinancas">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-label">Finanças & Contas</span>
+                    <span class="nav-sublabel">Martin</span>
+                </button>
+                <button class="nav-item" data-tab="agenda" id="tabNavAgenda">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">Agenda & Reuniões</span>
+                    <span class="nav-sublabel">Sofi</span>
+                </button>
+                <button class="nav-item" data-tab="tarefas" id="tabNavTarefas">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">Tarefas & Projetos</span>
+                    <span class="nav-sublabel">Luna</span>
+                </button>
+                <button class="nav-item" data-tab="pesquisas" id="tabNavPesquisas">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-label">Pesquisas & Cotações</span>
+                    <span class="nav-sublabel">Ítalo</span>
+                </button>
+                <button class="nav-item" data-tab="cobrancas" id="tabNavCobrancas">
+                    <span class="nav-icon">💸</span>
+                    <span class="nav-label">Cobranças & Devedores</span>
+                    <span class="nav-sublabel">Martin</span>
+                </button>
+                <button class="nav-item" data-tab="listas" id="tabNavListas">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-label">Listas & Ideias</span>
+                    <span class="nav-sublabel">Luna</span>
+                </button>
+
+                <div class="nav-section-title">Gestão & Operação</div>
+                <button class="nav-item" data-tab="arquivos" id="tabNavArquivos">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-label">Meu Drive & Arquivos</span>
+                    <span class="nav-sublabel">Luna & Rita</span>
+                </button>
+                <button class="nav-item" data-tab="lembretes" id="tabNavLembretes">
+                    <span class="nav-icon">⏰</span>
+                    <span class="nav-label">Lembretes Ilimitados</span>
+                </button>
+                <button class="nav-item" data-tab="equipe" id="tabNavEquipe">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">Usuários & Equipe</span>
+                    <span class="nav-badge">Ilimitado</span>
+                </button>
+
+                <div class="nav-section-title">Integrações</div>
+                <button class="nav-item" data-tab="conexao" id="tabNavConexao">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-label">Conexão WhatsApp</span>
+                </button>
+            </nav>
+
+            <!-- Assessores Squad Mini-Bar -->
+            <div class="sidebar-squad">
+                <span class="squad-title">Assessores Conectados</span>
+                <div class="squad-avatars">
+                    <div class="squad-avatar-item" title="Theo · Operações">
+                        <img src="images/theo.jpg" alt="Theo">
+                        <span class="squad-dot"></span>
+                    </div>
+                    <div class="squad-avatar-item" title="Martin · Finanças">
+                        <img src="images/martin.jpg" alt="Martin">
+                        <span class="squad-dot"></span>
+                    </div>
+                    <div class="squad-avatar-item" title="Sofi · Agenda">
+                        <img src="images/sofi.jpg" alt="Sofi">
+                        <span class="squad-dot"></span>
+                    </div>
+                    <div class="squad-avatar-item" title="Luna · Tarefas">
+                        <img src="images/luna.jpg" alt="Luna">
+                        <span class="squad-dot"></span>
+                    </div>
+                    <div class="squad-avatar-item" title="Ítalo · Pesquisas">
+                        <img src="images/italo_otim.jpg" alt="Ítalo">
+                        <span class="squad-dot"></span>
+                    </div>
+                    <div class="squad-avatar-item" title="Rita · Fiscal">
+                        <img src="images/rita.jpg" alt="Rita">
+                        <span class="squad-dot"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User profile footer -->
+            <div class="sidebar-user">
+                <div class="user-avatar-placeholder">AM</div>
+                <div class="user-info">
+                    <span class="user-name">Amauri (Conta Master)</span>
+                    <span class="user-tier">Plano Empresarial</span>
+                </div>
+                <button class="theme-toggle-btn" id="themeToggleBtn" title="Alternar Modo Claro/Escuro" aria-label="Alternar tema">🌓</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content" id="mainContent">
+            
+            <!-- TOP APP BAR -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-trigger" id="mobileMenuTrigger" aria-label="Abrir Menu">☰</button>
+                    <div class="page-title-box">
+                        <h1 class="page-main-title" id="pageMainTitle">Conversa WhatsApp</h1>
+                        <p class="page-breadcrumb" id="pageBreadcrumb">Assessoria de IA em Tempo Real</p>
+                    </div>
+                </div>
+
+                <div class="top-bar-right">
+                    <!-- Profile Filter (Todos / CPF Pessoal / CNPJ Empresa) -->
+                    <div class="profile-toggle-group" role="group" aria-label="Filtro de Perfil">
+                        <button class="profile-toggle-pill active" data-profile="all">Todos</button>
+                        <button class="profile-toggle-pill" data-profile="cpf">CPF (Pessoal)</button>
+                        <button class="profile-toggle-pill" data-profile="cnpj">CNPJ (Empresa)</button>
+                    </div>
+
+                    <!-- Global Search -->
+                    <div class="global-search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="globalSearchInput" placeholder="Buscar lançamentos, reuniões, tarefas..." aria-label="Busca global">
+                    </div>
+
+                    <!-- Report Export Buttons -->
+                    <button class="btn btn-outline btn-sm" id="btnExportReportExcel" title="Exportar Planilha Excel (.csv)">
+                        <span>📊 Excel</span>
+                    </button>
+                    <button class="btn btn-outline btn-sm" id="btnExportReportPdf" title="Exportar Relatório PDF Executivo">
+                        <span>📄 PDF</span>
+                    </button>
+
+                    <!-- Quick Action Trigger -->
+                    <button class="btn btn-primary btn-sm" id="btnQuickAction">
+                        <span class="btn-icon">⚡</span>
+                        <span>Ação Rápida</span>
+                    </button>
+
+                    <!-- Notification Button -->
+                    <button class="icon-action-btn" id="btnNotifications" title="Lembretes e Alertas" aria-label="Notificações">
+                        <span class="icon">🔔</span>
+                        <span class="notif-badge" id="notifBadgeCount">2</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB 1: WHATSAPP LIVE SIMULATOR -->
+            <section class="tab-panel active" id="tabContentChat">
+                <div class="chat-dashboard-split">
+                    <!-- Left: Interactive WhatsApp Device Mockup -->
+                    <div class="wa-phone-container">
+                        <div class="wa-phone-frame">
+                            <!-- Phone Notch & Status -->
+                            <div class="wa-phone-notch">
+                                <span class="phone-time" id="phoneLiveClock">09:41</span>
+                                <span class="phone-camera-island"></span>
+                                <div class="phone-icons">
+                                    <span>5G</span>
+                                    <span>📶</span>
+                                    <span>🔋</span>
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp Header -->
+                            <div class="wa-chat-header">
+                                <button class="wa-back-btn" title="Voltar" aria-label="Voltar">‹</button>
+                                <div class="wa-chat-avatar-stack">
+                                    <img src="images/theo.jpg" alt="Theo" id="waHeaderAvatar">
+                                    <span class="wa-active-badge"></span>
+                                </div>
+                                <div class="wa-chat-info">
+                                    <div class="wa-chat-title">
+                                        <span id="waHeaderTitle">Meu Assessor · Equipe IA</span>
+                                        <svg class="wa-verified-badge" viewBox="0 0 18 18" width="16" height="16">
+                                            <circle cx="9" cy="9" r="8" fill="#00a884" />
+                                            <path d="M5.5 9.2l2.3 2.3 4.7-4.7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <span class="wa-chat-members" id="waHeaderSubtitle">Theo, Martin, Sofi, Luna, Ítalo, Rita</span>
+                                </div>
+                                <div class="wa-chat-actions">
+                                    <button class="wa-action-icon" title="Chamada">📞</button>
+                                    <button class="wa-action-icon" title="Opções">⋮</button>
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp Messages Flow -->
+                            <div class="wa-messages-body" id="waMessagesBody">
+                                <div class="wa-encryption-notice">
+                                    <span>🔒 As mensagens e chamadas são protegidas com a criptografia de ponta a ponta e processadas pela sua equipe de IA oficial.</span>
+                                </div>
+                                <!-- Dynamic Chat Bubbles Injected via JS -->
+                            </div>
+
+                            <!-- WhatsApp Typing Indicator -->
+                            <div class="wa-typing-indicator" id="waTypingIndicator" style="display: none;">
+                                <span class="typing-advisor-avatar" id="typingAvatar"></span>
+                                <span class="typing-text"><strong id="typingAdvisorName">Martin</strong> está digitando</span>
+                                <span class="typing-dots"><span></span><span></span><span></span></span>
+                            </div>
+
+                            <!-- WhatsApp Input Box -->
+                            <div class="wa-input-dock">
+                                <button class="wa-dock-btn" id="waBtnEmoji" title="Emojis">😊</button>
+                                <button class="wa-dock-btn" id="waBtnAttach" title="Anexar Comprovante / Documento">📎</button>
+                                <input type="file" id="waFileInput" accept="image/*,.pdf" style="display: none;">
+                                
+                                <div class="wa-input-wrapper">
+                                    <input type="text" id="waTextInput" placeholder="Mensagem para seus assessores..." autocomplete="off">
+                                </div>
+
+                                <button class="wa-dock-btn wa-mic-btn" id="waBtnAudio" title="Simular envio de áudio">🎙️</button>
+                                <button class="wa-dock-btn wa-send-btn" id="waBtnSend" title="Enviar mensagem">➤</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Live Real-time Brain & Suggestions -->
+                    <div class="wa-control-sidebar">
+                        
+                        <!-- Quick Scenario Prompts -->
+                        <div class="card p-4 mb-4">
+                            <div class="card-header-clean">
+                                <h3 class="card-title">💡 Testar Comandos Rápidos no WhatsApp</h3>
+                                <span class="badge badge-subtle">Clique para enviar</span>
+                            </div>
+                            <p class="text-muted text-sm mb-3">Veja como a IA entende linguagem natural, identifica o assessor certo e atualiza o sistema na hora:</p>
+                            
+                            <div class="prompt-chips">
+                                <button class="prompt-chip" data-prompt="Gastei R$ 74,50 no almoço no cartão de crédito da empresa">
+                                    <span class="chip-advisor">Martin</span>
+                                    <span class="chip-text">💸 "Gastei R$ 74,50 no almoço no cartão..."</span>
+                                </button>
+                                <button class="prompt-chip" data-prompt="Recebi um PIX de R$ 3.500 do cliente Projeto Alpha">
+                                    <span class="chip-advisor">Martin</span>
+                                    <span class="chip-text">💵 "Recebi R$ 3.500 do cliente Alpha..."</span>
+                                </button>
+                                <button class="prompt-chip" data-prompt="Marca reunião presencial com Marcos amanhã das 14h às 15h no escritório">
+                                    <span class="chip-advisor">Sofi</span>
+                                    <span class="chip-text">📅 "Marca reunião amanhã 14h..."</span>
+                                </button>
+                                <button class="prompt-chip" data-prompt="Criar tarefa urgente: revisar contrato de fornecedor até sexta">
+                                    <span class="chip-advisor">Luna</span>
+                                    <span class="chip-text">📋 "Criar tarefa: revisar contrato..."</span>
+                                </button>
+                                <button class="prompt-chip" data-prompt="Lembrar de pagar o DAS da empresa todo dia 20 às 9h da manhã">
+                                    <span class="chip-advisor">Theo</span>
+                                    <span class="chip-text">⏰ "Lembrar de pagar o DAS todo dia 20..."</span>
+                                </button>
+                                <button class="prompt-chip" data-prompt="Qual é o balanço deste mês e quanto temos a pagar?">
+                                    <span class="chip-advisor">Theo & Martin</span>
+                                    <span class="chip-text">📊 "Qual é o balanço deste mês?"</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Active Execution Feed -->
+                        <div class="card p-4">
+                            <div class="card-header-clean">
+                                <h3 class="card-title">⚡ Ações Executadas Recentemente</h3>
+                                <span class="status-badge-live">Live Sync</span>
+                            </div>
+                            <div class="execution-feed" id="liveExecutionFeed">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: FINANÇAS & CONTAS (MARTIN) -->
+            <section class="tab-panel" id="tabContentFinancas">
+                <!-- Finance KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Saldo em Contas</span>
+                            <span class="kpi-icon-pill bg-emerald">💳</span>
+                        </div>
+                        <div class="kpi-value text-emerald" id="kpiSaldoTotal">R$ 48.720,00</div>
+                        <div class="kpi-footer">
+                            <span class="trend-up">↑ +14.2%</span>
+                            <span class="kpi-sub">vs. mês anterior</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Receitas Recebidas</span>
+                            <span class="kpi-icon-pill bg-blue">📈</span>
+                        </div>
+                        <div class="kpi-value" id="kpiReceitasMes">R$ 62.400,00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub">Total registrado via WhatsApp</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Despesas Pagas</span>
+                            <span class="kpi-icon-pill bg-rose">📉</span>
+                        </div>
+                        <div class="kpi-value text-rose" id="kpiDespesasMes">R$ 13.680,00</div>
+                        <div class="kpi-footer">
+                            <span class="trend-down">↓ 8% economia</span>
+                            <span class="kpi-sub">dentro da meta</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Contas a Pagar</span>
+                            <span class="kpi-icon-pill bg-amber">⏳</span>
+                        </div>
+                        <div class="kpi-value text-amber" id="kpiContasPendentes">R$ 4.250,00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub" id="kpiContasCount">3 boletos pendentes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Open Finance Connected Banks Bar -->
+                <div class="card p-4 mb-4">
+                    <div class="banks-sync-header">
+                        <div>
+                            <h3 class="card-title">Open Finance Brasil · 114 Bancos Conectados</h3>
+                            <p class="text-muted text-sm">Leitura automática de extratos e conciliação bancária oficial regulada pelo Banco Central.</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btnSyncOpenFinance">
+                            <span class="btn-icon">🔄</span>
+                            <span>Sincronizar Bancos Agora</span>
+                        </button>
+                    </div>
+
+                    <div class="connected-banks-row">
+                        <div class="bank-pill active">
+                            <img src="images/bancos/itau.svg" alt="Itaú" class="bank-icon">
+                            <span class="bank-name">Itaú Unibanco</span>
+                            <span class="bank-badge-status">Sincronizado</span>
+                        </div>
+                        <div class="bank-pill active">
+                            <img src="images/bancos/nubank.svg" alt="Nubank" class="bank-icon">
+                            <span class="bank-name">Nubank PJ</span>
+                            <span class="bank-badge-status">Sincronizado</span>
+                        </div>
+                        <div class="bank-pill active">
+                            <img src="images/bancos/inter.svg" alt="Inter" class="bank-icon">
+                            <span class="bank-name">Banco Inter</span>
+                            <span class="bank-badge-status">Sincronizado</span>
+                        </div>
+                        <div class="bank-pill active">
+                            <img src="images/bancos/xp.svg" alt="XP" class="bank-icon">
+                            <span class="bank-name">XP Investimentos</span>
+                            <span class="bank-badge-status">Sincronizado</span>
+                        </div>
+                        <button class="bank-pill-add" id="btnAddBank">
+                            <span>+ Conectar Novo Banco</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Martin Executive Analytics: Projeção de Fim de Mês & 30 Dias no Azul -->
+                <div class="row-2-cols mb-4">
+                    <!-- Projeção de Fim de Mês -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">Projeção de Fim de Mês · Martin</h3>
+                                <p class="text-muted text-xs">Caixa atual + entradas previstas - saídas previstas</p>
+                            </div>
+                            <span class="badge bg-emerald">Previsão Ativa</span>
+                        </div>
+                        <div id="martinProjectionBox">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Calendário 30 Dias no Azul -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">Calendário de Dias no Azul (Outubro)</h3>
+                                <p class="text-muted text-xs">Acompanhamento diário de superávit vs. déficit</p>
+                            </div>
+                            <span class="badge" id="diasAzulBadgeCount">Carregando...</span>
+                        </div>
+                        <div class="dias-azul-grid" id="diasNoAzulContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orçamentos por Categoria (Teto de Gastos com Alertas Preventivos) -->
+                <div class="card p-4 mb-4">
+                    <div class="card-header-clean mb-3">
+                        <div>
+                            <h3 class="card-title">Tetos de Orçamento por Categoria</h3>
+                            <p class="text-muted text-xs">Alertas aos 70% e aviso quando ultrapassar o teto estipulado</p>
+                        </div>
+                        <span class="badge">Martin Monitorando</span>
+                    </div>
+                    <div class="budgets-grid" id="budgetsListContainer">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Transactions Controls & Table -->
+                <div class="card p-4">
+                    <div class="table-toolbar">
+                        <div class="table-title-box">
+                            <h3 class="card-title">Extrato Geral & Lançamentos</h3>
+                            <span class="badge" id="transactionsCountBadge">18 lançamentos</span>
+                        </div>
+
+                        <div class="table-actions">
+                            <div class="filter-group">
+                                <button class="filter-btn active" data-filter="all">Todos</button>
+                                <button class="filter-btn" data-filter="receita">Receitas</button>
+                                <button class="filter-btn" data-filter="despesa">Despesas</button>
+                                <button class="filter-btn" data-filter="pendente">Pendentes</button>
+                            </div>
+                            <button class="btn btn-primary btn-sm" id="btnNewTransaction">
+                                <span>+ Novo Lançamento</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" id="transactionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Conta / Meio</th>
+                                    <th>Data</th>
+                                    <th>Registrado por</th>
+                                    <th class="text-right">Valor</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: AGENDA & REUNIÕES (SOFI) -->
+            <section class="tab-panel" id="tabContentAgenda">
+                <div class="agenda-layout">
+                    <!-- Calendar View -->
+                    <div class="card p-4 calendar-card">
+                        <div class="calendar-header-toolbar">
+                            <div class="calendar-nav">
+                                <button class="btn btn-ghost btn-sm" id="calPrevBtn">◀</button>
+                                <h3 class="calendar-month-title" id="calMonthDisplay">Outubro de 2026</h3>
+                                <button class="btn btn-ghost btn-sm" id="calNextBtn">▶</button>
+                                <button class="btn btn-secondary btn-sm" id="calTodayBtn">Hoje</button>
+                            </div>
+
+                            <div class="calendar-status-badge">
+                                <span class="pulse-dot"></span>
+                                <span>Google Agenda Conectada</span>
+                            </div>
+
+                            <button class="btn btn-primary btn-sm" id="btnNewEvent">
+                                <span>+ Novo Compromisso</span>
+                            </button>
+                        </div>
+
+                        <!-- Calendar Grid -->
+                        <div class="calendar-grid-wrapper">
+                            <div class="calendar-weekdays">
+                                <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                            </div>
+                            <div class="calendar-days-grid" id="calendarDaysGrid">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Events & Travel Time Advice (Sofi) -->
+                    <div class="agenda-sidebar">
+                        <!-- Sofi Travel & Conflict Advisor Alert -->
+                        <div class="advisor-alert-box mb-4">
+                            <div class="advisor-alert-header">
+                                <img src="images/sofi.jpg" alt="Sofi" class="advisor-mini-avatar">
+                                <div>
+                                    <strong class="advisor-name">Sofi · Secretária Executiva</strong>
+                                    <span class="advisor-badge">Análise Inteligente de Rota</span>
+                                </div>
+                            </div>
+                            <p class="advisor-alert-text" id="sofiAdvisorTip">
+                                "Identifiquei que quinta-feira você almoça na Faria Lima até as 14h. Já reservei 25 min de deslocamento para a reunião com Ana Prado às 15h. Sua tarde está 100% protegida contra atrasos."
+                            </p>
+                        </div>
+
+                        <!-- Schedule List for Selected Day -->
+                        <div class="card p-4 mb-4">
+                            <div class="card-header-clean">
+                                <h3 class="card-title" id="scheduleListTitle">Compromissos Agendados</h3>
+                                <span class="badge" id="scheduleCountBadge">3 eventos</span>
+                            </div>
+                            <div class="events-timeline" id="eventsTimelineList">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Link Público de Agendamento (Sofi) -->
+                        <div class="card p-4 mb-4">
+                            <div class="card-header-clean mb-2">
+                                <h3 class="card-title">Página Pública de Agendamento</h3>
+                                <span class="badge bg-purple">Estilo Calendly</span>
+                            </div>
+                            <p class="text-muted text-xs mb-3">Compartilhe na bio, WhatsApp ou e-mail. Terceiros escolhem duração e agendam nos seus horários livres.</p>
+                            <div class="booking-link-box">
+                                <input type="text" id="bookingLinkInput" class="form-control form-control-sm mb-2" readonly value="https://meuassessor.com/agenda/amauri">
+                                <div class="btn-group-row">
+                                    <button class="btn btn-primary btn-xs" id="btnCopyBookingLink">Copiar Link</button>
+                                    <button class="btn btn-outline btn-xs" id="btnOpenBookingModal">Ver Página Pública ↗</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 36 Funcionalidades: Sofi Analytics (Mapa de Calor 28 Dias & Choques de Horário) -->
+                <div class="row-2-cols mt-4">
+                    <!-- Mapa de Calor 28 Dias -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">Mapa de Calor da Agenda (28 Dias)</h3>
+                                <p class="text-muted text-xs">Intensidade de compromissos: quanto mais escuro, mais apertado o dia</p>
+                            </div>
+                            <span class="badge">Sofi Varrendo</span>
+                        </div>
+                        <div class="heatmap-28-grid" id="sofiHeatmapGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Detector de Choques de Horário (Próximos 14 Dias) -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">Detector de Choques de Horário</h3>
+                                <p class="text-muted text-xs">Prevenção ativa de sobreposições nos próximos 14 dias</p>
+                            </div>
+                            <span class="badge bg-emerald">100% Protegido</span>
+                        </div>
+                        <div id="conflictsListContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: TAREFAS & PROJETOS (LUNA) -->
+            <section class="tab-panel" id="tabContentTarefas">
+                <div class="tasks-toolbar mb-4">
+                    <div class="tasks-summary">
+                        <h2 class="section-title">Quadro de Tarefas & Projetos</h2>
+                        <p class="text-muted text-sm">Organizado pela Luna diretamente das suas mensagens e notas no WhatsApp.</p>
+                    </div>
+
+                    <div class="tasks-controls">
+                        <select class="form-select form-select-sm" id="filterTaskProject">
+                            <option value="all">Todos os Projetos</option>
+                            <option value="pessoal">Pessoal / Casa</option>
+                            <option value="empresa">Empresa & Clientes</option>
+                            <option value="financeiro">Financeiro / Fiscal</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" id="btnNewTask">
+                            <span>+ Nova Tarefa</span>
+                        </button>
+                    </div>
+                <!-- 36 Funcionalidades: Pirâmide de Prioridade da Luna -->
+                <div class="card p-4 mb-4">
+                    <div class="card-header-clean mb-2">
+                        <div>
+                            <h3 class="card-title">Pirâmide de Prioridade · Luna</h3>
+                            <p class="text-muted text-xs">Urgente no topo, alta no meio, normal na base. Clique em uma faixa para filtrar a fila.</p>
+                        </div>
+                        <span class="badge">Reordenação Automática</span>
+                    </div>
+                    <div id="priorityPyramidContainer">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Kanban Columns -->
+                <div class="kanban-board">
+                    <!-- Column: To Do -->
+                    <div class="kanban-column" data-status="todo">
+                        <div class="kanban-column-header">
+                            <div class="col-title-group">
+                                <span class="col-dot bg-amber"></span>
+                                <span class="col-title">A Fazer</span>
+                            </div>
+                            <span class="col-count" id="countColTodo">0</span>
+                        </div>
+                        <div class="kanban-cards-box" id="colBoxTodo">
+                            <!-- Cards inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Column: In Progress -->
+                    <div class="kanban-column" data-status="inprogress">
+                        <div class="kanban-column-header">
+                            <div class="col-title-group">
+                                <span class="col-dot bg-blue"></span>
+                                <span class="col-title">Em Andamento</span>
+                            </div>
+                            <span class="col-count" id="countColInProgress">0</span>
+                        </div>
+                        <div class="kanban-cards-box" id="colBoxInProgress">
+                            <!-- Cards inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Column: Waiting / Delegated -->
+                    <div class="kanban-column" data-status="waiting">
+                        <div class="kanban-column-header">
+                            <div class="col-title-group">
+                                <span class="col-dot bg-purple"></span>
+                                <span class="col-title">Aguardando Terceiros</span>
+                            </div>
+                            <span class="col-count" id="countColWaiting">0</span>
+                        </div>
+                        <div class="kanban-cards-box" id="colBoxWaiting">
+                            <!-- Cards inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Column: Done -->
+                    <div class="kanban-column" data-status="done">
+                        <div class="kanban-column-header">
+                            <div class="col-title-group">
+                                <span class="col-dot bg-emerald"></span>
+                                <span class="col-title">Concluído</span>
+                            </div>
+                            <span class="col-count" id="countColDone">0</span>
+                        </div>
+                        <div class="kanban-cards-box" id="colBoxDone">
+                            <!-- Cards inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: PESQUISAS & COTAÇÕES (MESA DO ÍTALO) -->
+            <section class="tab-panel" id="tabContentPesquisas">
+                <div class="card p-4 mb-4">
+                    <div class="card-header-clean mb-3">
+                        <div class="d-flex align-center gap-3">
+                            <img src="images/italo_otim.jpg" alt="Ítalo" class="advisor-round-avatar">
+                            <div>
+                                <h2 class="section-title">Mesa de Pesquisas & Cotações · Ítalo</h2>
+                                <p class="text-muted text-sm">Pesquisa em tempo real na web com fontes verificadas, cotações de moedas e comparações de preços.</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-cyan">Estagiário de Pesquisas</span>
+                    </div>
+
+                    <!-- Search Input Box -->
+                    <div class="research-input-wrapper">
+                        <input type="text" class="form-control" id="researchQueryInput" placeholder="Ex: Preço médio do notebook Dell XPS, cotação do dólar, regras de IPVA...">
+                        <button class="btn btn-primary" id="btnNewSearchTrigger">
+                            <span>🔍 Pesquisar na Web</span>
+                        </button>
+                    </div>
+
+                    <!-- Status Filter Pills -->
+                    <div class="research-filter-pills mt-3">
+                        <button class="research-filter-pill active" data-status="all">Todas as Pesquisas</button>
+                        <button class="research-filter-pill" data-status="entregue">✓ Entregues com Fonte</button>
+                        <button class="research-filter-pill" data-status="andamento">⏳ Em Andamento</button>
+                    </div>
+                </div>
+
+                <!-- Researches Feed -->
+                <div class="researches-feed-grid" id="researchFeedList">
+                    <!-- Injected dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB: COBRANÇAS & QUEM TE DEVE (MARTIN) -->
+            <section class="tab-panel" id="tabContentCobrancas">
+                <div class="kpi-grid mb-4">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Total a Receber (Devedores)</span>
+                            <span class="kpi-icon-pill bg-emerald">📥</span>
+                        </div>
+                        <div class="kpi-value text-emerald" id="debtTotalReceber">R$ 1.480,00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub">Empréstimos e serviços a receber</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Total a Pagar a Terceiros</span>
+                            <span class="kpi-icon-pill bg-rose">📤</span>
+                        </div>
+                        <div class="kpi-value text-rose" id="debtTotalPagar">R$ 450,00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub">Compromissos e empréstimos tomados</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Links de Cobrança Ativos</span>
+                            <span class="kpi-icon-pill bg-blue">🔗</span>
+                        </div>
+                        <div class="kpi-value text-blue">2 links</div>
+                        <div class="kpi-footer">
+                            <button class="btn btn-primary btn-xs mt-2" id="btnCreateBillingLinkModal">+ Gerar Link de Cobrança</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-2-cols">
+                    <!-- Quem te Deve (Martin) -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">Quem te Deve · Empréstimos & Prazos</h3>
+                                <p class="text-muted text-xs">Diga "emprestei X pro fulano" e o Martin acompanha até a baixa.</p>
+                            </div>
+                            <span class="badge">Martin Cobrando</span>
+                        </div>
+                        <div class="debts-list-box" id="debtsListContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Links de Cobrança -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">Links de Cobrança WhatsApp</h3>
+                                <p class="text-muted text-xs">Páginas de pagamento seguras enviadas a clientes e amigos.</p>
+                            </div>
+                            <span class="badge bg-emerald">PIX Instantâneo</span>
+                        </div>
+                        <div class="billing-links-box" id="billingLinksContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: LISTAS & BANCO DE IDEIAS (LUNA) -->
+            <section class="tab-panel" id="tabContentListas">
+                <div class="card p-4 mb-4">
+                    <div class="card-header-clean">
+                        <div class="d-flex align-center gap-3">
+                            <img src="images/luna.jpg" alt="Luna" class="advisor-round-avatar">
+                            <div>
+                                <h2 class="section-title">Listas Dinâmicas & Banco de Ideias · Luna</h2>
+                                <p class="text-muted text-sm">Checklists de compras, malas de viagem e ideias guardadas para recuperar por contexto a qualquer hora.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-secondary btn-sm" id="btnCreateListTrigger">+ Nova Lista</button>
+                            <button class="btn btn-primary btn-sm" id="btnCreateIdeaTrigger">+ Anotar Ideia</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-2-cols">
+                    <!-- Listas Dinâmicas -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <h3 class="card-title">Listas Rápidas (Compras / Afazeres)</h3>
+                            <span class="badge">Checklist Dinâmico</span>
+                        </div>
+                        <div class="dynamic-lists-wrapper" id="dynamicListsContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Banco de Ideias -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <h3 class="card-title">Cofre de Ideias & Insights</h3>
+                            <span class="badge bg-purple">Memória Permanente</span>
+                        </div>
+                        <div class="ideas-vault-wrapper" id="ideasVaultContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: ARQUIVOS & NOTAS (COFRE) -->
+            <section class="tab-panel" id="tabContentArquivos">
+                <div class="vault-header-row mb-4">
+                    <div>
+                        <h2 class="section-title">Cofre de Documentos, Notas Fiscais e Comprovantes</h2>
+                        <p class="text-muted text-sm">Armazenamento ilimitado com extração inteligente de dados (OCR) por mensagem ou foto no WhatsApp.</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btnUploadDocument">
+                        <span>📤 Enviar Arquivo</span>
+                    </button>
+                    <input type="file" id="fileUploadInput" multiple style="display: none;">
+                </div>
+
+                <!-- 36 Funcionalidades: Pastas do Meu Drive (Luna) -->
+                <div class="card p-4 mb-4">
+                    <div class="card-header-clean mb-3">
+                        <div>
+                            <h3 class="card-title">Meu Drive na Nuvem · Pastas & Links de Compartilhamento</h3>
+                            <p class="text-muted text-xs">Até 50 MB por arquivo com geração de links públicos temporários com revogação</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btnNewDriveFolder">+ Nova Pasta</button>
+                    </div>
+                    <div class="drive-folders-grid" id="cloudDriveFoldersGrid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Vault Categories Tabs -->
+                <div class="vault-category-chips mb-4">
+                    <button class="vault-chip active" data-vcat="all">Todos os Arquivos</button>
+                    <button class="vault-chip" data-vcat="nota-fiscal">🧾 Notas Fiscais (NFS-e/NF-e)</button>
+                    <button class="vault-chip" data-vcat="comprovante">💵 Comprovantes de Pagamento</button>
+                    <button class="vault-chip" data-vcat="contrato">📜 Contratos & Jurídico</button>
+                    <button class="vault-chip" data-vcat="pessoal">🪪 Documentos Pessoais & Família</button>
+                </div>
+
+                <!-- Vault Grid -->
+                <div class="vault-grid" id="vaultGrid">
+                    <!-- Injected dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 6: LEMBRETES ILIMITADOS -->
+            <section class="tab-panel" id="tabContentLembretes">
+                <div class="card p-4 mb-4">
+                    <div class="reminders-header-bar">
+                        <div>
+                            <h2 class="section-title">Central de Lembretes Ilimitados no WhatsApp</h2>
+                            <p class="text-muted text-sm">Avisos automáticos de vencimento de boletos, cobrança de clientes, aniversários e rotinas.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btnNewReminder">
+                            <span>+ Criar Novo Lembrete</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="reminders-grid" id="remindersGrid">
+                    <!-- Injected dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 7: USUÁRIOS & EQUIPE (ILIMITADOS) -->
+            <section class="tab-panel" id="tabContentEquipe">
+                <div class="card p-4 mb-4">
+                    <div class="team-header-bar">
+                        <div>
+                            <h2 class="section-title">Usuários & Equipe Ilimitada</h2>
+                            <p class="text-muted text-sm">Conecte sua esposa, sócios, assistentes ou equipe. Cada um conversa do próprio WhatsApp numa conta unificada.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btnNewTeamMember">
+                            <span>+ Convidar Novo Membro</span>
+                        </button>
+                    </div>
+
+                    <div class="team-members-grid mt-4" id="teamMembersGrid">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 8: CONEXÃO WHATSAPP (GATEWAY & WEBHOOK) -->
+            <section class="tab-panel" id="tabContentConexao">
+                <div class="card p-5 connection-card">
+                    <div class="connection-header mb-4">
+                        <div class="connection-status-pill">
+                            <span class="pulse-dot"></span>
+                            <span>Instância Conectada e Operando</span>
+                        </div>
+                        <h2 class="section-title">Configurações do Gateway WhatsApp</h2>
+                        <p class="text-muted">Integração oficial via Meta Cloud API ou Evolution API / Baileys com suporte a Webhook bidirecional.</p>
+                    </div>
+
+                    <div class="connection-grid">
+                        <div class="connection-left">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Número do WhatsApp Principal</label>
+                                <input type="text" class="form-control" id="cfgWaNumber" value="+55 11 98765-4321" readonly>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">URL do Webhook (para receber mensagens no servidor)</label>
+                                <div class="input-copy-group">
+                                    <input type="text" class="form-control" id="cfgWebhookUrl" value="https://app.meuassessor.com/api/whatsapp/webhook" readonly>
+                                    <button class="btn btn-secondary btn-sm" id="btnCopyWebhook">Copiar</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Token de Verificação do Webhook</label>
+                                <input type="password" class="form-control" id="cfgWebhookToken" value="meu_assessor_secret_token_live_2026">
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label class="form-label">Modo de Operação da IA</label>
+                                <select class="form-select" id="cfgAiMode">
+                                    <option value="autonomous">Autônomo com confirmação de ações críticas (Recomendado)</option>
+                                    <option value="direct">Execução direta e recibo instantâneo</option>
+                                    <option value="manual_review">Apenas sugestões para aprovação no painel</option>
+                                </select>
+                            </div>
+
+                            <button class="btn btn-primary" id="btnSaveWaConfig">Salvar Configurações</button>
+                        </div>
+
+                        <div class="connection-right">
+                            <div class="qr-code-box">
+                                <div class="qr-header">
+                                    <strong>Conectar Novo Aparelho</strong>
+                                    <span>Escaneie com o WhatsApp</span>
+                                </div>
+                                <div class="qr-mockup">
+                                    <svg viewBox="0 0 200 200" width="160" height="160">
+                                        <!-- Realistic QR Code Vector Simulation -->
+                                        <rect width="200" height="200" fill="#ffffff" rx="8" />
+                                        <path d="M20 20h50v50h-50z M30 30h30v30h-30z M40 40h10v10h-10z M130 20h50v50h-50z M140 30h30v30h-30z M150 40h10v10h-10z M20 130h50v50h-50z M30 140h30v30h-30z M40 150h10v10h-10z M90 20h20v20h-20z M90 60h20v40h-20z M60 90h40v20h-40z M130 90h20v20h-20z M160 80h20v20h-20z M130 130h20v40h-20z M170 140h10v30h-10z M90 140h30v20h-30z M100 170h40v10h-40z" fill="#0c1017"/>
+                                    </svg>
+                                </div>
+                                <span class="qr-caption">Código atualizado há 12 segundos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL: NOVO LANÇAMENTO (FINANCEIRO) -->
+    <dialog class="modal-dialog" id="modalTransaction">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Lançamento Financeiro</h3>
+                <button class="modal-close-btn" id="modalCloseTransaction">✕</button>
+            </div>
+            <form id="formTransaction" class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Tipo de Movimentação</label>
+                    <div class="segmented-control">
+                        <label class="segment-opt">
+                            <input type="radio" name="txType" value="despesa" checked>
+                            <span class="segment-label segment-despesa">Despesa (Saída)</span>
+                        </label>
+                        <label class="segment-opt">
+                            <input type="radio" name="txType" value="receita">
+                            <span class="segment-label segment-receita">Receita (Entrada)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Descrição do Gasto ou Entrada</label>
+                    <input type="text" class="form-control" id="txDescription" placeholder="Ex: Almoço com cliente, Assinatura AWS, PIX recebido..." required>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Valor (R$)</label>
+                        <input type="number" step="0.01" class="form-control" id="txAmount" placeholder="0,00" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" id="txDate" required>
+                    </div>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="txCategory">
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Transporte">Transporte / Deslocamento</option>
+                            <option value="Software & Nuvem">Software & Nuvem</option>
+                            <option value="Impostos & Tributos">Impostos & Tributos</option>
+                            <option value="Serviços Prestados">Serviços Prestados</option>
+                            <option value="Vendas & Faturamento">Vendas & Faturamento</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Meio de Pagamento</label>
+                        <select class="form-select" id="txPaymentMethod">
+                            <option value="PIX">PIX</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="Cartão de Débito">Cartão de Débito</option>
+                            <option value="Boleto">Boleto Bancário</option>
+                            <option value="Transferência">Transferência</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelTransaction">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- MODAL: NOVO COMPROMISSO (AGENDA) -->
+    <dialog class="modal-dialog" id="modalEvent">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Compromisso na Agenda</h3>
+                <button class="modal-close-btn" id="modalCloseEvent">✕</button>
+            </div>
+            <form id="formEvent" class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Título da Reunião ou Compromisso</label>
+                    <input type="text" class="form-control" id="eventTitle" placeholder="Ex: Reunião com Ana Prado, Dentista..." required>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" id="eventDate" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Horário de Início</label>
+                        <input type="time" class="form-control" id="eventStartTime" value="14:00" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Horário de Fim</label>
+                        <input type="time" class="form-control" id="eventEndTime" value="15:00" required>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Local ou Link</label>
+                    <input type="text" class="form-control" id="eventLocation" placeholder="Ex: Google Meet, Escritório Faria Lima...">
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Participantes (WhatsApp ou E-mail)</label>
+                    <input type="text" class="form-control" id="eventGuests" placeholder="Ex: marcos@empresa.com, +5511999998888">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelEvent">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agendar e Avisar Sofi</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- MODAL: NOVA TAREFA (LUNA) -->
+    <dialog class="modal-dialog" id="modalTask">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nova Tarefa ou Projeto</h3>
+                <button class="modal-close-btn" id="modalCloseTask">✕</button>
+            </div>
+            <form id="formTask" class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Título da Tarefa</label>
+                    <input type="text" class="form-control" id="taskTitle" placeholder="Ex: Pagar o IPVA, Renovar seguro do carro..." required>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Coluna Inicial</label>
+                        <select class="form-select" id="taskStatus">
+                            <option value="todo">A Fazer</option>
+                            <option value="inprogress">Em Andamento</option>
+                            <option value="waiting">Aguardando Terceiros</option>
+                            <option value="done">Concluído</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Prioridade</label>
+                        <select class="form-select" id="taskPriority">
+                            <option value="alta">Alta Prioridade</option>
+                            <option value="media" selected>Média Prioridade</option>
+                            <option value="baixa">Baixa Prioridade</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Prazo Final</label>
+                        <input type="date" class="form-control" id="taskDueDate">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Projeto / Categoria</label>
+                        <input type="text" class="form-control" id="taskProject" placeholder="Ex: Pessoal, Fiscal, Empresa...">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelTask">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Tarefa</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- MODAL: NOVO LEMBRETE -->
+    <dialog class="modal-dialog" id="modalReminder">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Programar Novo Lembrete no WhatsApp</h3>
+                <button class="modal-close-btn" id="modalCloseReminder">✕</button>
+            </div>
+            <form id="formReminder" class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">O que você quer que os assessores te lembrem?</label>
+                    <input type="text" class="form-control" id="reminderText" placeholder="Ex: Lembrar de tomar remédio, Pagar fatura do cartão..." required>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" id="reminderDate" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Horário</label>
+                        <input type="time" class="form-control" id="reminderTime" value="09:00" required>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Recorrência</label>
+                    <select class="form-select" id="reminderRecurrence">
+                        <option value="once">Uma única vez</option>
+                        <option value="daily">Todos os dias</option>
+                        <option value="weekly">Semanalmente</option>
+                        <option value="monthly">Mensalmente (mesmo dia do mês)</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelReminder">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Ativar Lembrete</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- MODAL: NOVO MEMBRO DA EQUIPE -->
+    <dialog class="modal-dialog" id="modalTeam">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Convidar Novo Usuário (Ilimitado)</h3>
+                <button class="modal-close-btn" id="modalCloseTeam">✕</button>
+            </div>
+            <form id="formTeam" class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Nome Completo</label>
+                    <input type="text" class="form-control" id="teamMemberName" placeholder="Ex: Carolina Silva, Rodrigo Sócio..." required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Número de WhatsApp (com DDD)</label>
+                    <input type="text" class="form-control" id="teamMemberPhone" placeholder="Ex: (11) 98765-4321" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Perfil de Acesso</label>
+                    <select class="form-select" id="teamMemberRole">
+                        <option value="Admin">Administrador (Acesso total)</option>
+                        <option value="Sócio">Sócio / Gestor (Finanças e Agenda)</option>
+                        <option value="Família">Família (Gastos pessoais e Lembretes)</option>
+                        <option value="Colaborador">Colaborador (Tarefas e Documentos)</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelTeam">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Vincular ao WhatsApp</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- MODAL: PÁGINA PÚBLICA DE AGENDAMENTO (CALENDLY DE SOFI) -->
+    <dialog class="modal-dialog modal-lg" id="modalPublicBooking">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">Agendar Reunião com Amauri</h3>
+                    <p class="text-muted text-xs">Página oficial: meuassessor.com/agenda/amauri</p>
+                </div>
+                <button class="modal-close-btn" onclick="window.closeBookingModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-preview-container">
+                    <div class="booking-preview-left">
+                        <div class="booking-host-profile">
+                            <div class="user-avatar-placeholder" style="width: 54px; height: 54px; font-size: 20px;">AM</div>
+                            <div>
+                                <h4>Amauri</h4>
+                                <p class="text-muted text-xs">Reunião Executiva · 100% Sincronizado</p>
+                            </div>
+                        </div>
+
+                        <div class="booking-duration-selector mt-4">
+                            <label class="form-label text-xs">Escolha a Duração:</label>
+                            <div class="duration-pills">
+                                <button class="duration-pill active" type="button">15 min</button>
+                                <button class="duration-pill" type="button">30 min</button>
+                                <button class="duration-pill" type="button">45 min</button>
+                                <button class="duration-pill" type="button">60 min</button>
+                            </div>
+                        </div>
+
+                        <div class="booking-details-box mt-4">
+                            <div class="b-detail-item">📍 Google Meet (Link gerado automaticamente)</div>
+                            <div class="b-detail-item">🕒 Horário de Brasília (GMT-3)</div>
+                            <div class="b-detail-item">🛡️ Sofi protege contra atrasos e choques</div>
+                        </div>
+                    </div>
+
+                    <div class="booking-preview-right">
+                        <h4 class="mb-3">Selecione Data & Horário Livre</h4>
+                        <div class="booking-slots-grid">
+                            <button class="slot-time-btn" type="button" onclick="alert('Horário das 11:00 selecionado!')">11:00</button>
+                            <button class="slot-time-btn" type="button" onclick="alert('Horário das 14:00 selecionado!')">14:00</button>
+                            <button class="slot-time-btn" type="button" onclick="alert('Horário das 16:30 selecionado!')">16:30</button>
+                            <button class="slot-time-btn" type="button" onclick="alert('Horário das 17:15 selecionado!')">17:15</button>
+                        </div>
+
+                        <div class="booking-form-box mt-4">
+                            <label class="form-label text-xs">Seu Nome Completo:</label>
+                            <input type="text" class="form-control form-control-sm mb-2" id="visitorName" placeholder="Ex: Marcos Silva">
+                            <label class="form-label text-xs">Seu WhatsApp (para envio do link do Meet):</label>
+                            <input type="text" class="form-control form-control-sm mb-3" id="visitorPhone" placeholder="(11) 99999-9999">
+                            <button class="btn btn-primary btn-block" type="button" onclick="alert('Compromisso agendado com sucesso! A Sofi já incluiu na agenda e disparou os convites.'); window.closeBookingModal();">
+                                Confirmar Agendamento ➔
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="js/store.js"></script>
+    <script src="js/ai-engine.js"></script>
+    <script src="js/whatsapp-simulator.js"></script>
+    <script src="js/modules/finances.js"></script>
+    <script src="js/modules/agenda.js"></script>
+    <script src="js/modules/tasks.js"></script>
+    <script src="js/modules/vault.js"></script>
+    <script src="js/modules/reminders.js"></script>
+    <script src="js/modules/team.js"></script>
+    <script src="js/modules/researches.js"></script>
+    <script src="js/modules/cobrancas.js"></script>
+    <script src="js/modules/listas.js"></script>
+    <script src="js/modules/reports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
