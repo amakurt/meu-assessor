@@ -7,8 +7,10 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    downloadMediaMessage
 } = require('@whiskeysockets/baileys');
+
 const pino = require('pino');
 const QRCode = require('qrcode');
 const path = require('path');
@@ -143,33 +145,68 @@ class WhatsAppService {
                     }
 
 
-                    const textMessage = msg.message?.conversation ||
-                                        msg.message?.extendedTextMessage?.text ||
-                                        msg.message?.imageMessage?.caption ||
-                                        '';
-
-                    if (!textMessage.trim()) continue;
-
-                    // Proteção contra eco infinito
-                    if (textMessage.includes('Meu Assessor OS')) {
-                        continue;
-                    }
-
-                    console.log(`[WhatsApp] Mensagem recebida (${isSelfChat ? 'Auto-conversa' : remoteJid}): "${textMessage}"`);
-
                     let replyText = '';
 
-                    // 1. Tenta processar com Gemini Pro / Flash se a chave estiver configurada
-                    if (geminiService.isConfigured()) {
+                    // 1. MENSAGEM DE ÁUDIO (Voz do usuário)
+                    if (msg.message?.audioMessage) {
+                        console.log(`[WhatsApp] Mensagem de ÁUDIO recebida no auto-chat.`);
                         try {
-                            replyText = await geminiService.generateAdvisorResponse(textMessage);
-                        } catch (aiErr) {
-                            console.error('[WhatsApp] Erro na resposta do Gemini:', aiErr.message);
+                            const audioBuffer = await downloadMediaMessage(msg, 'buffer', {});
+                            const mimeType = msg.message.audioMessage.mimetype || 'audio/ogg';
+                            if (geminiService.isConfigured()) {
+                                replyText = await geminiService.generateAdvisorAudioResponse(audioBuffer, mimeType);
+                            } else {
+                                replyText = `*Theo* · Meu Assessor OS\n\n🎙️ Recebi seu áudio! Configure a chave do Gemini Pro para transcrição e ação automática.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                            }
+                        } catch (audioErr) {
+                            console.error('[WhatsApp] Erro ao processar áudio:', audioErr.message);
+                            replyText = `*Theo* · Meu Assessor OS\n\n⚠️ Tive dificuldade em processar esse áudio. Poderia reenviar ou mandar por texto?`;
+                        }
+                    }
+                    // 2. MENSAGEM DE FOTO / COMPROVANTE (OCR da Rita)
+                    else if (msg.message?.imageMessage) {
+                        console.log(`[WhatsApp] Imagem/Comprovante recebido no auto-chat.`);
+                        try {
+                            const imageBuffer = await downloadMediaMessage(msg, 'buffer', {});
+                            const mimeType = msg.message.imageMessage.mimetype || 'image/jpeg';
+                            const caption = msg.message.imageMessage.caption || '';
+                            if (geminiService.isConfigured()) {
+                                replyText = await geminiService.generateAdvisorImageResponse(imageBuffer, mimeType, caption);
+                            } else {
+                                replyText = `*Rita* · Meu Assessor OS\n\n🧾 Imagem recebida! Configure a chave do Gemini Pro para OCR automático de notas fiscais.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                            }
+                        } catch (imgErr) {
+                            console.error('[WhatsApp] Erro ao processar imagem:', imgErr.message);
+                            replyText = `*Rita* · Meu Assessor OS\n\n⚠️ Não consegui fazer a leitura nítida desta imagem. Poderia reenviar uma foto mais clara do comprovante?`;
+                        }
+                    }
+                    // 3. MENSAGEM DE TEXTO
+                    else {
+                        const textMessage = msg.message?.conversation ||
+                                            msg.message?.extendedTextMessage?.text ||
+                                            '';
+
+                        if (!textMessage.trim()) continue;
+
+                        // Proteção contra eco infinito
+                        if (textMessage.includes('Meu Assessor OS')) {
+                            continue;
+                        }
+
+                        console.log(`[WhatsApp] Mensagem de texto recebida: "${textMessage}"`);
+
+                        if (geminiService.isConfigured()) {
+                            try {
+                                replyText = await geminiService.generateAdvisorResponse(textMessage);
+                            } catch (aiErr) {
+                                console.error('[WhatsApp] Erro na resposta do Gemini:', aiErr.message);
+                                replyText = this.fallbackRouter(textMessage);
+                            }
+                        } else {
                             replyText = this.fallbackRouter(textMessage);
                         }
-                    } else {
-                        replyText = this.fallbackRouter(textMessage);
                     }
+
 
                     // Envia a resposta de volta no WhatsApp
                     try {
