@@ -134,12 +134,14 @@ class WhatsAppService {
                     const myNumber = myId.split(':')[0];
                     const myLid = (this.sock.user?.lid || '').split(':')[0];
 
-                    const isSelfChat = (myNumber && remoteJid.includes(myNumber)) || (myLid && remoteJid.includes(myLid));
-
-                    // Se não for chat consigo mesmo e tiver sido enviado pelo próprio usuário para outra pessoa, ignora
-                    if (msg.key.fromMe && !isSelfChat) {
+                    // REGRA CRÍTICA DE PRIVACIDADE:
+                    // O robô é o seu assessor pessoal no seu número principal.
+                    // Ele responde EXCLUSIVAMENTE quando VOCÊ manda mensagem para você mesmo (auto-conversa / "Você").
+                    // Amigos, parentes e clientes que falarem no seu WhatsApp serão 100% ignorados pelo robô!
+                    if (!isSelfChat) {
                         continue;
                     }
+
 
                     const textMessage = msg.message?.conversation ||
                                         msg.message?.extendedTextMessage?.text ||
