@@ -7,6 +7,7 @@ class FinancesModule {
     constructor(store) {
         this.store = store;
         this.currentFilter = 'all';
+        this.currentBankFilter = 'all';
 
         this.elements = {
             kpiSaldoTotal: document.getElementById('kpiSaldoTotal'),
@@ -36,13 +37,35 @@ class FinancesModule {
         this.render();
         this.store.subscribe(() => this.render());
 
-        // Filter buttons
+        // Filter buttons (Todos / Receitas / Despesas / Pendentes)
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.currentFilter = btn.getAttribute('data-filter');
                 this.renderTransactions();
+            });
+        });
+
+        // Filter chips por banco
+        document.querySelectorAll('.bank-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const bank = btn.getAttribute('data-bank') || 'all';
+                this.setBankFilter(bank);
+            });
+        });
+
+        // Pílulas superiores de bancos conectados também funcionam como filtro rápido
+        document.querySelectorAll('#connectedBanksRow .bank-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                const bank = pill.getAttribute('data-bank');
+                if (bank) {
+                    if (this.currentBankFilter === bank) {
+                        this.setBankFilter('all');
+                    } else {
+                        this.setBankFilter(bank);
+                    }
+                }
             });
         });
 
@@ -383,11 +406,76 @@ class FinancesModule {
         }).join('');
     }
 
+    getBankKey(t) {
+        const pm = (t.paymentMethod || '').toLowerCase();
+        const desc = (t.description || '').toLowerCase();
+        if (pm.includes('c6') || desc.includes('c6')) return 'c6';
+        if (pm.includes('nu') || pm.includes('platinum') || desc.includes('nubank')) return 'nubank';
+        if (pm.includes('mercado pago') || desc.includes('mercado pago')) return 'mercadopago';
+        if (pm.includes('itau') || pm.includes('pao de acucar') || desc.includes('itau')) return 'itau';
+        return 'manual';
+    }
+
+    setBankFilter(bank) {
+        this.currentBankFilter = bank;
+
+        // Atualiza estado ativo nos chips
+        document.querySelectorAll('.bank-chip').forEach(chip => {
+            if (chip.getAttribute('data-bank') === bank) {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+        });
+
+        // Atualiza estado selecionado nas pílulas superiores
+        document.querySelectorAll('#connectedBanksRow .bank-pill').forEach(pill => {
+            if (pill.getAttribute('data-bank') === bank) {
+                pill.classList.add('selected');
+            } else {
+                pill.classList.remove('selected');
+            }
+        });
+
+        this.renderTransactions();
+    }
+
+    updateBankFilterCounts(txs) {
+        const counts = { all: txs.length, nubank: 0, mercadopago: 0, itau: 0, c6: 0, manual: 0 };
+        txs.forEach(t => {
+            const k = this.getBankKey(t);
+            if (counts[k] !== undefined) counts[k]++;
+            else counts.manual++;
+        });
+
+        const setBadge = (id, count) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = Number(count).toLocaleString('pt-BR');
+        };
+
+        setBadge('badgeCountAll', counts.all);
+        setBadge('badgeCountNubank', counts.nubank);
+        setBadge('badgeCountMercadoPago', counts.mercadopago);
+        setBadge('badgeCountItau', counts.itau);
+        setBadge('badgeCountC6', counts.c6);
+        setBadge('badgeCountManual', counts.manual);
+    }
+
     renderTransactions() {
         if (!this.elements.transactionsTableBody) return;
-        let txs = this.store.state.transactions || [];
+        const allTxs = this.store.state.transactions || [];
 
-        // Apply filter
+        // Atualiza os contadores em tempo real para cada banco
+        this.updateBankFilterCounts(allTxs);
+
+        let txs = allTxs;
+
+        // 1. Aplica o filtro de Banco
+        if (this.currentBankFilter && this.currentBankFilter !== 'all') {
+            txs = txs.filter(t => this.getBankKey(t) === this.currentBankFilter);
+        }
+
+        // 2. Aplica o filtro de Tipo (Receita, Despesa, Pendente)
         if (this.currentFilter === 'receita') {
             txs = txs.filter(t => t.type === 'receita');
         } else if (this.currentFilter === 'despesa') {
@@ -397,7 +485,16 @@ class FinancesModule {
         }
 
         if (this.elements.transactionsCountBadge) {
-            this.elements.transactionsCountBadge.textContent = `${txs.length} lançamentos`;
+            const bankNames = {
+                all: 'Todos os Bancos',
+                nubank: 'Nubank',
+                mercadopago: 'Mercado Pago',
+                itau: 'Itaú',
+                c6: 'C6 Bank',
+                manual: 'WhatsApp / Manual'
+            };
+            const bankLabel = bankNames[this.currentBankFilter] || 'Geral';
+            this.elements.transactionsCountBadge.textContent = `${txs.length} lançamentos (${bankLabel})`;
         }
 
         this.elements.transactionsTableBody.innerHTML = '';
@@ -406,7 +503,7 @@ class FinancesModule {
             this.elements.transactionsTableBody.innerHTML = `
                 <tr>
                     <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                        Nenhum lançamento encontrado nesta categoria.
+                        Nenhum lançamento encontrado para o filtro selecionado.
                     </td>
                 </tr>
             `;

@@ -429,22 +429,22 @@
                     </div>
 
                     <div class="connected-banks-row" id="connectedBanksRow">
-                        <div class="bank-pill active">
+                        <div class="bank-pill active" data-bank="nubank" title="Clique para filtrar apenas lançamentos do Nubank">
                             <img src="images/bancos/nubank.svg" alt="Nubank" class="bank-icon">
                             <span class="bank-name">Nubank (Conta + Platinum)</span>
                             <span class="bank-badge-status">Sincronizado</span>
                         </div>
-                        <div class="bank-pill active">
+                        <div class="bank-pill active" data-bank="mercadopago" title="Clique para filtrar apenas lançamentos do Mercado Pago">
                             <img src="https://cdn.pluggy.ai/assets/connector-icons/206.svg" alt="Mercado Pago" class="bank-icon">
                             <span class="bank-name">Mercado Pago</span>
                             <span class="bank-badge-status">Sincronizado</span>
                         </div>
-                        <div class="bank-pill active">
+                        <div class="bank-pill active" data-bank="itau" title="Clique para filtrar apenas lançamentos do Itaú">
                             <img src="images/bancos/itau.svg" alt="Itaú" class="bank-icon">
                             <span class="bank-name">Itaú (Conta + Pão de Açúcar Black)</span>
                             <span class="bank-badge-status">Sincronizado</span>
                         </div>
-                        <div class="bank-pill active">
+                        <div class="bank-pill active" data-bank="c6" title="Clique para filtrar apenas lançamentos do C6 Bank">
                             <img src="images/bancos/c6.svg" alt="C6 Bank" class="bank-icon">
                             <span class="bank-name">C6 Bank (Conta + Cartão)</span>
                             <span class="bank-badge-status">Sincronizado</span>
@@ -502,10 +502,45 @@
 
                 <!-- Transactions Controls & Table -->
                 <div class="card p-4">
+                    <!-- Filtro Interativo por Banco / Origem -->
+                    <div class="bank-filter-bar">
+                        <span class="bank-filter-label">🏦 Filtrar por Banco:</span>
+                        <div class="bank-chips-group" id="bankChipsGroup">
+                            <button class="bank-chip active" data-bank="all">
+                                <span>Todos os Bancos</span>
+                                <span class="bank-chip-badge" id="badgeCountAll">1.638</span>
+                            </button>
+                            <button class="bank-chip" data-bank="nubank">
+                                <img src="images/bancos/nubank.svg" class="chip-icon" alt="Nubank">
+                                <span>Nubank</span>
+                                <span class="bank-chip-badge" id="badgeCountNubank">262</span>
+                            </button>
+                            <button class="bank-chip" data-bank="mercadopago">
+                                <img src="https://cdn.pluggy.ai/assets/connector-icons/206.svg" class="chip-icon" alt="Mercado Pago">
+                                <span>Mercado Pago</span>
+                                <span class="bank-chip-badge" id="badgeCountMercadoPago">625</span>
+                            </button>
+                            <button class="bank-chip" data-bank="itau">
+                                <img src="images/bancos/itau.svg" class="chip-icon" alt="Itaú">
+                                <span>Itaú</span>
+                                <span class="bank-chip-badge" id="badgeCountItau">500</span>
+                            </button>
+                            <button class="bank-chip" data-bank="c6">
+                                <img src="images/bancos/c6.svg" class="chip-icon" alt="C6 Bank">
+                                <span>C6 Bank</span>
+                                <span class="bank-chip-badge" id="badgeCountC6">251</span>
+                            </button>
+                            <button class="bank-chip" data-bank="manual">
+                                <span>💬 WhatsApp / Manual</span>
+                                <span class="bank-chip-badge" id="badgeCountManual">0</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="table-toolbar">
                         <div class="table-title-box">
                             <h3 class="card-title">Extrato Geral & Lançamentos</h3>
-                            <span class="badge" id="transactionsCountBadge">18 lançamentos</span>
+                            <span class="badge" id="transactionsCountBadge">1.638 lançamentos</span>
                         </div>
 
                         <div class="table-actions">
