@@ -68,6 +68,22 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 
 ---
 
+## 📅 Sessão 03 · 20/10/2026 (Rebranding para KIT & Roteamento Invisível)
+
+### 🎯 Objetivos da Sessão
+1. Rebrand oficial do sistema de "Meu Assessor" para **KIT** (KIT OS).
+2. Implementar **Roteamento Invisível**: o usuário não precisa lembrar ou citar o nome dos assessores (Theo, Martin, Luna, etc.) — interage apenas com o **KIT** de forma unificada e natural.
+3. Processamento multimodal de áudio de voz (.ogg) e fotos de comprovantes (OCR) com Google Gemini Pro (`gemini-3.5-flash-lite`).
+4. **Trava estrita de privacidade**: o robô interage única e exclusivamente no chat privado de notas do usuário consigo mesmo ("Você" / auto-conversa). Amigos, familiares e clientes externos que mandam mensagem no número são 100% ignorados pelo robô.
+
+### 🛠️ Entregas e Atualizações
+- Rebranding completo para **KIT** em `index.html`, `server.js`, `js/gemini-service.js` e `js/whatsapp-service.js`.
+- Prompt executivo unificado da persona **KIT**: sintetiza tarefas, compromissos na agenda, conciliação financeira e pesquisas mantendo botões de ação `[✏️ Editar] [↩️ Desfazer]`.
+- Filtro `isSelfChat` ativado: Baileys lê os eventos de auto-chat e descarta silenciosamente contatos de fora.
+- Código sincronizado no GitHub (`amakurt/meu-assessor`) e atualizado na VM Oracle (`137.131.160.171`).
+
+---
+
 ## 🔄 Como Retomar a Sessão Futura
 
 Ao iniciar uma nova sessão com o assistente de IA, execute os passos abaixo:
@@ -82,7 +98,10 @@ Ao iniciar uma nova sessão com o assistente de IA, execute os passos abaixo:
 ## 📋 Backlog / Próximos Passos Sugeridos
 - [x] Conexão de WhatsApp Real: Integração nativa de Baileys / QR Code direto no backend.
 - [x] Chave da Gemini API (Google Gemini Pro) integrada e ativa em produção.
-- [ ] Escanear o QR Code no celular para ativar a sessão física do WhatsApp.
+- [x] Rebranding para KIT e Roteamento Invisível (interação com persona única).
+- [x] Filtro de privacidade para auto-conversa (ignora contatos externos).
+- [x] Suporte multimodal nativo a áudios de voz e fotos de recibos.
+- [ ] Teste em tempo real de mensagem de voz e texto no auto-chat do WhatsApp.
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
 
