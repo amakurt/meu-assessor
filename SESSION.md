@@ -101,7 +101,8 @@ Ao iniciar uma nova sessão com o assistente de IA, execute os passos abaixo:
 - [x] Rebranding para KIT e Roteamento Invisível (interação com persona única).
 - [x] Filtro de privacidade para auto-conversa (ignora contatos externos).
 - [x] Suporte multimodal nativo a áudios de voz e fotos de recibos.
-- [ ] Teste em tempo real de mensagem de voz e texto no auto-chat do WhatsApp.
+- [x] Teste em tempo real de mensagem de voz e texto no auto-chat do WhatsApp (Posto de gasolina R$ 55 processado com sucesso).
+- [x] Fix de sincronização em tempo real: headers anti-cache, Nginx unbuffered SSE e polling de contingência de 2.5s.
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
 
