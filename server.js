@@ -12,6 +12,7 @@ const fs = require('fs');
 const whatsappService = require('./js/whatsapp-service');
 const geminiService = require('./js/gemini-service');
 const dbService = require('./js/db-service');
+const pluggyService = require('./js/pluggy-service');
 const crypto = require('crypto');
 
 const app = express();
@@ -170,6 +171,68 @@ app.post('/api/config/gemini', (req, res) => {
 // 4. REST API: Finances & Open Finance
 app.get('/api/financas', (req, res) => {
     res.json({ success: true, data: dbService.getAll().transactions });
+});
+
+// OPEN FINANCE (PLUGGY) REST API
+app.get('/api/open-finance/status', (req, res) => {
+    res.json({
+        configured: pluggyService.isConfigured(),
+        clientId: process.env.PLUGGY_CLIENT_ID ? 'Configurado' : 'Pendente'
+    });
+});
+
+app.post('/api/open-finance/configure', (req, res) => {
+    const { clientId, clientSecret } = req.body;
+    if (clientId && clientSecret) {
+        pluggyService.setCredentials(clientId, clientSecret);
+        try {
+            const envPath = path.join(__dirname, '.env');
+            let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+            if (envContent.includes('PLUGGY_CLIENT_ID=')) {
+                envContent = envContent.replace(/PLUGGY_CLIENT_ID=.*/, `PLUGGY_CLIENT_ID=${clientId}`);
+            } else {
+                envContent += `\nPLUGGY_CLIENT_ID=${clientId}\n`;
+            }
+            if (envContent.includes('PLUGGY_CLIENT_SECRET=')) {
+                envContent = envContent.replace(/PLUGGY_CLIENT_SECRET=.*/, `PLUGGY_CLIENT_SECRET=${clientSecret}`);
+            } else {
+                envContent += `\nPLUGGY_CLIENT_SECRET=${clientSecret}\n`;
+            }
+            fs.writeFileSync(envPath, envContent);
+        } catch (e) {
+            console.error('[OpenFinance] Erro ao salvar .env:', e.message);
+        }
+    }
+    res.json({ success: true, configured: pluggyService.isConfigured() });
+});
+
+const handleConnectToken = async (req, res) => {
+    try {
+        const accessToken = await pluggyService.createConnectToken();
+        res.json({ success: true, accessToken });
+    } catch (err) {
+        console.error('[OpenFinance] Erro ao gerar Connect Token:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+app.get('/api/connect-token', handleConnectToken);
+app.post('/api/connect-token', handleConnectToken);
+app.get('/api/open-finance/connect-token', handleConnectToken);
+app.post('/api/open-finance/connect-token', handleConnectToken);
+
+app.post('/api/open-finance/sync', async (req, res) => {
+    const { itemId } = req.body;
+    if (!itemId) {
+        return res.status(400).json({ error: 'itemId é obrigatório para sincronização.' });
+    }
+    try {
+        const result = await pluggyService.syncItem(itemId);
+        res.json(result);
+    } catch (err) {
+        console.error('[OpenFinance] Erro ao sincronizar item:', err.message);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 5. REST API: Agenda & Calendar
