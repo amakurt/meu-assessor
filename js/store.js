@@ -650,7 +650,7 @@ class Store {
                 hasChanges = true;
                 const newTx = backendDb.transactions[0];
                 if (newTx && isLiveEvent) {
-                    window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${newTx.description} (R$ ${Number(newTx.amount).toFixed(2)})`);
+                    window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${newTx.description} (R$ ${Number(newTx.amount).toFixed(2)})`, 'financas');
                 }
             }
             this.state.transactions = backendDb.transactions;
@@ -663,7 +663,7 @@ class Store {
                 hasChanges = true;
                 const newEv = backendDb.events[0];
                 if (newEv && isLiveEvent) {
-                    window.showToast?.(`📅 KIT: Novo compromisso na agenda: ${newEv.title}`);
+                    window.showToast?.(`📅 KIT: Novo compromisso na agenda: ${newEv.title}`, 'agenda');
                 }
             }
             this.state.events = backendDb.events;
@@ -676,6 +676,10 @@ class Store {
                 hasChanges = true;
             }
             this.state.tasks = backendDb.tasks;
+        }
+
+        if (Array.isArray(backendDb.chatMessages) && backendDb.chatMessages.length > 0) {
+            this.state.chatMessages = backendDb.chatMessages;
         }
 
         if (Array.isArray(backendDb.budgets)) {

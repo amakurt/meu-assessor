@@ -237,7 +237,9 @@ class FinancesModule {
 
         const budgets = this.store.state.budgets || [];
         container.innerHTML = budgets.map(b => {
-            const pct = Math.min(Math.round((b.spent / b.limit) * 100), 100);
+            const limit = b.limit || b.ceiling || 3000;
+            const spent = b.spent || 0;
+            const pct = Math.min(Math.round((spent / limit) * 100), 100);
             const isWarning = pct >= 70 && pct < 100;
             const isExceeded = pct >= 100;
             const colorClass = isExceeded ? 'progress-danger' : (isWarning ? 'progress-warning' : 'progress-normal');
@@ -252,8 +254,8 @@ class FinancesModule {
                             </span>
                         </div>
                         <div class="budget-values-box">
-                            <span class="budget-spent">R$ ${b.spent.toFixed(2)}</span>
-                            <span class="budget-limit">de R$ ${b.limit.toFixed(2)}</span>
+                            <span class="budget-spent">R$ ${spent.toFixed(2)}</span>
+                            <span class="budget-limit">de R$ ${limit.toFixed(2)}</span>
                         </div>
                     </div>
                     <div class="budget-progress-track">
@@ -261,7 +263,7 @@ class FinancesModule {
                     </div>
                     <div class="budget-card-bottom">
                         <span class="budget-pct">${pct}% utilizado</span>
-                        <span class="budget-remaining">Resta: R$ ${Math.max(0, b.limit - b.spent).toFixed(2)}</span>
+                        <span class="budget-remaining">Resta: R$ ${Math.max(0, limit - spent).toFixed(2)}</span>
                     </div>
                 </div>
             `;
@@ -318,9 +320,9 @@ class FinancesModule {
                 <td><span class="tx-status-pill ${statusClass}">${statusLabel}</span></td>
                 <td><strong>${t.description}</strong></td>
                 <td><span class="badge">${t.category}</span></td>
-                <td>${t.paymentMethod}</td>
+                <td>${t.paymentMethod || 'Cartão / Pix'}</td>
                 <td>${dateStr}</td>
-                <td><span style="font-size: 11.5px; color: var(--text-muted);">${t.registeredBy}</span></td>
+                <td><span style="font-size: 11.5px; color: var(--text-muted);">${t.registeredBy || 'WhatsApp (KIT)'}</span></td>
                 <td class="text-right ${amountClass}">${amountFormatted}</td>
                 <td class="text-center">
                     <button class="btn btn-ghost btn-sm" style="padding: 2px 6px;" title="Detalhes do Lançamento">👁️</button>

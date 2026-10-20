@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.switchTab = function (tabKey) {
+        if (!tabPanels[tabKey]) tabKey = 'chat';
         navItems.forEach(i => i.classList.remove('active'));
         const activeNav = document.querySelector(`.nav-item[data-tab="${tabKey}"]`);
         if (activeNav) activeNav.classList.add('active');
@@ -59,6 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sidebar && window.innerWidth <= 768) {
             sidebar.classList.remove('open');
         }
+
+        // Persiste a aba para nunca mais perder a tela em um refresh!
+        try {
+            localStorage.setItem('kit_active_tab', tabKey);
+            history.replaceState(null, null, '#' + tabKey);
+        } catch(e) {}
     };
 
     navItems.forEach(item => {
@@ -67,6 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
             window.switchTab(tabKey);
         });
     });
+
+    // Restaura imediatamente a aba salva (Finanças, Agenda, etc.)
+    const hashTab = window.location.hash ? window.location.hash.replace('#', '') : null;
+    const initialSavedTab = hashTab || localStorage.getItem('kit_active_tab') || 'chat';
+    if (initialSavedTab && tabPanels[initialSavedTab]) {
+        window.switchTab(initialSavedTab);
+    }
 
     // Profile Filter (Todos / CPF Pessoal / CNPJ Empresa)
     const profilePills = document.querySelectorAll('.profile-toggle-pill');
@@ -177,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Toast Utility
-    window.showToast = function (message) {
+    window.showToast = function (message, targetTab = null) {
         let toast = document.getElementById('appToast');
         if (!toast) {
             toast = document.createElement('div');
@@ -185,11 +199,15 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.className = 'app-toast';
             document.body.appendChild(toast);
         }
-        toast.textContent = message;
+        if (targetTab) {
+            toast.innerHTML = `<span>${message}</span> <button class="toast-tab-btn" onclick="window.switchTab('${targetTab}')" style="background: var(--brand-purple); color: #fff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 10px; cursor: pointer;">Abrir ➔</button>`;
+        } else {
+            toast.textContent = message;
+        }
         toast.classList.add('show');
         setTimeout(() => {
             toast.classList.remove('show');
-        }, 3200);
+        }, 4500);
     };
 
     // ==========================================================================

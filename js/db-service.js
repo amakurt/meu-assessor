@@ -218,6 +218,23 @@ class DbService {
 
         return applied;
     }
+
+    /**
+     * Registra mensagem no feed em tempo real do WhatsApp
+     */
+    addChatMessage(msg) {
+        if (!this.db.chatMessages) this.db.chatMessages = [];
+        this.db.chatMessages.push(msg);
+        if (this.db.chatMessages.length > 50) {
+            this.db.chatMessages.shift();
+        }
+        this._saveDb();
+        this.broadcast('data_updated', {
+            type: 'chat',
+            item: msg,
+            fullDb: this.db
+        });
+    }
 }
 
 module.exports = new DbService();

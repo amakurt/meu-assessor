@@ -221,6 +221,29 @@ class WhatsAppService {
                     // Sincroniza a ação executiva no Banco de Dados e transmite ao painel em tempo real
                     replyText = this._extractAndApplyAction(replyText);
 
+                    // Registra a conversa no histórico ao vivo do sistema
+                    const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const userMsgText = msg.message?.conversation ||
+                                        msg.message?.extendedTextMessage?.text ||
+                                        (msg.message?.audioMessage ? '🎙️ [Mensagem de Áudio]' : '📷 [Foto / Comprovante]');
+
+                    dbService.addChatMessage({
+                        id: 'm-u-' + Date.now(),
+                        sender: 'user',
+                        text: userMsgText,
+                        time: timeStr,
+                        checks: 'read'
+                    });
+
+                    dbService.addChatMessage({
+                        id: 'm-k-' + Date.now(),
+                        sender: 'advisor',
+                        advisorKey: 'theo',
+                        text: replyText,
+                        time: timeStr,
+                        checks: 'read'
+                    });
+
                     // Envia a resposta de volta no WhatsApp
                     try {
                         const sent = await this.sock.sendMessage(targetJid, { text: replyText });
