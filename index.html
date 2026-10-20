@@ -928,64 +928,98 @@
                 </div>
             </section>
 
-            <!-- TAB 8: CONEXÃO WHATSAPP (GATEWAY & WEBHOOK) -->
+            <!-- TAB 8: CONEXÃO WHATSAPP REAL (BAILEYS) & GEMINI PRO -->
             <section class="tab-panel" id="tabContentConexao">
                 <div class="card p-5 connection-card">
                     <div class="connection-header mb-4">
-                        <div class="connection-status-pill">
-                            <span class="pulse-dot"></span>
-                            <span>Instância Conectada e Operando</span>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="connection-status-pill pill-danger" id="waLiveStatusBadge">
+                                    <span>🔴 Desconectado</span>
+                                </div>
+                                <div class="connection-status-pill pill-success" id="geminiStatusBadge">
+                                    <span class="pulse-dot"></span>
+                                    <span>Google Gemini Pro/Flash Ativo</span>
+                                </div>
+                            </div>
+                            <span class="text-xs text-muted">Instância 24/7 na Oracle Cloud</span>
                         </div>
-                        <h2 class="section-title">Configurações do Gateway WhatsApp</h2>
-                        <p class="text-muted">Integração oficial via Meta Cloud API ou Evolution API / Baileys com suporte a Webhook bidirecional.</p>
+                        <h2 class="section-title mt-2">Conexão Oficial WhatsApp & Inteligência Artificial</h2>
+                        <p class="text-muted">Pareie o seu WhatsApp via QR Code direto no servidor. Todas as mensagens enviadas para este número serão atendidas pelo seu time de 6 assessores de IA.</p>
                     </div>
 
                     <div class="connection-grid">
                         <div class="connection-left">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Número do WhatsApp Principal</label>
-                                <input type="text" class="form-control" id="cfgWaNumber" value="+55 11 98765-4321" readonly>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label class="form-label">URL do Webhook (para receber mensagens no servidor)</label>
-                                <div class="input-copy-group">
-                                    <input type="text" class="form-control" id="cfgWebhookUrl" value="https://app.meuassessor.com/api/whatsapp/webhook" readonly>
-                                    <button class="btn btn-secondary btn-sm" id="btnCopyWebhook">Copiar</button>
+                            <!-- Status da Conexão Ativa -->
+                            <div class="card p-3 mb-4" id="waConnectedBox" style="display:none; background: rgba(0, 168, 132, 0.08); border: 1px solid rgba(0, 168, 132, 0.3);">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="text-xs text-muted">Aparelho Conectado:</div>
+                                        <div class="h4 font-weight-bold text-success mb-0" id="waConnectedNumberDisplay">+55 (11) 98765-4321</div>
+                                        <div class="text-xs text-muted mt-1">Sessão salva com reconexão automática contínua.</div>
+                                    </div>
+                                    <button class="btn btn-outline btn-sm text-danger" id="btnDisconnectWa">Desconectar Aparelho</button>
                                 </div>
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label class="form-label">Token de Verificação do Webhook</label>
-                                <input type="password" class="form-control" id="cfgWebhookToken" value="meu_assessor_secret_token_live_2026">
+                            <!-- Teste de Envio -->
+                            <div class="card p-3 mb-4" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                                <h4 class="text-sm font-weight-bold mb-2">🧪 Testar Disparo no WhatsApp</h4>
+                                <p class="text-xs text-muted mb-3">Envie uma mensagem de teste do sistema diretamente para qualquer número para validar o envio.</p>
+                                <div class="form-group mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="testWaPhone" placeholder="DDD + Número (ex: 11999998888)">
+                                </div>
+                                <div class="form-group mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="testWaMessage" placeholder="Mensagem de teste" value="Olá! Seu Meu Assessor OS está 100% operacional no WhatsApp.">
+                                </div>
+                                <button class="btn btn-outline btn-sm" id="btnSendTestWa">Enviar Mensagem de Teste</button>
                             </div>
 
-                            <div class="form-group mb-4">
-                                <label class="form-label">Modo de Operação da IA</label>
-                                <select class="form-select" id="cfgAiMode">
-                                    <option value="autonomous">Autônomo com confirmação de ações críticas (Recomendado)</option>
-                                    <option value="direct">Execução direta e recibo instantâneo</option>
-                                    <option value="manual_review">Apenas sugestões para aprovação no painel</option>
-                                </select>
-                            </div>
+                            <!-- Configurações do Google Gemini Pro -->
+                            <div class="card p-3 mb-4" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h4 class="text-sm font-weight-bold mb-0">🧠 Google Gemini Pro / Flash</h4>
+                                    <span class="badge badge-primary text-xs">gemini-3.5-flash-lite</span>
+                                </div>
+                                <p class="text-xs text-muted mb-3">Motor de IA executiva que processa os 6 assessores, áudios e recibos em milissegundos.</p>
+                                <div class="form-group mb-2">
+                                    <label class="form-label text-xs">Chave de API do Google AI Studio</label>
+                                    <div class="input-copy-group">
+                                        <input type="password" class="form-control form-control-sm" id="geminiApiKeyInput" placeholder="Chave ativa salva no servidor (.env)" value="">
+                                        <button class="btn btn-secondary btn-sm" id="btnSaveGeminiKey">Salvar Chave</button>
 
-                            <button class="btn btn-primary" id="btnSaveWaConfig">Salvar Configurações</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Lado Direito: Caixa do QR Code Dinâmico -->
                         <div class="connection-right">
-                            <div class="qr-code-box">
-                                <div class="qr-header">
-                                    <strong>Conectar Novo Aparelho</strong>
-                                    <span>Escaneie com o WhatsApp</span>
+                            <div class="qr-code-box text-center p-4" style="background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: 16px;">
+                                <div class="qr-header mb-3">
+                                    <h3 class="h5 font-weight-bold mb-1">Parear Celular via QR Code</h3>
+                                    <p class="text-xs text-muted mb-0" id="waStatusMessage">Clique no botão para gerar o código de conexão.</p>
                                 </div>
-                                <div class="qr-mockup">
-                                    <svg viewBox="0 0 200 200" width="160" height="160">
-                                        <!-- Realistic QR Code Vector Simulation -->
-                                        <rect width="200" height="200" fill="#ffffff" rx="8" />
-                                        <path d="M20 20h50v50h-50z M30 30h30v30h-30z M40 40h10v10h-10z M130 20h50v50h-50z M140 30h30v30h-30z M150 40h10v10h-10z M20 130h50v50h-50z M30 140h30v30h-30z M40 150h10v10h-10z M90 20h20v20h-20z M90 60h20v40h-20z M60 90h40v20h-40z M130 90h20v20h-20z M160 80h20v20h-20z M130 130h20v40h-20z M170 140h10v30h-10z M90 140h30v20h-30z M100 170h40v10h-40z" fill="#0c1017"/>
-                                    </svg>
+
+                                <div class="qr-display-container my-3 d-flex justify-content-center align-items-center" style="min-height: 230px;">
+                                    <img id="waQrImage" alt="QR Code WhatsApp" style="display:none; width: 220px; height: 220px; border-radius: 12px; background: #fff; padding: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" />
+                                    <div id="waQrPlaceholder" class="d-flex flex-column align-items-center justify-content-center p-4 text-center" style="border: 2px dashed var(--border-card); border-radius: 12px; width: 220px; height: 220px;">
+                                        <span style="font-size: 3rem; margin-bottom: 8px;">📱</span>
+                                        <span class="text-xs text-muted">Aguardando geração do código</span>
+                                    </div>
                                 </div>
-                                <span class="qr-caption">Código atualizado há 12 segundos</span>
+
+                                <div class="qr-actions mt-3">
+                                    <button class="btn btn-primary btn-block mb-2" id="btnConnectWa">
+                                        <span>⚡ Conectar WhatsApp (Gerar QR Code)</span>
+                                    </button>
+                                    <div class="text-xs text-muted text-left mt-3">
+                                        <strong>Como conectar:</strong><br>
+                                        1. Abra o WhatsApp no seu celular<br>
+                                        2. Toque em <strong>Mais opções</strong> (⋮) ou <strong>Configurações</strong> ➔ <strong>Aparelhos conectados</strong><br>
+                                        3. Toque em <strong>Conectar um aparelho</strong> e aponte a câmera para o QR Code acima
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1321,6 +1355,8 @@
     <script src="js/modules/cobrancas.js"></script>
     <script src="js/modules/listas.js"></script>
     <script src="js/modules/reports.js"></script>
+    <script src="js/modules/conexao.js"></script>
     <script src="js/app.js"></script>
+
 </body>
 </html>

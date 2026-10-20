@@ -3,9 +3,14 @@
  * Express server providing static hosting, REST APIs and WhatsApp Webhook integration.
  */
 
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
+const whatsappService = require('./js/whatsapp-service');
+const geminiService = require('./js/gemini-service');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname)));
@@ -102,34 +108,61 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// 2. WhatsApp Webhook Verification (Meta Cloud API protocol)
-app.get('/api/whatsapp/webhook', (req, res) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'meu_assessor_secret_token_live_2026';
-
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-        console.log('[Webhook] Webhook verificado com sucesso pelo Meta Cloud API!');
-        return res.status(200).send(challenge);
-    }
-    res.sendStatus(403);
+// 2. WhatsApp Baileys Status & QR Code API
+app.get('/api/whatsapp/status', (req, res) => {
+    res.json(whatsappService.getStatus());
 });
 
-// 3. WhatsApp Inbound Messages Webhook (Meta / Evolution API)
-app.post('/api/whatsapp/webhook', (req, res) => {
+app.post('/api/whatsapp/connect', async (req, res) => {
     try {
-        const body = req.body;
-        console.log('[Webhook] Mensagem recebida no WhatsApp:', JSON.stringify(body, null, 2));
-
-        // Format response immediately to acknowledge WhatsApp server
-        res.status(200).json({ status: 'received' });
-    } catch (e) {
-        console.error('[Webhook] Erro no processamento:', e);
-        res.sendStatus(500);
+        const status = await whatsappService.init();
+        res.json(status);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
+
+app.post('/api/whatsapp/disconnect', async (req, res) => {
+    try {
+        const status = await whatsappService.disconnect();
+        res.json(status);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/whatsapp/test', async (req, res) => {
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+        return res.status(400).json({ error: 'Telefone e mensagem são obrigatórios' });
+    }
+    try {
+        await whatsappService.sendTestMessage(phone, message);
+        res.json({ success: true, message: 'Mensagem de teste enviada com sucesso!' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 3. Gemini Configuration API
+app.post('/api/config/gemini', (req, res) => {
+    const { apiKey } = req.body;
+    if (apiKey) {
+        geminiService.setApiKey(apiKey);
+        try {
+            const envPath = path.join(__dirname, '.env');
+            let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+            if (envContent.includes('GEMINI_API_KEY=')) {
+                envContent = envContent.replace(/GEMINI_API_KEY=.*/, `GEMINI_API_KEY=${apiKey}`);
+            } else {
+                envContent += `\nGEMINI_API_KEY=${apiKey}\n`;
+            }
+            fs.writeFileSync(envPath, envContent);
+        } catch (e) {}
+    }
+    res.json({ success: true, configured: geminiService.isConfigured() });
+});
+
 
 // 4. REST API: Finances & Open Finance
 app.get('/api/financas', (req, res) => {
@@ -171,32 +204,50 @@ app.get('/api/drive/pastas', (req, res) => {
     res.json({ success: true, data: db.cloudDrive });
 });
 
-// 12. REST API: Direct AI Chat Endpoint
-app.post('/api/chat', (req, res) => {
+// 12. REST API: Direct AI Chat Endpoint (Powered by Gemini Pro)
+app.post('/api/chat', async (req, res) => {
     const { message, senderPhone } = req.body;
     if (!message) {
         return res.status(400).json({ error: 'Mensagem obrigatória' });
     }
 
-    const lower = message.toLowerCase();
+    let reply = '';
     let advisor = 'Theo';
-    let reply = `Compreendido! O Theo organizou a demanda com seu time executivo.`;
 
-    if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('saldo') || lower.includes('orçamento') || lower.includes('quem me deve')) {
-        advisor = 'Martin';
-        reply = `Registrado com sucesso nas finanças e conciliado no Open Finance!`;
-    } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('link') || lower.includes('meet')) {
-        advisor = 'Sofi';
-        reply = `Compromisso agendado no seu Google Agenda com tempo de deslocamento e link do Meet reservado.`;
-    } else if (lower.includes('pesquisa') || lower.includes('cotação') || lower.includes('preço') || lower.includes('compara') || lower.includes('ítalo')) {
-        advisor = 'Ítalo';
-        reply = `Pesquisa concluída! Analisei as fontes mais confiáveis e montei o comparativo.`;
-    } else if (lower.includes('tarefa') || lower.includes('lista') || lower.includes('ideia') || lower.includes('drive') || lower.includes('pasta')) {
-        advisor = 'Luna';
-        reply = `Registrado na sua central de tarefas e documentos com sincronização na nuvem.`;
-    } else if (lower.includes('nota') || lower.includes('imposto') || lower.includes('das') || lower.includes('cnpj') || lower.includes('fiscal')) {
-        advisor = 'Rita';
-        reply = `Documento fiscal processado via OCR com alíquotas verificadas.`;
+    if (geminiService.isConfigured()) {
+        try {
+            reply = await geminiService.generateAdvisorResponse(message);
+            // Extrai o nome do assessor da resposta se existir
+            if (reply.includes('Martin')) advisor = 'Martin';
+            else if (reply.includes('Sofi')) advisor = 'Sofi';
+            else if (reply.includes('Luna')) advisor = 'Luna';
+            else if (reply.includes('Ítalo') || reply.includes('Italo')) advisor = 'Ítalo';
+            else if (reply.includes('Rita')) advisor = 'Rita';
+        } catch (e) {
+            console.error('[Chat API] Erro no Gemini:', e.message);
+        }
+    }
+
+    if (!reply) {
+        const lower = message.toLowerCase();
+        reply = `Compreendido! O Theo organizou a demanda com seu time executivo.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+
+        if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('saldo') || lower.includes('orçamento') || lower.includes('quem me deve')) {
+            advisor = 'Martin';
+            reply = `*Martin* · Meu Assessor OS\n\nRegistrado com sucesso nas finanças e conciliado no Open Finance!\n• Meta 30 Dias no Azul: Positiva\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+        } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('link') || lower.includes('meet')) {
+            advisor = 'Sofi';
+            reply = `*Sofi* · Meu Assessor OS\n\nCompromisso agendado no seu Google Agenda com tempo de deslocamento e link do Meet reservado.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+        } else if (lower.includes('pesquisa') || lower.includes('cotação') || lower.includes('preço') || lower.includes('compara') || lower.includes('ítalo')) {
+            advisor = 'Ítalo';
+            reply = `*Ítalo* · Meu Assessor OS\n\nPesquisa concluída! Analisei as fontes mais confiáveis e montei o comparativo de menor preço.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+        } else if (lower.includes('tarefa') || lower.includes('lista') || lower.includes('ideia') || lower.includes('drive') || lower.includes('pasta')) {
+            advisor = 'Luna';
+            reply = `*Luna* · Meu Assessor OS\n\nRegistrado na sua central de tarefas e documentos com sincronização na nuvem.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+        } else if (lower.includes('nota') || lower.includes('imposto') || lower.includes('das') || lower.includes('cnpj') || lower.includes('fiscal')) {
+            advisor = 'Rita';
+            reply = `*Rita* · Meu Assessor OS\n\nDocumento fiscal processado via OCR com alíquotas verificadas.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+        }
     }
 
     res.json({
@@ -207,10 +258,19 @@ app.post('/api/chat', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`=======================================================`);
     console.log(`🚀 MEU ASSESSOR OS RODANDO COM SUCESSO!`);
     console.log(`👉 Acesse a plataforma: http://localhost:${PORT}`);
-    console.log(`👉 Webhook WhatsApp:   http://localhost:${PORT}/api/whatsapp/webhook`);
+    console.log(`👉 Status WhatsApp:    http://localhost:${PORT}/api/whatsapp/status`);
+    console.log(`👉 Gemini Pro Ativo:    ${geminiService.isConfigured() ? 'SIM (Google Gemini Pro/Flash)' : 'NÃO'}`);
     console.log(`=======================================================`);
+
+    // Auto connect WhatsApp se houver sessão anterior salva
+    const authDir = path.join(__dirname, 'auth_info_baileys');
+    if (fs.existsSync(authDir) && fs.readdirSync(authDir).length > 0) {
+        console.log('[WhatsApp] Sessão existente detectada. Conectando automaticamente...');
+        whatsappService.init().catch(err => console.error('[WhatsApp] Erro no auto-connect:', err.message));
+    }
 });
+
