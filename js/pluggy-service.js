@@ -147,12 +147,13 @@ class PluggyService {
             for (const acc of accounts.results) {
                 console.log(`[Pluggy] Conta encontrada: ${acc.name} (${acc.type}) - Saldo: R$ ${acc.balance}`);
 
-                // 2. Busca transações recentes da conta
-                const txs = await this._makeGetRequest(`/transactions?accountId=${acc.id}&pageSize=50`, apiKey);
+                // 2. Busca transações recentes da conta usando v2
+                const txs = await this._makeGetRequest(`/v2/transactions?accountId=${acc.id}`, apiKey);
                 if (txs && Array.isArray(txs.results)) {
                     for (const t of txs.results) {
                         const amount = Math.abs(t.amount);
-                        const isReceita = t.amount > 0;
+                        const isDespesa = t.type === 'DEBIT' || t.amount < 0;
+                        const isReceita = !isDespesa;
                         const dateStr = t.date ? t.date.split('T')[0] : new Date().toISOString().split('T')[0];
 
                         // Verifica se já não importou esta transação
@@ -163,7 +164,7 @@ class PluggyService {
                                 data: {
                                     pluggyId: t.id,
                                     type: isReceita ? 'receita' : 'despesa',
-                                    description: t.description || 'Lançamento bancário',
+                                    description: t.description || t.descriptionRaw || 'Lançamento bancário',
                                     amount: amount,
                                     category: t.category || 'Bancário',
                                     status: 'conciliado',
