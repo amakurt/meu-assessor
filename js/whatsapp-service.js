@@ -119,21 +119,24 @@ class WhatsAppService {
 
             // Processamento de mensagens recebidas
             this.sock.ev.on('messages.upsert', async (m) => {
-                if (m.type !== 'notify') return;
+                if (!m.messages || m.messages.length === 0) return;
 
                 for (const msg of m.messages) {
                     const msgId = msg.key?.id;
                     if (msgId && this.sentMessageIds.has(msgId)) {
-                        continue; // Ignora mensagens enviadas pelo próprio bot
+                        continue; // Ignora mensagens enviadas pelo próprio robô
                     }
 
                     const remoteJid = msg.key.remoteJid;
-                    if (!remoteJid || remoteJid.endsWith('@g.us')) continue; // Foco em conversas individuais
+                    if (!remoteJid || remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
 
-                    const myNumber = this.sock.user?.id ? this.sock.user.id.split(':')[0] : '';
-                    const isSelfChat = myNumber && remoteJid.includes(myNumber);
+                    const myId = this.sock.user?.id || '';
+                    const myNumber = myId.split(':')[0];
+                    const myLid = (this.sock.user?.lid || '').split(':')[0];
 
-                    // Se não for auto-conversa e for fromMe, ignora
+                    const isSelfChat = (myNumber && remoteJid.includes(myNumber)) || (myLid && remoteJid.includes(myLid));
+
+                    // Se não for chat consigo mesmo e tiver sido enviado pelo próprio usuário para outra pessoa, ignora
                     if (msg.key.fromMe && !isSelfChat) {
                         continue;
                     }
@@ -145,7 +148,7 @@ class WhatsAppService {
 
                     if (!textMessage.trim()) continue;
 
-                    // Proteção contra eco: se a mensagem já contém o identificador do assessor, ignora
+                    // Proteção contra eco infinito
                     if (textMessage.includes('Meu Assessor OS')) {
                         continue;
                     }
@@ -168,19 +171,21 @@ class WhatsAppService {
 
                     // Envia a resposta de volta no WhatsApp
                     try {
-                        const sent = await this.sock.sendMessage(remoteJid, { text: replyText });
+                        const targetJid = isSelfChat && myNumber ? `${myNumber}@s.whatsapp.net` : remoteJid;
+                        const sent = await this.sock.sendMessage(targetJid, { text: replyText });
                         if (sent?.key?.id) {
                             this.sentMessageIds.add(sent.key.id);
                             if (this.sentMessageIds.size > 2000) {
                                 this.sentMessageIds.clear();
                             }
                         }
-                        console.log(`[WhatsApp] Resposta executiva enviada com sucesso para ${remoteJid}!`);
+                        console.log(`[WhatsApp] Resposta executiva enviada com sucesso para ${targetJid}!`);
                     } catch (sendErr) {
                         console.error('[WhatsApp] Erro ao enviar resposta:', sendErr);
                     }
                 }
             });
+
 
 
             return this.getStatus();
