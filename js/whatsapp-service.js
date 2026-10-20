@@ -259,9 +259,6 @@ class WhatsAppService {
     }
 
 
-        return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-    }
-
     async disconnect() {
         try {
             if (this.sock) {
