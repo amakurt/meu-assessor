@@ -68,7 +68,8 @@ class WhatsAppService {
                 auth: state,
                 logger: pino({ level: 'silent' }),
                 printQRInTerminal: true,
-                browser: ['Meu Assessor OS', 'Chrome', '2.0.0'],
+                browser: ['KIT OS', 'Chrome', '2.0.0'],
+
                 defaultQueryTimeoutMs: 60000,
                 connectTimeoutMs: 60000
             });
@@ -241,22 +242,22 @@ class WhatsAppService {
 
     fallbackRouter(text) {
         const lower = text.toLowerCase();
-        let advisor = '*Theo* · Meu Assessor OS';
-        let body = 'Compreendido! O Theo recebeu sua demanda e alinhou as prioridades com o time executivo.';
+        let advisor = '*KIT* · Seu Assessor Pessoal';
+        let body = 'Compreendido! O KIT registrou sua demanda e está organizando tudo para você.';
 
         if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('saldo') || lower.includes('pix')) {
-            advisor = '*Martin* · Meu Assessor OS';
             body = `Lançamento registrado com sucesso!\n\n🧾 *Recibo Executivo*\n• Tipo: Finanças & Conciliação\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
         } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('meet')) {
-            advisor = '*Sofi* · Meu Assessor OS';
             body = `Compromisso agendado na sua agenda com sucesso!\n• Tempo de deslocamento reservado\n• Link do Google Meet gerado`;
         } else if (lower.includes('tarefa') || lower.includes('lembrete') || lower.includes('lista')) {
-            advisor = '*Luna* · Meu Assessor OS';
             body = `Adicionado à sua Pirâmide de Prioridades!\n• Nível: Alta Prioridade\n• Sincronizado no seu Cloud Drive`;
         } else if (lower.includes('pesquisa') || lower.includes('preço') || lower.includes('cotação')) {
-            advisor = '*Ítalo* · Meu Assessor OS';
             body = `Pesquisa de mercado iniciada! Já estou cruzando os menores preços e fontes verificadas para você.`;
         }
+
+        return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+    }
+
 
         return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
     }

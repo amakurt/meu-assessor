@@ -229,30 +229,12 @@ app.post('/api/chat', async (req, res) => {
     }
 
     if (!reply) {
-        const lower = message.toLowerCase();
-        reply = `Compreendido! O Theo organizou a demanda com seu time executivo.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-
-        if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('saldo') || lower.includes('orçamento') || lower.includes('quem me deve')) {
-            advisor = 'Martin';
-            reply = `*Martin* · Meu Assessor OS\n\nRegistrado com sucesso nas finanças e conciliado no Open Finance!\n• Meta 30 Dias no Azul: Positiva\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-        } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('link') || lower.includes('meet')) {
-            advisor = 'Sofi';
-            reply = `*Sofi* · Meu Assessor OS\n\nCompromisso agendado no seu Google Agenda com tempo de deslocamento e link do Meet reservado.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-        } else if (lower.includes('pesquisa') || lower.includes('cotação') || lower.includes('preço') || lower.includes('compara') || lower.includes('ítalo')) {
-            advisor = 'Ítalo';
-            reply = `*Ítalo* · Meu Assessor OS\n\nPesquisa concluída! Analisei as fontes mais confiáveis e montei o comparativo de menor preço.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-        } else if (lower.includes('tarefa') || lower.includes('lista') || lower.includes('ideia') || lower.includes('drive') || lower.includes('pasta')) {
-            advisor = 'Luna';
-            reply = `*Luna* · Meu Assessor OS\n\nRegistrado na sua central de tarefas e documentos com sincronização na nuvem.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-        } else if (lower.includes('nota') || lower.includes('imposto') || lower.includes('das') || lower.includes('cnpj') || lower.includes('fiscal')) {
-            advisor = 'Rita';
-            reply = `*Rita* · Meu Assessor OS\n\nDocumento fiscal processado via OCR com alíquotas verificadas.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
-        }
+        reply = `*KIT* · Seu Assessor Pessoal\n\nDemanda registrada com sucesso! Estou organizando tudo nos seus relatórios.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
     }
 
     res.json({
         success: true,
-        advisor,
+        advisor: 'KIT',
         reply,
         timestamp: new Date().toISOString()
     });
@@ -260,9 +242,12 @@ app.post('/api/chat', async (req, res) => {
 
 app.listen(PORT, async () => {
     console.log(`=======================================================`);
-    console.log(`🚀 MEU ASSESSOR OS RODANDO COM SUCESSO!`);
+    console.log(`🚀 KIT OS · SEU ASSESSOR EXECUTIVO RODANDO COM SUCESSO!`);
     console.log(`👉 Acesse a plataforma: http://localhost:${PORT}`);
     console.log(`👉 Status WhatsApp:    http://localhost:${PORT}/api/whatsapp/status`);
+    console.log(`👉 Gemini Pro Ativo:    ${geminiService.isConfigured() ? 'SIM (Google Gemini Pro/Flash)' : 'NÃO'}`);
+    console.log(`=======================================================`);
+
     console.log(`👉 Gemini Pro Ativo:    ${geminiService.isConfigured() ? 'SIM (Google Gemini Pro/Flash)' : 'NÃO'}`);
     console.log(`=======================================================`);
 
