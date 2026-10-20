@@ -66,6 +66,19 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
 
 ---
 
+### 🔹 Conversa 05: Arquitetura Custo Zero e Deploy na Oracle Cloud
+- **Data:** 20/10/2026
+- **Usuário:** *"uma dúvida, consigo utilizar com tudo gratis por enquanto até conseguir clientes que pague os custos futuros? [...] tenho uma conta free tier na oracle [...] pode desativalos"*
+- **Assistente:**
+  - Mapeou e apresentou a arquitetura Custo Zero (R$ 0,00) combinando Oracle Cloud, Google Gemini AI Studio (Free Tier), Supabase Free e WhatsApp.
+  - Testou a tentativa de provisionamento da Ampere ARM em São Paulo (rejeitada por limite de capacidade do datacenter).
+  - Conectou via SSH na máquina existente (`137.131.160.171`), desativou os processos legados do PM2 (`gincana-1` e `gincana-2`).
+  - Configurou Nginx como Proxy Reverso com suporte a WebSockets para a porta 3000.
+  - Clonou o repositório `amakurt/meu-assessor`, instalou dependências e subiu o sistema em produção gerenciado pelo PM2 com inicialização automática (`pm2-ubuntu`).
+  - Sistema validado respondendo com HTTP 200 no IP público `http://137.131.160.171/`.
+
+---
+
 ## 📌 Convenções de Registro para Sessões Futuras
 
 Sempre que uma nova conversa for realizada, adicione um novo bloco neste documento seguindo o padrão:
@@ -75,3 +88,4 @@ Sempre que uma nova conversa for realizada, adicione um novo bloco neste documen
 - **Usuário:** *"[Texto do pedido do usuário]"*
 - **Assistente:** [Resumo das ações realizadas, arquivos editados e resultados]
 ```
+

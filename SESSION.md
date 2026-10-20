@@ -48,18 +48,37 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 
 ---
 
+## 📅 Sessão 02 · 20/10/2026
+
+### 🎯 Objetivos da Sessão
+1. Definir arquitetura de Custo Zero (R$ 0,00) para hospedar e operar o Meu Assessor sem custos até conseguir clientes pagantes.
+2. Avaliar recursos disponíveis na Oracle Cloud Free Tier na região São Paulo (`sa-saopaulo-1`).
+3. Tentar provisionamento de máquina Ampere ARM e verificar disponibilidade de capacidade.
+4. Reutilizar a máquina existente (`137.131.160.171`), desativar processos legados (`gincana-1` e `gincana-2`).
+5. Reconfigurar Nginx com Proxy Reverso completo para a porta 3000 e WebSockets.
+6. Clonar o repositório `amakurt/meu-assessor`, instalar dependências e inicializar via PM2 com auto-boot no systemd.
+
+### 🛠️ Entregas e Infraestrutura Ativa
+- **Servidor de Produção Ativo:** `http://137.131.160.171/`
+- **Nginx:** Proxy reverso com suporte a WebSockets e payloads de até 50MB.
+- **PM2:** Serviço `meu-assessor` online, consumindo apenas ~28 MB de RAM e com persistência de inicialização (`systemctl enable pm2-ubuntu`).
+- **Swap:** 3 GB de swap garantindo estabilidade e memória livre superior a 530 MB.
+
+---
+
 ## 🔄 Como Retomar a Sessão Futura
 
 Ao iniciar uma nova sessão com o assistente de IA, execute os passos abaixo:
 1. Abra o diretório do projeto: `cd /Users/amauri/meu-assessor`
-2. Verifique o servidor local: `npm start` ou `node server.js`
-3. Acesse a aplicação: `http://localhost:3000`
-4. Leia este arquivo (`SESSION.md`) e o histórico (`CONVERSATION_HISTORY.md`) para recuperar o contexto exato do ponto onde parou.
+2. Servidor de produção ativo: `http://137.131.160.171/`
+3. Acesso SSH: `ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171`
+4. Leia este arquivo (`SESSION.md`) e o histórico (`CONVERSATION_HISTORY.md`).
 
 ---
 
 ## 📋 Backlog / Próximos Passos Sugeridos
-- [ ] Integração real com instâncias da Evolution API ou Z-API para envio de mensagens via WhatsApp físico.
-- [ ] Conexão com banco de dados PostgreSQL / Supabase para persistência de dados em nuvem.
-- [ ] Integração com Google Calendar API e Google Meet API para geração de links externos reais.
-- [ ] Implementação de provedor OCR com Tesseract.js ou Google Cloud Vision para leitura de notas fiscais reais.
+- [ ] Conexão de WhatsApp Real: Integração nativa de Baileys / QR Code direto no backend para ler no celular.
+- [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
+- [ ] Chave da Gemini API (Google AI Studio Free Tier) para visão/áudio/raciocínio dos assessores em tempo real.
+- [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
