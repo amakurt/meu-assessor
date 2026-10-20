@@ -144,7 +144,9 @@ class DbService {
                     category: txData.category || 'Geral',
                     status: 'conciliado',
                     profile: txData.profile || 'personal',
-                    date: txData.date || dateStr
+                    date: txData.date || dateStr,
+                    paymentMethod: txData.paymentMethod || 'Open Finance',
+                    pluggyId: txData.pluggyId || null
                 };
                 this.db.transactions.unshift(applied);
 
