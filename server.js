@@ -236,6 +236,28 @@ app.post('/api/open-finance/sync', async (req, res) => {
     }
 });
 
+// WEBHOOK OFICIAL DA PLUGGY (Eventos em tempo real: item/created, transactions/created, etc.)
+const handlePluggyWebhook = async (req, res) => {
+    console.log('[Pluggy Webhook] Evento recebido:', req.body);
+    const event = req.body?.event;
+    const itemId = req.body?.itemId || req.body?.data?.itemId || req.body?.data?.item?.id;
+
+    if (itemId) {
+        try {
+            console.log(`[Pluggy Webhook] Disparando auto-sincronização do item: ${itemId} (evento: ${event})`);
+            await pluggyService.syncItem(itemId);
+        } catch (e) {
+            console.error('[Pluggy Webhook] Erro ao sincronizar item do webhook:', e.message);
+        }
+    }
+
+    res.status(200).json({ received: true });
+};
+
+app.post('/api/open-finance/webhook', handlePluggyWebhook);
+app.post('/api/pluggy/webhook', handlePluggyWebhook);
+
+
 // 5. REST API: Agenda & Calendar
 app.get('/api/agenda', (req, res) => {
     res.json({ success: true, data: dbService.getAll().events });
