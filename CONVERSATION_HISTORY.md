@@ -79,6 +79,20 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
 
 ---
 
+### 🔹 Conversa 06: Conexão Nativa WhatsApp (Baileys) e Google Gemini Pro
+- **Data:** 20/10/2026
+- **Usuário:** *"1 e 2 no 2 eu tenho plano pro do google gimini [...] [CHAVE_GEMINI_PRO_CONFIGURADA]"*
+- **Assistente:**
+  - Validou a chave oficial do Google Gemini com modelo de ponta `gemini-3.5-flash-lite`, obtendo resposta imediata do assessor executivo Theo.
+  - Implementou o serviço `js/gemini-service.js` com prompt executivo para os 6 assessores virtuais (Theo, Martin, Sofi, Luna, Ítalo e Rita).
+  - Implementou `js/whatsapp-service.js` utilizando `@whiskeysockets/baileys` nativo (sem Docker, consumindo apenas ~30 MB de RAM) para pareamento via QR Code.
+  - Desenvolveu o módulo interativo `js/modules/conexao.js` com polling em tempo real, visualizador dinâmico de QR Code base64 e teste de envio de mensagens.
+  - Protegeu credenciais no `.env` e `.gitignore` para prevenir alertas do GitHub Push Protection.
+  - Realizou deploy completo no servidor Oracle Cloud (`137.131.160.171`) via PM2.
+  - Testou e validou o endpoint de QR Code ao vivo respondendo em `http://137.131.160.171/api/whatsapp/status`.
+
+---
+
 ## 📌 Convenções de Registro para Sessões Futuras
 
 Sempre que uma nova conversa for realizada, adicione um novo bloco neste documento seguindo o padrão:
@@ -88,4 +102,5 @@ Sempre que uma nova conversa for realizada, adicione um novo bloco neste documen
 - **Usuário:** *"[Texto do pedido do usuário]"*
 - **Assistente:** [Resumo das ações realizadas, arquivos editados e resultados]
 ```
+
 

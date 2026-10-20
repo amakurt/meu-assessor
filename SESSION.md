@@ -61,8 +61,10 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 ### 🛠️ Entregas e Infraestrutura Ativa
 - **Servidor de Produção Ativo:** `http://137.131.160.171/`
 - **Nginx:** Proxy reverso com suporte a WebSockets e payloads de até 50MB.
-- **PM2:** Serviço `meu-assessor` online, consumindo apenas ~28 MB de RAM e com persistência de inicialização (`systemctl enable pm2-ubuntu`).
-- **Swap:** 3 GB de swap garantindo estabilidade e memória livre superior a 530 MB.
+- **PM2:** Serviço `meu-assessor` online, consumindo apenas ~60 MB de RAM e com persistência de inicialização (`systemctl enable pm2-ubuntu`).
+- **Swap:** 3 GB de swap garantindo estabilidade e memória livre superior a 500 MB.
+- **WhatsApp Real (Baileys):** Conexão nativa via QR Code integrada em `js/whatsapp-service.js` e interface reativa em `js/modules/conexao.js`.
+- **Google Gemini Pro AI:** Motor de IA ativo com modelo `gemini-3.5-flash-lite` processando requisições em milissegundos para os 6 assessores.
 
 ---
 
@@ -71,14 +73,17 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 Ao iniciar uma nova sessão com o assistente de IA, execute os passos abaixo:
 1. Abra o diretório do projeto: `cd /Users/amauri/meu-assessor`
 2. Servidor de produção ativo: `http://137.131.160.171/`
-3. Acesso SSH: `ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171`
-4. Leia este arquivo (`SESSION.md`) e o histórico (`CONVERSATION_HISTORY.md`).
+3. Aba de conexão WhatsApp: `http://137.131.160.171/#conexao`
+4. Acesso SSH: `ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171`
+5. Leia este arquivo (`SESSION.md`) e o histórico (`CONVERSATION_HISTORY.md`).
 
 ---
 
 ## 📋 Backlog / Próximos Passos Sugeridos
-- [ ] Conexão de WhatsApp Real: Integração nativa de Baileys / QR Code direto no backend para ler no celular.
+- [x] Conexão de WhatsApp Real: Integração nativa de Baileys / QR Code direto no backend.
+- [x] Chave da Gemini API (Google Gemini Pro) integrada e ativa em produção.
+- [ ] Escanear o QR Code no celular para ativar a sessão física do WhatsApp.
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
-- [ ] Chave da Gemini API (Google AI Studio Free Tier) para visão/áudio/raciocínio dos assessores em tempo real.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
 
