@@ -120,41 +120,102 @@ class FinancesModule {
                     throw new Error(data.error || 'Credenciais da Pluggy não configuradas.');
                 }
                 
-                if (typeof window.PluggyConnect === 'undefined') {
-                    throw new Error('SDK da Pluggy não carregado no navegador.');
+                const token = data.accessToken;
+
+                // Tenta carregar o SDK oficial se ainda não estiver presente
+                let PluggyConstructor = window.PluggyConnect || (window.window && window.window.PluggyConnect);
+                if (!PluggyConstructor) {
+                    await new Promise(resolve => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.pluggy.ai/pluggy-connect/v2.5.0/pluggy-connect.js';
+                        s.onload = () => resolve();
+                        s.onerror = () => resolve();
+                        document.head.appendChild(s);
+                    });
+                    PluggyConstructor = window.PluggyConnect || (window.window && window.window.PluggyConnect);
                 }
 
-                const pluggyConnect = new window.PluggyConnect({
-                    connectToken: data.accessToken,
-                    includeSandbox: true,
-                    onSuccess: async (itemData) => {
-                        window.showToast?.('Banco conectado com sucesso! Sincronizando saldos e extrato...', 'success');
-                        try {
-                            const syncRes = await fetch('/api/open-finance/sync', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ itemId: itemData.item.id })
-                            });
-                            const syncData = await syncRes.json();
-                            window.showToast?.(`Open Finance: ${syncData.importedCount || 0} novos lançamentos reais sincronizados!`, 'success');
-                            if (window.store) {
-                                window.store.syncWithBackend();
-                            }
-                        } catch (err) {
-                            console.error('Erro ao sincronizar:', err);
-                            window.showToast?.('Erro ao sincronizar dados bancários.', 'error');
+                const handleBankConnected = async (itemId) => {
+                    window.showToast?.('Banco conectado com sucesso! Sincronizando saldos e extrato...', 'success');
+                    try {
+                        const syncRes = await fetch('/api/open-finance/sync', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ itemId })
+                        });
+                        const syncData = await syncRes.json();
+                        window.showToast?.(`Open Finance: ${syncData.importedCount || 0} novos lançamentos reais sincronizados!`, 'success');
+                        if (window.store) {
+                            window.store.syncWithBackend();
                         }
-                    },
-                    onError: (error) => {
-                        console.error('Pluggy Connect Error:', error);
-                        window.showToast?.('Conexão bancária interrompida ou cancelada.', 'warning');
-                    },
-                    onClose: () => {
-                        console.log('Pluggy Connect widget fechado');
+                    } catch (err) {
+                        console.error('Erro ao sincronizar:', err);
+                        window.showToast?.('Erro ao sincronizar dados bancários.', 'error');
                     }
-                });
+                };
 
-                pluggyConnect.init();
+                if (PluggyConstructor) {
+                    const pluggyConnect = new PluggyConstructor({
+                        connectToken: token,
+                        includeSandbox: true,
+                        onSuccess: (itemData) => {
+                            if (itemData && itemData.item && itemData.item.id) {
+                                handleBankConnected(itemData.item.id);
+                            }
+                        },
+                        onError: (error) => {
+                            console.error('Pluggy Connect Error:', error);
+                            window.showToast?.('Conexão bancária interrompida ou cancelada.', 'warning');
+                        },
+                        onClose: () => {
+                            console.log('Pluggy Connect fechado');
+                        }
+                    });
+
+                    pluggyConnect.init();
+                } else {
+                    // Fallback Executivo: Renderiza Iframe Oficial Seguro da Pluggy
+                    console.log('[OpenFinance] Usando Webview Iframe Direto...');
+                    let overlay = document.getElementById('pluggyDirectModal');
+                    if (!overlay) {
+                        overlay = document.createElement('div');
+                        overlay.id = 'pluggyDirectModal';
+                        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+                        document.body.appendChild(overlay);
+                    }
+
+                    overlay.innerHTML = `
+                        <div style="width:100%;max-width:480px;height:90vh;max-height:720px;background:#1e1e2d;border-radius:20px;overflow:hidden;position:relative;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;">
+                            <div style="padding:12px 16px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="background:#6366f1;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">KIT OS</span>
+                                    <span style="font-size:13px;font-weight:600;color:#fff;">Open Finance Conector</span>
+                                </div>
+                                <button id="btnClosePluggyIframe" style="background:transparent;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+                            </div>
+                            <iframe src="https://connect.pluggy.ai/?connect_token=${encodeURIComponent(token)}" style="width:100%;flex:1;border:none;"></iframe>
+                        </div>
+                    `;
+
+                    overlay.style.display = 'flex';
+                    document.getElementById('btnClosePluggyIframe').onclick = () => {
+                        overlay.style.display = 'none';
+                    };
+
+                    const messageListener = (event) => {
+                        if (event.data && typeof event.data === 'object') {
+                            if (event.data.event === 'onSuccess' || event.data.type === 'item/created') {
+                                const itemId = event.data.data?.item?.id || event.data.itemId;
+                                if (itemId) {
+                                    overlay.style.display = 'none';
+                                    window.removeEventListener('message', messageListener);
+                                    handleBankConnected(itemId);
+                                }
+                            }
+                        }
+                    };
+                    window.addEventListener('message', messageListener);
+                }
 
             } catch (err) {
                 console.error('Open Finance Error:', err);
