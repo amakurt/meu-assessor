@@ -136,6 +136,8 @@ class WhatsAppService {
                     const myNumber = myId.split(':')[0];
                     const myLid = (this.sock.user?.lid || '').split(':')[0];
 
+                    const isSelfChat = (myNumber && remoteJid.includes(myNumber)) || (myLid && remoteJid.includes(myLid));
+
                     // REGRA CRÍTICA DE PRIVACIDADE:
                     // O robô é o seu assessor pessoal no seu número principal.
                     // Ele responde EXCLUSIVAMENTE quando VOCÊ manda mensagem para você mesmo (auto-conversa / "Você").
@@ -143,6 +145,7 @@ class WhatsAppService {
                     if (!isSelfChat) {
                         continue;
                     }
+
 
 
                     let replyText = '';
