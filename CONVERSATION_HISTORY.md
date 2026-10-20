@@ -93,6 +93,16 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
 
 ---
 
+### 🔹 Conversa 07: Rebranding para KIT, Tela de Login e Sincronização em Tempo Real (SSE)
+- **Data:** 20/10/2026
+- **Usuário:** *"o nome deve ser KIT" / "vamos lá 3 coisas 1. demorou pra me responder mais do que da outra vez, 2. não tá atualizando nada no painel do sistema e 3 preciso de uma tela de login pra proteger o acesso ao sistema"*
+- **Assistente:**
+  - **1. Latência e Feedback Imediato:** Identificou que áudio exige download de mídia e transcrição via Gemini multimodal. Adicionou disparo imediato de status de presença `"digitando..."` (`sock.sendPresenceUpdate('composing')`) no WhatsApp em <200ms para feedback visual instantâneo, e otimizou parâmetros do Gemini (`temperature: 0.3`, `maxOutputTokens: 600`) para respostas mais velozes.
+  - **2. Sincronização em Tempo Real (SSE):** Criou `js/db-service.js` persistente (`data/db.json`) e fluxo de Server-Sent Events (`/api/live-sync`). O Gemini agora embute metadados de ação `<!--KIT_ACTION:{...}-->` que são extraídos automaticamente pelo backend para atualizar despesas, tarefas e eventos e transmiti-los aos navegadores abertos sem necessidade de refresh manual.
+  - **3. Tela de Login & Proteção:** Implementou gateway de segurança executiva (`#kitLoginOverlay`) em glassmorphism com autenticação por token (`POST /api/auth/login`, `GET /api/auth/check`, `POST /api/auth/logout`) e botão de bloqueio de sessão. Credenciais configuráveis via `.env` (Padrão: `amauri` / `kit2026`).
+
+---
+
 ## 📌 Convenções de Registro para Sessões Futuras
 
 Sempre que uma nova conversa for realizada, adicione um novo bloco neste documento seguindo o padrão:
