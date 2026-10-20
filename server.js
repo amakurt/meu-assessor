@@ -208,7 +208,8 @@ app.post('/api/open-finance/configure', (req, res) => {
 
 const handleConnectToken = async (req, res) => {
     try {
-        const accessToken = await pluggyService.createConnectToken();
+        const oauthRedirectUri = req.body?.oauthRedirectUri || req.query?.oauthRedirectUri || (req.headers['x-forwarded-proto'] === 'https' ? `https://${req.get('host')}/` : null);
+        const accessToken = await pluggyService.createConnectToken({ oauthRedirectUri });
         res.json({ success: true, accessToken });
     } catch (err) {
         console.error('[OpenFinance] Erro ao gerar Connect Token:', err.message);

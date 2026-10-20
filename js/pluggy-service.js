@@ -84,10 +84,19 @@ class PluggyService {
         const apiKey = await this.authenticate();
 
         return new Promise((resolve, reject) => {
+            const tokenOptions = {
+                clientUserId: options.clientUserId || 'amauri-kit-os'
+            };
+
+            if (options.oauthRedirectUri && options.oauthRedirectUri.startsWith('https://')) {
+                tokenOptions.oauthRedirectUri = options.oauthRedirectUri;
+            } else {
+                // URL segura HTTPS exigida pela especificação do Open Finance para fluxos OAuth
+                tokenOptions.oauthRedirectUri = 'https://pluggy.ai/demo';
+            }
+
             const data = JSON.stringify({
-                options: {
-                    clientUserId: options.clientUserId || 'amauri-kit-os'
-                }
+                options: tokenOptions
             });
 
             const req = https.request({
