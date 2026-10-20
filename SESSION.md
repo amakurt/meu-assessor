@@ -80,30 +80,60 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - Rebranding completo para **KIT** em `index.html`, `server.js`, `js/gemini-service.js` e `js/whatsapp-service.js`.
 - Prompt executivo unificado da persona **KIT**: sintetiza tarefas, compromissos na agenda, conciliação financeira e pesquisas mantendo botões de ação `[✏️ Editar] [↩️ Desfazer]`.
 - Filtro `isSelfChat` ativado: Baileys lê os eventos de auto-chat e descarta silenciosamente contatos de fora.
-- Código sincronizado no GitHub (`amakurt/meu-assessor`) e atualizado na VM Oracle (`137.131.160.171`).
+## 📅 Sessão 04 · 20/10/2026 (Open Finance Real, C6 Bank, Correção Inteligente e Filtro por Banco)
+
+### 🎯 Objetivos da Sessão
+1. Conectar bancos reais via Open Finance (Pluggy.ai) eliminando 100% dos dados fictícios.
+2. Integrar e sincronizar 4 instituições financeiras reais do usuário (Nubank, Mercado Pago, Itaú e C6 Bank).
+3. Resolver a duplicação em correções no WhatsApp: quando o áudio/texto corrige um valor ("era 50 e não 500" ou "apaga a anterior"), o KIT agora ajusta ou exclui o lançamento em vez de criar um duplicado.
+4. Adicionar filtros interativos por banco no extrato e sincronizar com as pílulas de bancos conectados no topo.
+
+### 🛠️ Entregas e Módulos Atualizados
+- **Open Finance Consolidado (1.638 transações reais):**
+  - **Nubank:** Item `62126b17-54c4-436f-b87b-976b4aedcc4b` (262 transações).
+  - **Mercado Pago:** Item `1ee26cba-53d8-400a-9d0d-52fc5fd11b95` (625 transações).
+  - **Itaú:** Item `ac64f76b-369e-470e-8150-593ef3ce0c54` (500 transações).
+  - **C6 Bank:** Item `a1e4250e-6925-4720-a966-63bb5ca252d4` (251 transações).
+  - Pílulas de bancos atualizadas para `(4/5 Ativos)`.
+- **Limpeza Total de Mocks:** Purga de dados fictícios em `data/db.json` tanto local quanto na Oracle VM.
+- **Memória Conversacional e Correção sem Duplicata:**
+  - `js/db-service.js`: implementado `update_transaction`, `delete_transaction`/`undo`, rastreamento de `lastAction` e resumos de chat (`getLastActionSummary()`, `getRecentChatSummary()`).
+  - `js/gemini-service.js`: injeção da memória de curto prazo e diretrizes estritas para emitir `update_transaction` ou `delete_transaction` ao detectar correções.
+  - `js/whatsapp-service.js`: repasse do contexto em áudio e texto e suporte aprimorado no `fallbackRouter`.
+- **Filtro Interativo por Banco no Painel:**
+  - `index.html` & `styles/main.css`: Barramento de chips com logos e badges dinâmicos de contagem por banco.
+  - `js/modules/finances.js`: Lógica de classificação (`getBankKey`), filtragem combinada e sincronização bidirecional com as pílulas superiores.
 
 ---
 
-## 🔄 Como Retomar a Sessão Futura
+## 🔄 Como Retomar a Sessão Futura (ou acessar de outro PC)
 
-Ao iniciar uma nova sessão com o assistente de IA, execute os passos abaixo:
-1. Abra o diretório do projeto: `cd /Users/amauri/meu-assessor`
-2. Servidor de produção ativo: `http://137.131.160.171/`
-3. Aba de conexão WhatsApp: `http://137.131.160.171/#conexao`
-4. Acesso SSH: `ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171`
-5. Leia este arquivo (`SESSION.md`) e o histórico (`CONVERSATION_HISTORY.md`).
+### 1. Se for apenas UTILIZAR o painel de outro computador:
+- **URL de Produção:** `http://137.131.160.171/`
+- **Usuário:** `amauri`
+- **Senha:** `kit2026`
+- O servidor roda 24/7 na Oracle Cloud com WhatsApp conectado e sincronização em tempo real. Não é necessário levar arquivos para apenas usar a interface.
+
+### 2. Se for DESENVOLVER / PROGRAMAR do outro PC de casa:
+- **Arquivos necessários para levar:**
+  1. `.env` (contém `GEMINI_API_KEY`, `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, credenciais).
+  2. Chave SSH `~/.ssh/oracle-gincana.key` (caso queira acessar a máquina Oracle via terminal).
+- **Passos para rodar no novo PC:**
+  1. `git clone https://github.com/amakurt/meu-assessor.git`
+  2. Copie o arquivo `.env` para a raiz do repositório clonado.
+  3. Execute `npm install`
+  4. Rode localmente com `npm start` ou conecte na VM via SSH:
+     `ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171`
 
 ---
 
 ## 📋 Backlog / Próximos Passos Sugeridos
-- [x] Conexão de WhatsApp Real: Integração nativa de Baileys / QR Code direto no backend.
-- [x] Chave da Gemini API (Google Gemini Pro) integrada e ativa em produção.
-- [x] Rebranding para KIT e Roteamento Invisível (interação com persona única).
-- [x] Filtro de privacidade para auto-conversa (ignora contatos externos).
-- [x] Suporte multimodal nativo a áudios de voz e fotos de recibos.
-- [x] Teste em tempo real de mensagem de voz e texto no auto-chat do WhatsApp (Posto de gasolina R$ 55 processado com sucesso).
-- [x] Fix de sincronização em tempo real: headers anti-cache, Nginx unbuffered SSE e polling de contingência de 2.5s.
+- [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
+- [x] Filtros por banco interativos no extrato financeiro.
+- [x] Correção inteligente e cancelamento de despesas via áudio/texto no WhatsApp.
+- [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
 
 

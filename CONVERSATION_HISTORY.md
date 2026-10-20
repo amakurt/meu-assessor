@@ -115,6 +115,49 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
 
 ---
 
+### 🔹 Conversa 09: Integração de Open Finance Real (Pluggy) e Purga de Mocks
+- **Data:** 20/10/2026
+- **Usuário:** Conectou Nubank, Mercado Pago e Itaú via Pluggy Connect; solicitou selecionar os 5 principais bancos e remover todos os dados fictícios e testes anteriores do WhatsApp.
+- **Assistente:**
+  - Purgou todos os mocks e transações de teste antigas de `data/db.json`.
+  - Conectou Nubank (`62126b17-54c4-436f-b87b-976b4aedcc4b`), Mercado Pago (`1ee26cba-53d8-400a-9d0d-52fc5fd11b95`) e Itaú (`ac64f76b-369e-470e-8150-593ef3ce0c54`).
+  - Sincronizou 1.387 transações bancárias autênticas ao vivo.
+  - Atualizou as pílulas de bancos conectados para `(3/5 Ativos)`.
+
+---
+
+### 🔹 Conversa 10: Memória Conversacional e Correção sem Duplicação
+- **Data:** 20/10/2026
+- **Usuário:** *"as vezes pelo whatsaap o audio é entendido errado os valores e ai pesso pra corrigir ou falo que ele entendeu errado ele adiciona outro corrigindo e não apaga ou simplismente corrige o que ele errou"*
+- **Assistente:**
+  - Diagnosticou que o Gemini não recebia o histórico imediato nem a última ação, e o sistema só tinha comando de inserção (`unshift`).
+  - Implementou no `db-service.js` as ações `update_transaction` (ajusta valor, descrição, categoria e orçamento da transação anterior) e `delete_transaction` / `undo` (remove o registro anterior).
+  - Adicionou injeção da memória de curto prazo (`lastAction` e últimas mensagens) no prompt do Gemini para áudio e texto.
+  - Sincronizou atualizações e exclusões em tempo real via SSE com toasts visuais no painel.
+
+---
+
+### 🔹 Conversa 11: Integração e Sincronização do C6 Bank
+- **Data:** 20/10/2026
+- **Usuário:** *"acabei de adicionar o C6: a1e4250e-6925-4720-a966-63bb5ca252d4"*
+- **Assistente:**
+  - Autenticou na API Pluggy e identificou duas contas do C6: Conta Corrente (140 txs) e Cartão de Crédito (111 txs).
+  - Sincronizou 251 novas transações reais no banco de dados, elevando o total consolidado para 1.638 transações.
+  - Adicionou a pílula do C6 Bank (`images/bancos/c6.svg`) em `index.html` e atualizou o status para `(4/5 Ativos)`.
+
+---
+
+### 🔹 Conversa 12: Filtros Interativos por Banco no Painel
+- **Data:** 20/10/2026
+- **Usuário:** *"precisa adicionar filtros por banco"*
+- **Assistente:**
+  - Criou o barramento de chips com logos e contadores dinâmicos por instituição: Todos os Bancos (1.638), Nubank (262), Mercado Pago (625), Itaú (500), C6 Bank (251) e WhatsApp / Manual (0).
+  - Tornou as pílulas de bancos do topo interativas e sincronizadas bidirecionalmente com a tabela.
+  - Implementou em `js/modules/finances.js` a detecção e filtragem combinada de banco e tipo (Receita, Despesa, Pendente).
+  - Deploy efetuado na Oracle VM com sucesso.
+
+---
+
 ## 📌 Convenções de Registro para Sessões Futuras
 
 Sempre que uma nova conversa for realizada, adicione um novo bloco neste documento seguindo o padrão:
@@ -124,5 +167,6 @@ Sempre que uma nova conversa for realizada, adicione um novo bloco neste documen
 - **Usuário:** *"[Texto do pedido do usuário]"*
 - **Assistente:** [Resumo das ações realizadas, arquivos editados e resultados]
 ```
+
 
 
