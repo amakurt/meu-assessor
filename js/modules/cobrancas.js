@@ -58,6 +58,17 @@ class CobrancasModule {
         const elTotalPag = document.getElementById('debtTotalPagar');
         if (elTotalPag) elTotalPag.textContent = totalPagar.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+        if (!debts || debts.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
+                    <span style="font-size: 28px; display: block; margin-bottom: 8px;">🤝</span>
+                    <p style="font-size: 13px; margin: 0; font-weight: 500;">Nenhuma cobrança ou dívida pendente.</p>
+                    <span style="font-size: 11px; opacity: 0.7;">Avise o <strong>Martin</strong> no WhatsApp se alguém te dever ou se tiver algo a pagar.</span>
+                </div>
+            `;
+            return;
+        }
+
         container.innerHTML = debts.map(d => `
             <div class="debt-card ${d.status === 'pago' ? 'is-settled' : ''}">
                 <div class="debt-card-left">

@@ -191,6 +191,17 @@ class AgendaModule {
 
         this.elements.eventsTimelineList.innerHTML = '';
 
+        if (events.length === 0) {
+            this.elements.eventsTimelineList.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
+                    <span style="font-size: 28px; display: block; margin-bottom: 8px;">📅</span>
+                    <p style="font-size: 13px; margin: 0; font-weight: 500;">Nenhum compromisso agendado.</p>
+                    <span style="font-size: 11px; opacity: 0.7;">Envie um áudio ou texto para a <strong>Sofi</strong> no WhatsApp ou clique em "+ Novo Compromisso".</span>
+                </div>
+            `;
+            return;
+        }
+
         events.forEach(ev => {
             const item = document.createElement('div');
             item.className = 'event-timeline-item';

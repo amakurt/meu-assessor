@@ -174,6 +174,11 @@ class TasksModule {
             }
         });
 
+        if (counts.todo === 0 && this.elements.colBoxTodo) this.elements.colBoxTodo.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 24px 8px; font-size: 11px;">Sem tarefas a fazer</div>';
+        if (counts.inprogress === 0 && this.elements.colBoxInProgress) this.elements.colBoxInProgress.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 24px 8px; font-size: 11px;">Nenhuma em andamento</div>';
+        if (counts.waiting === 0 && this.elements.colBoxWaiting) this.elements.colBoxWaiting.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 24px 8px; font-size: 11px;">Nenhuma aguardando</div>';
+        if (counts.done === 0 && this.elements.colBoxDone) this.elements.colBoxDone.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 24px 8px; font-size: 11px;">Nenhuma concluída</div>';
+
         if (this.elements.countColTodo) this.elements.countColTodo.textContent = counts.todo;
         if (this.elements.countColInProgress) this.elements.countColInProgress.textContent = counts.inprogress;
         if (this.elements.countColWaiting) this.elements.countColWaiting.textContent = counts.waiting;

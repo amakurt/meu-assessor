@@ -54,7 +54,17 @@ class ListasModule {
         const container = document.getElementById('dynamicListsContainer');
         if (!container) return;
 
-        const lists = this.store.state.lists;
+        if (!lists || lists.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
+                    <span style="font-size: 28px; display: block; margin-bottom: 8px;">📝</span>
+                    <p style="font-size: 13px; margin: 0; font-weight: 500;">Nenhuma lista ou checklist ativo.</p>
+                    <span style="font-size: 11px; opacity: 0.7;">Diga para a <strong>Luna</strong> no WhatsApp: "Crie uma lista de compras" ou "Anote esses itens".</span>
+                </div>
+            `;
+            return;
+        }
+
         container.innerHTML = lists.map(list => `
             <div class="list-card" data-list-id="${list.id}">
                 <div class="list-card-header">
