@@ -103,6 +103,18 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
 
 ---
 
+### 🔹 Conversa 08: Persistência de Abas, Sincronização da Conversa WhatsApp e Toasts Interativos
+- **Data:** 20/10/2026
+- **Usuário:** *"no sistema no navegador preciso atualizar a pagina e clicar. no menu referente"*
+- **Assistente:**
+  - Identificou que a aba ativa sempre resetava para `chat` (Conversa WhatsApp) ao atualizar a página, obrigando o usuário a clicar manualmente em "Finanças".
+  - Implementou **Persistência de Abas** via `localStorage` e hash de URL (`#financas`, `#agenda`, etc.): o sistema agora reabre exatamente na aba onde o usuário estava.
+  - Sincronizou as mensagens reais enviadas pelo usuário e as respostas do KIT diretamente no histórico do chat web em tempo real (`dbService.addChatMessage`).
+  - Adicionou notificações interativas com botão direto de navegação: ao registrar despesa via WhatsApp, surge o alerta com botão `[Abrir ➔]` que leva o usuário direto para a aba de Finanças.
+  - Corrigiu renderização de orçamentos (`b.ceiling || b.limit`) e campos padrão de lançamentos.
+
+---
+
 ## 📌 Convenções de Registro para Sessões Futuras
 
 Sempre que uma nova conversa for realizada, adicione um novo bloco neste documento seguindo o padrão:
