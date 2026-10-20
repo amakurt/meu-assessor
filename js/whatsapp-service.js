@@ -160,14 +160,14 @@ class WhatsAppService {
                             if (geminiService.isConfigured()) {
                                 replyText = await geminiService.generateAdvisorAudioResponse(audioBuffer, mimeType);
                             } else {
-                                replyText = `*Theo* · Meu Assessor OS\n\n🎙️ Recebi seu áudio! Configure a chave do Gemini Pro para transcrição e ação automática.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                                replyText = `*KIT* · Seu Assessor Pessoal\n\n🎙️ Recebi seu áudio! Configure a chave do Gemini Pro para transcrição e ação automática.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
                             }
                         } catch (audioErr) {
                             console.error('[WhatsApp] Erro ao processar áudio:', audioErr.message);
-                            replyText = `*Theo* · Meu Assessor OS\n\n⚠️ Tive dificuldade em processar esse áudio. Poderia reenviar ou mandar por texto?`;
+                            replyText = `*KIT* · Seu Assessor Pessoal\n\n⚠️ Tive dificuldade em processar esse áudio. Poderia reenviar ou mandar por texto?`;
                         }
                     }
-                    // 2. MENSAGEM DE FOTO / COMPROVANTE (OCR da Rita)
+                    // 2. MENSAGEM DE FOTO / COMPROVANTE (OCR de Comprovantes)
                     else if (msg.message?.imageMessage) {
                         console.log(`[WhatsApp] Imagem/Comprovante recebido no auto-chat.`);
                         try {
@@ -177,11 +177,11 @@ class WhatsAppService {
                             if (geminiService.isConfigured()) {
                                 replyText = await geminiService.generateAdvisorImageResponse(imageBuffer, mimeType, caption);
                             } else {
-                                replyText = `*Rita* · Meu Assessor OS\n\n🧾 Imagem recebida! Configure a chave do Gemini Pro para OCR automático de notas fiscais.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                                replyText = `*KIT* · Seu Assessor Pessoal\n\n🧾 Imagem recebida! Configure a chave do Gemini Pro para OCR automático de notas fiscais.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
                             }
                         } catch (imgErr) {
                             console.error('[WhatsApp] Erro ao processar imagem:', imgErr.message);
-                            replyText = `*Rita* · Meu Assessor OS\n\n⚠️ Não consegui fazer a leitura nítida desta imagem. Poderia reenviar uma foto mais clara do comprovante?`;
+                            replyText = `*KIT* · Seu Assessor Pessoal\n\n⚠️ Não consegui fazer a leitura nítida desta imagem. Poderia reenviar uma foto mais clara do comprovante?`;
                         }
                     }
                     // 3. MENSAGEM DE TEXTO
@@ -193,7 +193,7 @@ class WhatsAppService {
                         if (!textMessage.trim()) continue;
 
                         // Proteção contra eco infinito
-                        if (textMessage.includes('Meu Assessor OS')) {
+                        if (textMessage.includes('Meu Assessor OS') || textMessage.includes('*KIT*') || textMessage.includes('KIT OS')) {
                             continue;
                         }
 

@@ -92,7 +92,7 @@ const db = {
 app.get('/api/status', (req, res) => {
     res.json({
         status: 'online',
-        service: 'Meu Assessor OS',
+        service: 'KIT OS',
         version: '2.0.0',
         whatsappConnected: true,
         advisors: [
