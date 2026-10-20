@@ -592,6 +592,13 @@ class Store {
         // Snapshot inicial
         this.syncWithBackend();
 
+        // Polling contínuo de 2.5 segundos (garantia de sincronização em qualquer navegador/rede)
+        if (typeof window !== 'undefined') {
+            setInterval(() => {
+                this.syncWithBackend();
+            }, 2500);
+        }
+
         // Conecta ao fluxo de eventos em tempo real (Server-Sent Events)
         try {
             if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
@@ -607,7 +614,7 @@ class Store {
                         const payload = JSON.parse(e.data);
                         console.log('[Store Live Sync] Atualização recebida via WhatsApp:', payload.type);
                         if (payload.fullDb) {
-                            this.mergeBackendData(payload.fullDb);
+                            this.mergeBackendData(payload.fullDb, true);
                         }
                     } catch (err) {}
                 });
@@ -620,7 +627,7 @@ class Store {
     async syncWithBackend() {
         try {
             if (typeof window === 'undefined' || typeof fetch === 'undefined') return;
-            const res = await fetch('/api/data');
+            const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
             if (res.ok) {
                 const json = await res.json();
                 if (json.success && json.data) {
@@ -632,17 +639,45 @@ class Store {
         }
     }
 
-    mergeBackendData(backendDb) {
+    mergeBackendData(backendDb, isLiveEvent = false) {
         if (!backendDb) return;
+        let hasChanges = false;
+
         if (Array.isArray(backendDb.transactions)) {
+            const oldFirstId = this.state.transactions?.[0]?.id;
+            const newFirstId = backendDb.transactions?.[0]?.id;
+            if (oldFirstId !== newFirstId) {
+                hasChanges = true;
+                const newTx = backendDb.transactions[0];
+                if (newTx && isLiveEvent) {
+                    window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${newTx.description} (R$ ${Number(newTx.amount).toFixed(2)})`);
+                }
+            }
             this.state.transactions = backendDb.transactions;
         }
+
         if (Array.isArray(backendDb.events)) {
+            const oldFirstId = this.state.events?.[0]?.id;
+            const newFirstId = backendDb.events?.[0]?.id;
+            if (oldFirstId !== newFirstId) {
+                hasChanges = true;
+                const newEv = backendDb.events[0];
+                if (newEv && isLiveEvent) {
+                    window.showToast?.(`📅 KIT: Novo compromisso na agenda: ${newEv.title}`);
+                }
+            }
             this.state.events = backendDb.events;
         }
+
         if (Array.isArray(backendDb.tasks)) {
+            const oldFirstId = this.state.tasks?.[0]?.id;
+            const newFirstId = backendDb.tasks?.[0]?.id;
+            if (oldFirstId !== newFirstId) {
+                hasChanges = true;
+            }
             this.state.tasks = backendDb.tasks;
         }
+
         if (Array.isArray(backendDb.budgets)) {
             this.state.budgets = backendDb.budgets;
         }
@@ -655,6 +690,7 @@ class Store {
         if (Array.isArray(backendDb.lists)) {
             this.state.lists = backendDb.lists;
         }
+
         this.saveState();
     }
 

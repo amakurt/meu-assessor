@@ -21,8 +21,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname)));
+// Serve static frontend files with anti-cache headers for instant updates
+app.use(express.static(path.join(__dirname), {
+    etag: false,
+    maxAge: 0,
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
+    }
+}));
 
 // 0. AUTHENTICATION & LOGIN GATEWAY
 const activeSessions = new Set();
@@ -62,8 +72,9 @@ app.post('/api/auth/logout', (req, res) => {
 // REAL-TIME SERVER-SENT EVENTS (SSE) LIVE SYNC
 app.get('/api/live-sync', (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Crucial para Nginx não segurar o SSE
     if (res.flushHeaders) res.flushHeaders();
 
     dbService.addSseClient(res);
