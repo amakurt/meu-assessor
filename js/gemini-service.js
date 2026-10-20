@@ -58,10 +58,14 @@ class GeminiService {
         });
     }
 
-    _getMasterSystemPrompt() {
+    _getMasterSystemPrompt(context = {}) {
+        const lastActionInfo = context.lastActionSummary ? `\n\n📌 MEMÓRIA DA ÚLTIMA AÇÃO EXECUTADA:\n${context.lastActionSummary}` : '';
+        const chatContextInfo = context.chatSummary ? `\n\n💬 HISTÓRICO RECENTE DE MENSAGENS:\n${context.chatSummary}` : '';
+
         return `Você é o KIT, o assessor executivo de inteligência artificial de alto padrão do usuário.
 Você atua como um chefe de gabinete pessoal executivo, proativo, direto e extremamente competente.
 O usuário NÃO precisa decorar comandos, departamentos ou nomes: ele apenas fala ou digita naturalmente o que precisa (por texto ou áudio) e VOCÊ resolve e organiza tudo nos bastidores.
+${lastActionInfo}${chatContextInfo}
 
 Suas áreas de atuação integradas:
 1. Finanças & Open Finance: Registra despesas, receitas, categorias, calcula projeção e avisa status da meta "30 Dias no Azul".
@@ -80,12 +84,29 @@ Diretrizes de resposta no WhatsApp:
 - Finalize o texto visível SEMPRE com a barra de botões interativos de 24h:
   "[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)"
 
-INSTRUÇÃO CRUCIAL DE SINCRONIZAÇÃO DE DADOS:
-Se a mensagem do usuário envolver uma ação executiva concreta para salvar no painel (despesa/receita, compromisso de agenda ou tarefa), adicione OBRIGATORIAMENTE no FINAL ABSOLUTO da resposta uma linha oculta no formato:
+INSTRUÇÃO CRUCIAL PARA CORREÇÕES, AJUSTES OU CANCELAMENTO:
+Se o usuário indicar que você ou o áudio entendeu errado, pedir para corrigir um valor/descrição/categoria, ou pedir para cancelar/apagar/desfazer:
+1. CORREÇÃO DE VALOR / DETALHES (ex: "não foi 500, foi 50", "entendeu errado, era 35 reais", "corrige o valor para 80", "o almoço foi 40"):
+   - NUNCA adicione uma nova despesa duplicada!
+   - Em vez disso, use OBRIGATORIAMENTE a tag de atualização:
+     <!--KIT_ACTION:{"type":"update_transaction","data":{"amount":50.0}}-->
+     (Você pode incluir "amount", "description" e/ou "category" no objeto data com os valores corrigidos).
+   - Responda confirmando o ajuste com precisão:
+     "✏️ *Lançamento corrigido com sucesso!*"
+     "O valor anterior foi ajustado para R$ [novo valor]."
+2. CANCELAMENTO / DESFAZER / APAGAR (ex: "apaga", "cancela", "desfaz", "não registra", "errou tudo apaga"):
+   - Use OBRIGATORIAMENTE a tag de exclusão:
+     <!--KIT_ACTION:{"type":"delete_transaction"}-->
+   - Responda confirmando:
+     "↩️ *Lançamento cancelado com sucesso!*"
+     "O registro anterior foi desfeito e removido do seu painel."
+
+INSTRUÇÃO CRUCIAL DE SINCRONIZAÇÃO DE DADOS (NOVOS REGISTROS):
+Se a mensagem envolver uma NOVA ação executiva concreta para salvar no painel (despesa/receita, compromisso de agenda ou tarefa), adicione OBRIGATORIAMENTE no FINAL ABSOLUTO da resposta uma linha oculta no formato:
 <!--KIT_ACTION:{"type":"transaction|event|task","data":{...}}-->
 
 Modelos de dados JSON:
-1. Despesa ou Receita:
+1. Nova Despesa ou Receita:
 <!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Descrição","amount":85.0,"category":"Alimentação","profile":"personal"}}-->
 2. Reunião ou Agenda:
 <!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com Arquiteto","date":"2026-10-21","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
@@ -103,7 +124,7 @@ Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, 
             throw new Error('Chave Gemini API não configurada');
         }
 
-        const systemPrompt = this._getMasterSystemPrompt();
+        const systemPrompt = this._getMasterSystemPrompt(context);
 
         const requestBody = JSON.stringify({
             contents: [
@@ -115,7 +136,7 @@ Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, 
                 }
             ],
             generationConfig: {
-                temperature: 0.3,
+                temperature: 0.2,
                 maxOutputTokens: 600
             }
         });
@@ -126,7 +147,7 @@ Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, 
     /**
      * Processa mensagem de ÁUDIO (voz) usando a capacidade multimodal nativa do Gemini
      */
-    async generateAdvisorAudioResponse(audioBuffer, mimeType = 'audio/ogg') {
+    async generateAdvisorAudioResponse(audioBuffer, mimeType = 'audio/ogg', context = {}) {
         if (!this.isConfigured()) {
             throw new Error('Chave Gemini API não configurada');
         }
@@ -134,11 +155,12 @@ Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, 
         const cleanMimeType = mimeType.split(';')[0];
         const base64Audio = audioBuffer.toString('base64');
 
-        const systemPrompt = `${this._getMasterSystemPrompt()}
+        const systemPrompt = `${this._getMasterSystemPrompt(context)}
 
 INSTRUÇÃO ESPECIAL PARA MENSAGEM DE VOZ:
 O usuário enviou uma mensagem de áudio.
 Ouça com precisão, transcreva a essência do que ele falou e execute a demanda.
+ATENÇÃO: Se no áudio o usuário estiver corrigindo um valor anterior (ex: "KIT, você entendeu errado, o almoço foi 50 e não 500", ou "corrige aí pra mim", ou "apaga a última"), APLIQUE A CORREÇÃO OU EXCLUSÃO (update_transaction ou delete_transaction) e NUNCA DUPLIQUE O REGISTRO!
 Logo no início da sua resposta, adicione:
 "🎙️ *Áudio compreendido:* \"[Transcrição resumida do que o usuário falou]\""
 Em seguida, apresente a confirmação ou recibo da ação.`;
@@ -158,7 +180,7 @@ Em seguida, apresente a confirmação ou recibo da ação.`;
                 }
             ],
             generationConfig: {
-                temperature: 0.3,
+                temperature: 0.2,
                 maxOutputTokens: 600
             }
         });

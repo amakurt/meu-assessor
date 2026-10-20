@@ -30,6 +30,7 @@ class DbService {
     constructor() {
         this.db = this._loadDb();
         this.sseClients = new Set();
+        this.lastAction = null;
     }
 
     _loadDb() {
@@ -84,7 +85,7 @@ class DbService {
     }
 
     /**
-     * Aplica uma ação extraída da IA (transação, tarefa, reunião) e notifica o painel
+     * Aplica uma ação extraída da IA (transação, tarefa, reunião, atualização ou exclusão) e notifica o painel
      */
     applyAction(action) {
         if (!action || !action.type) return null;
@@ -118,6 +119,106 @@ class DbService {
                         budget.spent += applied.amount;
                     }
                 }
+                this.lastAction = { type: 'transaction', item: applied, timestamp: Date.now() };
+                break;
+            }
+
+            case 'update_transaction': {
+                const updData = action.data || {};
+                let target = null;
+
+                // 1. Tenta achar por ID explícito
+                if (updData.id) {
+                    target = this.db.transactions.find(t => t.id === updData.id);
+                }
+                // 2. Tenta achar pela última transação gravada nesta sessão
+                if (!target && this.lastAction && this.lastAction.type === 'transaction' && this.lastAction.item) {
+                    target = this.db.transactions.find(t => t.id === this.lastAction.item.id);
+                }
+                // 3. Fallback: transação manual mais recente no banco (que não seja de Open Finance)
+                if (!target) {
+                    target = this.db.transactions.find(t => !t.pluggyId) || this.db.transactions[0];
+                }
+
+                if (target) {
+                    // Reverte gasto anterior no orçamento se era despesa
+                    if (target.type === 'despesa') {
+                        const oldBudget = this.db.budgets.find(b => b.category.toLowerCase() === (target.category || '').toLowerCase());
+                        if (oldBudget) {
+                            oldBudget.spent = Math.max(0, oldBudget.spent - (target.amount || 0));
+                        }
+                    }
+
+                    // Aplica alterações nos campos
+                    if (updData.amount !== undefined && updData.amount !== null && !isNaN(updData.amount)) {
+                        target.amount = Math.abs(parseFloat(updData.amount));
+                    }
+                    if (updData.description) {
+                        target.description = updData.description;
+                    }
+                    if (updData.category) {
+                        target.category = updData.category;
+                    }
+                    if (updData.type) {
+                        target.type = updData.type;
+                    }
+
+                    // Aplica novo valor ao orçamento
+                    if (target.type === 'despesa') {
+                        const newBudget = this.db.budgets.find(b => b.category.toLowerCase() === (target.category || '').toLowerCase());
+                        if (newBudget) {
+                            newBudget.spent += target.amount;
+                        }
+                    }
+
+                    applied = target;
+                    this.lastAction = { type: 'transaction', item: target, timestamp: Date.now() };
+                }
+                break;
+            }
+
+            case 'delete_transaction':
+            case 'undo': {
+                let targetId = action.data?.id;
+                let targetIndex = -1;
+
+                if (targetId) {
+                    targetIndex = this.db.transactions.findIndex(t => t.id === targetId);
+                } else if (this.lastAction && this.lastAction.type === 'transaction' && this.lastAction.item) {
+                    targetIndex = this.db.transactions.findIndex(t => t.id === this.lastAction.item.id);
+                } else {
+                    // Procura a transação manual mais recente
+                    targetIndex = this.db.transactions.findIndex(t => !t.pluggyId);
+                    if (targetIndex === -1 && this.db.transactions.length > 0) {
+                        targetIndex = 0;
+                    }
+                }
+
+                if (targetIndex !== -1) {
+                    const removed = this.db.transactions.splice(targetIndex, 1)[0];
+                    if (removed.type === 'despesa') {
+                        const budget = this.db.budgets.find(b => b.category.toLowerCase() === (removed.category || '').toLowerCase());
+                        if (budget) {
+                            budget.spent = Math.max(0, budget.spent - (removed.amount || 0));
+                        }
+                    }
+                    applied = { deleted: true, ...removed };
+                    this.lastAction = null;
+                } else if (this.lastAction && this.lastAction.type === 'event' && this.lastAction.item) {
+                    const evIndex = this.db.events.findIndex(e => e.id === this.lastAction.item.id);
+                    if (evIndex !== -1) {
+                        const removed = this.db.events.splice(evIndex, 1)[0];
+                        applied = { deleted: true, ...removed };
+                        this.lastAction = null;
+                    }
+                } else if (this.lastAction && this.lastAction.type === 'task' && this.lastAction.item) {
+                    const tkIndex = this.db.tasks.findIndex(t => t.id === this.lastAction.item.id);
+                    if (tkIndex !== -1) {
+                        const removed = this.db.tasks.splice(tkIndex, 1)[0];
+                        applied = { deleted: true, ...removed };
+                        this.lastAction = null;
+                    }
+                }
                 break;
             }
 
@@ -134,6 +235,7 @@ class DbService {
                     meetUrl: evData.hasMeet ? `https://meet.google.com/kit-${Math.random().toString(36).substring(2, 6)}` : null
                 };
                 this.db.events.unshift(applied);
+                this.lastAction = { type: 'event', item: applied, timestamp: Date.now() };
                 break;
             }
 
@@ -147,6 +249,7 @@ class DbService {
                     dueDate: tkData.dueDate || dateStr
                 };
                 this.db.tasks.unshift(applied);
+                this.lastAction = { type: 'task', item: applied, timestamp: Date.now() };
                 break;
             }
 
@@ -161,6 +264,7 @@ class DbService {
                     status: 'pendente'
                 };
                 this.db.debts.unshift(applied);
+                this.lastAction = { type: 'debt', item: applied, timestamp: Date.now() };
                 break;
             }
 
@@ -180,6 +284,44 @@ class DbService {
         }
 
         return applied;
+    }
+
+    /**
+     * Retorna a última ação realizada pelo KIT
+     */
+    getLastAction() {
+        return this.lastAction;
+    }
+
+    /**
+     * Resumo amigável da última ação para injetar no prompt do Gemini
+     */
+    getLastActionSummary() {
+        if (!this.lastAction || !this.lastAction.item) {
+            const recentManual = this.db.transactions?.find(t => !t.pluggyId);
+            if (recentManual) {
+                return `Última transação registrada: [${(recentManual.type || 'despesa').toUpperCase()}] R$ ${Number(recentManual.amount).toFixed(2)} - "${recentManual.description}" (Categoria: ${recentManual.category}) - ID: ${recentManual.id}`;
+            }
+            return 'Nenhuma transação recente foi registrada pelo KIT ainda.';
+        }
+        const item = this.lastAction.item;
+        if (this.lastAction.type === 'transaction') {
+            return `Última transação registrada: [${(item.type || 'despesa').toUpperCase()}] R$ ${Number(item.amount).toFixed(2)} - "${item.description}" (Categoria: ${item.category}) - ID: ${item.id}`;
+        } else if (this.lastAction.type === 'event') {
+            return `Último compromisso agendado: "${item.title}" em ${item.date} às ${item.startTime} - ID: ${item.id}`;
+        } else if (this.lastAction.type === 'task') {
+            return `Última tarefa criada: "${item.title}" (Prioridade: ${item.priority}) - ID: ${item.id}`;
+        }
+        return 'Ação executiva recente gravada no sistema.';
+    }
+
+    /**
+     * Retorna resumo das mensagens recentes de chat para contexto da IA
+     */
+    getRecentChatSummary(limit = 4) {
+        if (!this.db.chatMessages || this.db.chatMessages.length === 0) return '';
+        const recent = this.db.chatMessages.slice(-limit);
+        return recent.map(m => `${m.sender === 'user' ? 'Usuário' : 'KIT'}: "${(m.text || '').replace(/<!--KIT_ACTION:.*?-->/gs, '').trim()}"`).join('\n');
     }
 
     /**

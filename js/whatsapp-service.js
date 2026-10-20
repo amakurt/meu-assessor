@@ -157,6 +157,10 @@ class WhatsAppService {
                     } catch (pErr) {}
 
                     let replyText = '';
+                    const context = {
+                        lastActionSummary: dbService.getLastActionSummary(),
+                        chatSummary: dbService.getRecentChatSummary(6)
+                    };
 
                     // 1. MENSAGEM DE ÁUDIO (Voz do usuário)
                     if (msg.message?.audioMessage) {
@@ -165,7 +169,7 @@ class WhatsAppService {
                             const audioBuffer = await downloadMediaMessage(msg, 'buffer', {});
                             const mimeType = msg.message.audioMessage.mimetype || 'audio/ogg';
                             if (geminiService.isConfigured()) {
-                                replyText = await geminiService.generateAdvisorAudioResponse(audioBuffer, mimeType);
+                                replyText = await geminiService.generateAdvisorAudioResponse(audioBuffer, mimeType, context);
                             } else {
                                 replyText = `*KIT* · Seu Assessor Pessoal\n\n🎙️ Recebi seu áudio! Configure a chave do Gemini Pro para transcrição e ação automática.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
                             }
@@ -208,7 +212,7 @@ class WhatsAppService {
 
                         if (geminiService.isConfigured()) {
                             try {
-                                replyText = await geminiService.generateAdvisorResponse(textMessage);
+                                replyText = await geminiService.generateAdvisorResponse(textMessage, context);
                             } catch (aiErr) {
                                 console.error('[WhatsApp] Erro na resposta do Gemini:', aiErr.message);
                                 replyText = this.fallbackRouter(textMessage);
@@ -292,7 +296,19 @@ class WhatsAppService {
         let body = 'Compreendido! O KIT registrou sua demanda e está organizando tudo para você.';
         let actionTag = '';
 
-        if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix')) {
+        if (lower.includes('apaga') || lower.includes('cancela') || lower.includes('desfaz') || lower.includes('desfazer') || lower.includes('exclui') || lower.includes('tira esse')) {
+            body = `Lançamento cancelado com sucesso!\n\n↩️ O registro anterior foi desfeito e removido do seu painel.`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"delete_transaction"}-->`;
+        } else if (lower.includes('corrige') || lower.includes('corrigir') || lower.includes('entendeu errado') || lower.includes('não era') || lower.includes('era ')) {
+            const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+            const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : null;
+            if (val !== null) {
+                body = `Lançamento corrigido com sucesso!\n\n✏️ *Recibo Atualizado*\n• Valor ajustado para: R$ ${val.toFixed(2)}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
+                actionTag = `\n<!--KIT_ACTION:{"type":"update_transaction","data":{"amount":${val}}}-->`;
+            } else {
+                body = `Compreendido! Qual é o valor ou descrição correto para eu atualizar?`;
+            }
+        } else if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix')) {
             const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
             const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 50;
             const isReceita = lower.includes('recebi');

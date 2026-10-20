@@ -614,7 +614,7 @@ class Store {
                         const payload = JSON.parse(e.data);
                         console.log('[Store Live Sync] Atualização recebida via WhatsApp:', payload.type);
                         if (payload.fullDb) {
-                            this.mergeBackendData(payload.fullDb, true);
+                            this.mergeBackendData(payload.fullDb, true, payload);
                         }
                     } catch (err) {}
                 });
@@ -639,9 +639,18 @@ class Store {
         }
     }
 
-    mergeBackendData(backendDb, isLiveEvent = false) {
+    mergeBackendData(backendDb, isLiveEvent = false, payload = null) {
         if (!backendDb) return;
         let hasChanges = false;
+
+        if (isLiveEvent && payload) {
+            if (payload.type === 'update_transaction') {
+                const item = payload.item;
+                window.showToast?.(`✏️ KIT: Lançamento corrigido para R$ ${Number(item?.amount || 0).toFixed(2)}`, 'financas');
+            } else if (payload.type === 'delete_transaction' || payload.type === 'undo') {
+                window.showToast?.(`↩️ KIT: Lançamento anterior cancelado/desfeito`, 'financas');
+            }
+        }
 
         if (Array.isArray(backendDb.transactions)) {
             const oldFirstId = this.state.transactions?.[0]?.id;
@@ -649,7 +658,7 @@ class Store {
             if (oldFirstId !== newFirstId) {
                 hasChanges = true;
                 const newTx = backendDb.transactions[0];
-                if (newTx && isLiveEvent) {
+                if (newTx && isLiveEvent && payload?.type === 'transaction') {
                     window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${newTx.description} (R$ ${Number(newTx.amount).toFixed(2)})`, 'financas');
                 }
             }
