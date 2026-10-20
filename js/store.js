@@ -585,6 +585,77 @@ class Store {
     constructor() {
         this.listeners = [];
         this.state = this.loadState();
+        this.initRealtimeSync();
+    }
+
+    initRealtimeSync() {
+        // Snapshot inicial
+        this.syncWithBackend();
+
+        // Conecta ao fluxo de eventos em tempo real (Server-Sent Events)
+        try {
+            if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
+                this.sse = new EventSource('/api/live-sync');
+                this.sse.addEventListener('initial_state', (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        this.mergeBackendData(data);
+                    } catch (err) {}
+                });
+                this.sse.addEventListener('data_updated', (e) => {
+                    try {
+                        const payload = JSON.parse(e.data);
+                        console.log('[Store Live Sync] Atualização recebida via WhatsApp:', payload.type);
+                        if (payload.fullDb) {
+                            this.mergeBackendData(payload.fullDb);
+                        }
+                    } catch (err) {}
+                });
+            }
+        } catch (e) {
+            console.warn('[Store] SSE live-sync indisponível:', e.message);
+        }
+    }
+
+    async syncWithBackend() {
+        try {
+            if (typeof window === 'undefined' || typeof fetch === 'undefined') return;
+            const res = await fetch('/api/data');
+            if (res.ok) {
+                const json = await res.json();
+                if (json.success && json.data) {
+                    this.mergeBackendData(json.data);
+                }
+            }
+        } catch (e) {
+            console.warn('[Store] Falha ao sincronizar com backend:', e.message);
+        }
+    }
+
+    mergeBackendData(backendDb) {
+        if (!backendDb) return;
+        if (Array.isArray(backendDb.transactions)) {
+            this.state.transactions = backendDb.transactions;
+        }
+        if (Array.isArray(backendDb.events)) {
+            this.state.events = backendDb.events;
+        }
+        if (Array.isArray(backendDb.tasks)) {
+            this.state.tasks = backendDb.tasks;
+        }
+        if (Array.isArray(backendDb.budgets)) {
+            this.state.budgets = backendDb.budgets;
+        }
+        if (Array.isArray(backendDb.debts)) {
+            this.state.debts = backendDb.debts;
+        }
+        if (Array.isArray(backendDb.researches)) {
+            this.state.researches = backendDb.researches;
+        }
+        if (Array.isArray(backendDb.lists)) {
+            this.state.lists = backendDb.lists;
+        }
+        this.saveState();
     }
 
     loadState() {

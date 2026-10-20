@@ -191,4 +191,105 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.classList.remove('show');
         }, 3200);
     };
+
+    // ==========================================================================
+    // KIT OS · AUTENTICAÇÃO & TELA DE LOGIN
+    // ==========================================================================
+    const loginOverlay = document.getElementById('kitLoginOverlay');
+    const loginForm = document.getElementById('kitLoginForm');
+    const loginAlert = document.getElementById('kitLoginAlert');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const rememberLogin = document.getElementById('rememberLogin');
+    const btnLogout = document.getElementById('btnLogout');
+
+    function checkAuth() {
+        const token = localStorage.getItem('kit_auth_token') || sessionStorage.getItem('kit_auth_token');
+        if (!token) {
+            showLogin();
+            return;
+        }
+
+        fetch('/api/auth/check', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.json()).then(data => {
+            if (data.authenticated) {
+                hideLogin();
+            } else {
+                showLogin();
+            }
+        }).catch(() => {
+            hideLogin();
+        });
+    }
+
+    function showLogin(errorMsg = '') {
+        if (!loginOverlay) return;
+        loginOverlay.classList.remove('d-none');
+        if (errorMsg) {
+            loginAlert.textContent = errorMsg;
+            loginAlert.classList.remove('d-none');
+        } else {
+            loginAlert.classList.add('d-none');
+        }
+        if (loginPassword) loginPassword.value = '';
+    }
+
+    function hideLogin() {
+        if (!loginOverlay) return;
+        loginOverlay.classList.add('d-none');
+        if (window.appStore) {
+            window.appStore.syncWithBackend();
+        }
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value.trim();
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const json = await res.json();
+                if (res.ok && json.success) {
+                    if (rememberLogin.checked) {
+                        localStorage.setItem('kit_auth_token', json.token);
+                    } else {
+                        sessionStorage.setItem('kit_auth_token', json.token);
+                    }
+                    hideLogin();
+                    window.showToast('Bem-vindo ao KIT OS, Amauri!');
+                } else {
+                    showLogin(json.error || 'Credenciais incorretas.');
+                }
+            } catch (err) {
+                showLogin('Erro ao conectar ao servidor de autenticação.');
+            }
+        });
+    }
+
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            const token = localStorage.getItem('kit_auth_token') || sessionStorage.getItem('kit_auth_token');
+            if (token) {
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).catch(() => {});
+            }
+            localStorage.removeItem('kit_auth_token');
+            sessionStorage.removeItem('kit_auth_token');
+            showLogin('Sessão encerrada.');
+            window.showToast('Você bloqueou o acesso ao KIT OS.');
+        });
+    }
+
+    // Inicializa verificação de segurança
+    checkAuth();
 });

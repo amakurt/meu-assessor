@@ -16,6 +16,50 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
+    <!-- KIT OS · TELA DE LOGIN & SEGURANÇA EXECUTIVA -->
+    <div id="kitLoginOverlay" class="kit-login-overlay">
+        <div class="kit-login-card">
+            <div class="kit-login-header">
+                <div class="kit-login-logo">
+                    <span class="kit-logo-badge">KIT</span>
+                    <span class="kit-logo-os">OS PRO</span>
+                </div>
+                <h2 class="kit-login-title">Acesso Seguro · Chefe de Gabinete</h2>
+                <p class="kit-login-subtitle">Entre com suas credenciais de administrador para acessar o KIT OS.</p>
+            </div>
+            <form id="kitLoginForm" class="kit-login-form">
+                <div id="kitLoginAlert" class="kit-login-alert d-none"></div>
+                <div class="form-group mb-3">
+                    <label class="form-label">USUÁRIO</label>
+                    <div class="input-icon-wrap">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="loginUsername" class="form-control" placeholder="Usuário" value="amauri" required autocomplete="username">
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">SENHA MASTER</label>
+                    <div class="input-icon-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Digite sua senha" required autocomplete="current-password">
+                    </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mb-4 text-xs">
+                    <label class="d-flex align-items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="rememberLogin" checked>
+                        <span>Lembrar neste navegador</span>
+                    </label>
+                    <span class="text-muted">Protegido por Token</span>
+                </div>
+                <button type="submit" id="btnLoginSubmit" class="btn btn-primary w-100 py-2 font-weight-bold">
+                    <span>Desbloquear KIT OS</span>
+                </button>
+            </form>
+            <div class="kit-login-footer">
+                <span>🛡️ Acesso Restrito ao Administrador · Oracle Cloud VM & Baileys WhatsApp</span>
+            </div>
+        </div>
+    </div>
+
     <div class="app-layout" id="appLayout">
         
         <!-- SIDEBAR -->
@@ -142,6 +186,7 @@
                     <span class="user-tier">Plano Empresarial</span>
                 </div>
                 <button class="theme-toggle-btn" id="themeToggleBtn" title="Alternar Modo Claro/Escuro" aria-label="Alternar tema">🌓</button>
+                <button class="logout-btn" id="btnLogout" title="Bloquear / Sair do KIT OS" aria-label="Sair">🔒</button>
             </div>
         </aside>
 

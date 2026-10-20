@@ -16,6 +16,7 @@ const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const geminiService = require('./gemini-service');
+const dbService = require('./db-service');
 
 class WhatsAppService {
     constructor() {
@@ -147,7 +148,13 @@ class WhatsAppService {
                         continue;
                     }
 
+                    const targetJid = isSelfChat && myNumber ? `${myNumber}@s.whatsapp.net` : remoteJid;
+                    const startTime = Date.now();
 
+                    // Notifica visualmente "digitando..." IMEDIATAMENTE no WhatsApp (< 200ms)
+                    try {
+                        await this.sock.sendPresenceUpdate('composing', targetJid);
+                    } catch (pErr) {}
 
                     let replyText = '';
 
@@ -211,10 +218,11 @@ class WhatsAppService {
                         }
                     }
 
+                    // Sincroniza a ação executiva no Banco de Dados e transmite ao painel em tempo real
+                    replyText = this._extractAndApplyAction(replyText);
 
                     // Envia a resposta de volta no WhatsApp
                     try {
-                        const targetJid = isSelfChat && myNumber ? `${myNumber}@s.whatsapp.net` : remoteJid;
                         const sent = await this.sock.sendMessage(targetJid, { text: replyText });
                         if (sent?.key?.id) {
                             this.sentMessageIds.add(sent.key.id);
@@ -222,7 +230,8 @@ class WhatsAppService {
                                 this.sentMessageIds.clear();
                             }
                         }
-                        console.log(`[WhatsApp] Resposta executiva enviada com sucesso para ${targetJid}!`);
+                        const duration = Date.now() - startTime;
+                        console.log(`[WhatsApp] Resposta executiva enviada para ${targetJid} em ${duration}ms!`);
                     } catch (sendErr) {
                         console.error('[WhatsApp] Erro ao enviar resposta:', sendErr);
                     }
@@ -240,22 +249,43 @@ class WhatsAppService {
         }
     }
 
+    _extractAndApplyAction(text) {
+        if (!text) return text;
+        const match = text.match(/<!--KIT_ACTION:(.*?)-->/s);
+        if (match && match[1]) {
+            try {
+                const action = JSON.parse(match[1].trim());
+                dbService.applyAction(action);
+            } catch (e) {
+                console.error('[WhatsApp] Erro ao processar KIT_ACTION:', e.message);
+            }
+        }
+        return text.replace(/<!--KIT_ACTION:.*?-->/gs, '').trim();
+    }
+
     fallbackRouter(text) {
         const lower = text.toLowerCase();
         let advisor = '*KIT* · Seu Assessor Pessoal';
         let body = 'Compreendido! O KIT registrou sua demanda e está organizando tudo para você.';
+        let actionTag = '';
 
-        if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('saldo') || lower.includes('pix')) {
-            body = `Lançamento registrado com sucesso!\n\n🧾 *Recibo Executivo*\n• Tipo: Finanças & Conciliação\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
+        if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix')) {
+            const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+            const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 50;
+            const isReceita = lower.includes('recebi');
+            body = `Lançamento registrado com sucesso!\n\n🧾 *Recibo Executivo*\n• Tipo: ${isReceita ? 'Receita' : 'Despesa'}\n• Valor: R$ ${val.toFixed(2)}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"transaction","data":{"type":"${isReceita ? 'receita' : 'despesa'}","description":"${text.replace(/"/g, '')}","amount":${val},"category":"Alimentação"}}-->`;
         } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('meet')) {
             body = `Compromisso agendado na sua agenda com sucesso!\n• Tempo de deslocamento reservado\n• Link do Google Meet gerado`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"event","data":{"title":"${text.replace(/"/g, '')}","hasMeet":true}}-->`;
         } else if (lower.includes('tarefa') || lower.includes('lembrete') || lower.includes('lista')) {
             body = `Adicionado à sua Pirâmide de Prioridades!\n• Nível: Alta Prioridade\n• Sincronizado no seu Cloud Drive`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"task","data":{"title":"${text.replace(/"/g, '')}","priority":"alta"}}-->`;
         } else if (lower.includes('pesquisa') || lower.includes('preço') || lower.includes('cotação')) {
             body = `Pesquisa de mercado iniciada! Já estou cruzando os menores preços e fontes verificadas para você.`;
         }
 
-        return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+        return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)${actionTag}`;
     }
 
 

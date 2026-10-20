@@ -2885,3 +2885,175 @@ html, body {
     color: #ffffff;
     border-color: var(--wa-green);
 }
+
+/* ==========================================================================
+   KIT OS · TELA DE LOGIN & SEGURANÇA EXECUTIVA
+   ========================================================================== */
+.kit-login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 12, 22, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.kit-login-overlay.d-none {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.kit-login-card {
+    background: rgba(26, 28, 45, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.15);
+    border-radius: 22px;
+    padding: 38px 32px;
+    width: 100%;
+    max-width: 430px;
+    animation: kitCardPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes kitCardPop {
+    from {
+        opacity: 0;
+        transform: scale(0.94) translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.kit-login-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.kit-login-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.kit-logo-badge {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.kit-logo-os {
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+}
+
+.kit-login-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    font-family: var(--font-heading);
+}
+
+.kit-login-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.kit-login-form .form-label {
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.input-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon-wrap .input-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.input-icon-wrap .form-control {
+    padding-left: 38px;
+    background: rgba(14, 16, 26, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.input-icon-wrap .form-control:focus {
+    background: rgba(18, 20, 32, 0.95);
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+    outline: none;
+}
+
+.kit-login-alert {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.kit-login-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+

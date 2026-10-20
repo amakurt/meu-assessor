@@ -74,11 +74,25 @@ Suas áreas de atuação integradas:
 Diretrizes de resposta no WhatsApp:
 - Comece SEMPRE com o cabeçalho oficial: "*KIT* · Seu Assessor Pessoal"
 - Linguagem executiva, cordial, ágil e focada em resolução.
-- Se for finanças: apresente um recibo claro com valor, categoria e saldo conciliado.
+- Se for finanças: apresente um recibo claro com valor, categoria e status conciliado.
 - Se for agenda: confirme dia, horário e link de reunião.
 - Se for tarefa/lembrete: confirme prioridade e data limite.
-- Finalize sempre com a barra de botões interativos de 24h:
-  "[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)"`;
+- Finalize o texto visível SEMPRE com a barra de botões interativos de 24h:
+  "[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)"
+
+INSTRUÇÃO CRUCIAL DE SINCRONIZAÇÃO DE DADOS:
+Se a mensagem do usuário envolver uma ação executiva concreta para salvar no painel (despesa/receita, compromisso de agenda ou tarefa), adicione OBRIGATORIAMENTE no FINAL ABSOLUTO da resposta uma linha oculta no formato:
+<!--KIT_ACTION:{"type":"transaction|event|task","data":{...}}-->
+
+Modelos de dados JSON:
+1. Despesa ou Receita:
+<!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Descrição","amount":85.0,"category":"Alimentação","profile":"personal"}}-->
+2. Reunião ou Agenda:
+<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com Arquiteto","date":"2026-10-21","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
+3. Tarefa ou Lembrete:
+<!--KIT_ACTION:{"type":"task","data":{"title":"Título da tarefa","priority":"alta","dueDate":"2026-10-21"}}-->
+
+Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, não inclua a tag <!--KIT_ACTION:...-->.`;
     }
 
     /**
@@ -101,8 +115,8 @@ Diretrizes de resposta no WhatsApp:
                 }
             ],
             generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1000
+                temperature: 0.3,
+                maxOutputTokens: 600
             }
         });
 
@@ -144,8 +158,8 @@ Em seguida, apresente a confirmação ou recibo da ação.`;
                 }
             ],
             generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1000
+                temperature: 0.3,
+                maxOutputTokens: 600
             }
         });
 
