@@ -231,9 +231,11 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 - [x] Cadastro e Consulta de Faturamento de Clientes/Fornecedores no WhatsApp e Painel.
 - [x] Nginx e SSL Let's Encrypt configurados com script `scripts/deploy-ssl.sh`.
 - [x] Documentação técnica de arquitetura SaaS criada em `docs/ROADMAP_SAAS.md`.
-- [ ] Liberar porta 443 TCP na Security List da Oracle Cloud Console para o HTTPS externo.
+- [x] Porta 443 TCP liberada na Security List da Oracle Cloud Console (HTTPS 100% ativo com Cadeado Verde).
+- [x] Redirecionamento automático 301 de HTTP para HTTPS ativado no Nginx.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
+
 
 
 
