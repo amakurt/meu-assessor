@@ -450,7 +450,31 @@ class DbService {
         const transactions = this.sqlite.prepare('SELECT * FROM transactions ORDER BY date DESC, createdAt DESC').all();
         const events = this.sqlite.prepare('SELECT * FROM events ORDER BY date ASC, startTime ASC').all();
         const tasks = this.sqlite.prepare('SELECT * FROM tasks ORDER BY createdAt DESC').all();
+        const currentMonth = new Date().toISOString().substring(0, 7);
         const budgets = this.sqlite.prepare('SELECT * FROM budgets').all();
+        // Recalcula o gasto real do mês atual para cada categoria de orçamento
+        const monthlyExpenses = this.sqlite.prepare(`
+            SELECT category, amount FROM transactions 
+            WHERE type = 'despesa' AND date LIKE ?
+        `).all(`${currentMonth}%`);
+
+        budgets.forEach(b => {
+            let spent = 0;
+            const bCat = (b.category || '').toLowerCase();
+            monthlyExpenses.forEach(t => {
+                const tCat = (t.category || '').toLowerCase();
+                if (bCat.includes('aliment') && (tCat.includes('aliment') || tCat.includes('restaur') || tCat.includes('grocer') || tCat.includes('eating'))) {
+                    spent += t.amount;
+                } else if (bCat.includes('transporte') && (tCat.includes('transporte') || tCat.includes('combust') || tCat.includes('gas') || tCat.includes('uber') || tCat.includes('viagem'))) {
+                    spent += t.amount;
+                } else if (bCat.includes('saúde') && (tCat.includes('saúde') || tCat.includes('farmácia') || tCat.includes('health'))) {
+                    spent += t.amount;
+                } else if (bCat.includes('compra') && (tCat.includes('compra') || tCat.includes('serviço') || tCat.includes('shopping'))) {
+                    spent += t.amount;
+                }
+            });
+            b.spent = Math.round(spent * 100) / 100;
+        });
         const debts = this.sqlite.prepare('SELECT * FROM debts ORDER BY createdAt DESC').all();
         const billingLinks = this.sqlite.prepare('SELECT * FROM billing_links ORDER BY createdAt DESC').all();
         const researches = this.sqlite.prepare('SELECT * FROM researches ORDER BY createdAt DESC').all();
@@ -531,10 +555,22 @@ class DbService {
 
                 // Atualiza o orçamento gasto se for despesa
                 if (applied.type === 'despesa') {
+                    let budgetCat = applied.category;
+                    const catLower = (applied.category || '').toLowerCase();
+                    if (catLower.includes('transporte') || catLower.includes('combust') || catLower.includes('gas')) {
+                        budgetCat = 'Transporte & Viagens';
+                    } else if (catLower.includes('aliment') || catLower.includes('restaur') || catLower.includes('grocer')) {
+                        budgetCat = 'Alimentação';
+                    } else if (catLower.includes('saúde') || catLower.includes('farmácia')) {
+                        budgetCat = 'Saúde & Farmácia';
+                    } else if (catLower.includes('compra') || catLower.includes('serviço')) {
+                        budgetCat = 'Compras & Serviços';
+                    }
+
                     this.sqlite.prepare(`
                         UPDATE budgets SET spent = spent + ? 
                         WHERE LOWER(category) = LOWER(?)
-                    `).run(applied.amount, applied.category);
+                    `).run(applied.amount, budgetCat);
                 }
 
                 // Gera notificação automática para transação manual ou relevante

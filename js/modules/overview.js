@@ -56,29 +56,39 @@ class OverviewModule {
 
     renderKPIs() {
         const txs = this.store.state.transactions || [];
-        let totalReceitas = 0;
-        let totalDespesas = 0;
+        const nowMonth = new Date().toISOString().substring(0, 7);
+        let saldoTotal = 0;
+        let mesReceitas = 0;
+        let mesDespesas = 0;
 
         txs.forEach(t => {
-            if (t.type === 'receita') totalReceitas += t.amount;
-            else if (t.type === 'despesa') totalDespesas += t.amount;
+            const isReceita = t.type === 'receita';
+            const isDespesa = t.type === 'despesa';
+            const isCurrentMonth = t.date && t.date.startsWith(nowMonth);
+
+            if (isReceita) {
+                saldoTotal += t.amount;
+                if (isCurrentMonth) mesReceitas += t.amount;
+            } else if (isDespesa) {
+                saldoTotal -= t.amount;
+                if (isCurrentMonth) mesDespesas += t.amount;
+            }
         });
 
-        const saldo = totalReceitas - totalDespesas;
-        const liquido = totalReceitas - totalDespesas;
+        const liquidoMes = mesReceitas - mesDespesas;
 
         if (this.elements.overviewKpiSaldo) {
-            this.elements.overviewKpiSaldo.textContent = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            this.elements.overviewKpiSaldo.textContent = saldoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
         if (this.elements.overviewKpiFluxo) {
-            const isPositive = liquido >= 0;
-            this.elements.overviewKpiFluxo.textContent = (isPositive ? '+ ' : '') + liquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            const isPositive = liquidoMes >= 0;
+            this.elements.overviewKpiFluxo.textContent = (isPositive ? '+ ' : '') + liquidoMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             this.elements.overviewKpiFluxo.className = 'kpi-value ' + (isPositive ? 'text-emerald' : 'text-rose');
         }
 
         if (this.elements.overviewKpiFluxoSub) {
-            this.elements.overviewKpiFluxoSub.textContent = `Entradas: ${totalReceitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · Saídas: ${totalDespesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+            this.elements.overviewKpiFluxoSub.textContent = `Entradas Mês: ${mesReceitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · Saídas Mês: ${mesDespesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
         }
 
         // Agenda Count
@@ -97,7 +107,7 @@ class OverviewModule {
         // Projeção
         const entradasPrevistas = 15200.00;
         const saidasPrevistas = 4250.00;
-        const projecaoFimMes = saldo + entradasPrevistas - saidasPrevistas;
+        const projecaoFimMes = saldoTotal + entradasPrevistas - saidasPrevistas;
         if (this.elements.overviewProjectionVal) {
             this.elements.overviewProjectionVal.textContent = projecaoFimMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
@@ -106,7 +116,8 @@ class OverviewModule {
     renderTopCategories() {
         if (!this.elements.overviewTopCategoriesList) return;
         const txs = this.store.state.transactions || [];
-        const expenses = txs.filter(t => t.type === 'despesa');
+        const nowMonth = new Date().toISOString().substring(0, 7);
+        const expenses = txs.filter(t => t.type === 'despesa' && t.date && t.date.startsWith(nowMonth));
 
         const catMap = {};
         let totalExp = 0;

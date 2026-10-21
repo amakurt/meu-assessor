@@ -10,7 +10,7 @@ class FinancesModule {
         this.currentFilter = 'all';
         this.currentBankFilter = 'all';
         this.searchTerm = '';
-        this.currentMonth = 'all';
+        this.currentMonth = new Date().toISOString().substring(0, 7);
         this.currentCategoryFilter = 'all';
         this.pageSize = 50;
         this.displayedCount = 50;
@@ -121,6 +121,7 @@ class FinancesModule {
             this.elements.txMonthFilter.addEventListener('change', (e) => {
                 this.currentMonth = e.target.value;
                 this.displayedCount = this.pageSize;
+                this.renderKPIs();
                 this.renderTransactions();
                 this.renderCategoryChart();
             });
@@ -360,21 +361,42 @@ class FinancesModule {
             this.elements.txMonthFilter.appendChild(opt);
         });
 
+        // Seleciona o mês atual por padrão se houver transações nele
+        const nowMonth = new Date().toISOString().substring(0, 7);
+        if (sortedMonths.includes(nowMonth)) {
+            this.currentMonth = nowMonth;
+            this.elements.txMonthFilter.value = nowMonth;
+        } else if (sortedMonths.length > 0) {
+            this.currentMonth = sortedMonths[0];
+            this.elements.txMonthFilter.value = this.currentMonth;
+        }
+
         this.monthOptionsPopulated = true;
     }
 
     renderKPIs() {
         const txs = this.store.state.transactions || [];
-        let totalReceitas = 0;
-        let totalDespesas = 0;
+        const nowMonth = (this.currentMonth && this.currentMonth !== 'all') 
+            ? this.currentMonth 
+            : new Date().toISOString().substring(0, 7);
+
+        let saldoTotal = 0;
+        let totalReceitasMes = 0;
+        let totalDespesasMes = 0;
         let contasPendentes = 0;
         let pendentesCount = 0;
 
         txs.forEach(t => {
-            if (t.type === 'receita') {
-                totalReceitas += t.amount;
-            } else if (t.type === 'despesa') {
-                totalDespesas += t.amount;
+            const isReceita = t.type === 'receita';
+            const isDespesa = t.type === 'despesa';
+            const isTargetMonth = t.date && t.date.startsWith(nowMonth);
+
+            if (isReceita) {
+                saldoTotal += t.amount;
+                if (isTargetMonth) totalReceitasMes += t.amount;
+            } else if (isDespesa) {
+                saldoTotal -= t.amount;
+                if (isTargetMonth) totalDespesasMes += t.amount;
                 if (t.status === 'pendente') {
                     contasPendentes += t.amount;
                     pendentesCount++;
@@ -382,16 +404,14 @@ class FinancesModule {
             }
         });
 
-        const saldo = totalReceitas - totalDespesas;
-
         if (this.elements.kpiSaldoTotal) {
-            this.elements.kpiSaldoTotal.textContent = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            this.elements.kpiSaldoTotal.textContent = saldoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
         if (this.elements.kpiReceitasMes) {
-            this.elements.kpiReceitasMes.textContent = totalReceitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            this.elements.kpiReceitasMes.textContent = totalReceitasMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
         if (this.elements.kpiDespesasMes) {
-            this.elements.kpiDespesasMes.textContent = totalDespesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            this.elements.kpiDespesasMes.textContent = totalDespesasMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
         if (this.elements.kpiContasPendentes) {
             this.elements.kpiContasPendentes.textContent = contasPendentes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

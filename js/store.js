@@ -639,14 +639,8 @@ class Store {
         }
 
         if (Array.isArray(backendDb.transactions)) {
-            const oldFirstId = this.state.transactions?.[0]?.id;
-            const newFirstId = backendDb.transactions?.[0]?.id;
-            if (oldFirstId !== newFirstId) {
-                hasChanges = true;
-                const newTx = backendDb.transactions[0];
-                if (newTx && isLiveEvent && payload?.type === 'transaction') {
-                    window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${newTx.description} (R$ ${Number(newTx.amount).toFixed(2)})`, 'financas');
-                }
+            if (isLiveEvent && payload?.type === 'transaction' && payload.item) {
+                window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${payload.item.description} (R$ ${Number(payload.item.amount).toFixed(2)})`, 'financas');
             }
             this.state.transactions = backendDb.transactions;
         }
