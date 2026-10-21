@@ -73,6 +73,11 @@ class TeamModule {
         // 2. Modais de Membro de Equipe
         if (this.elements.btnNewTeamMember && this.elements.modalTeam) {
             this.elements.btnNewTeamMember.addEventListener('click', () => {
+                this.elements.formTeam?.reset();
+                const editId = document.getElementById('teamMemberEditId');
+                if (editId) editId.value = '';
+                const title = document.getElementById('modalTeamTitle');
+                if (title) title.textContent = 'Convidar Novo Usuário (Ilimitado)';
                 this.elements.modalTeam.showModal();
             });
         }
@@ -92,27 +97,33 @@ class TeamModule {
         if (this.elements.formTeam) {
             this.elements.formTeam.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const editId = document.getElementById('teamMemberEditId')?.value;
                 const name = document.getElementById('teamMemberName').value;
                 const phone = document.getElementById('teamMemberPhone').value;
                 const role = document.getElementById('teamMemberRole').value;
 
                 try {
-                    const res = await fetch('/api/team', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, phone, role })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        this.elements.formTeam.reset();
-                        this.elements.modalTeam.close();
+                    if (editId) {
+                        await fetch(`/api/team/${editId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, phone, role })
+                        });
+                        window.showToast?.(`Membro ${name} atualizado com sucesso!`);
+                    } else {
+                        await fetch('/api/team', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, phone, role })
+                        });
                         window.showToast?.(`Membro ${name} conectado à conta compartilhada!`);
                     }
-                } catch (err) {
-                    this.store.addTeamMember({ name, phone, role });
                     this.elements.formTeam.reset();
                     this.elements.modalTeam.close();
-                    window.showToast?.(`Membro ${name} conectado localmente!`);
+                    this.renderTeamMembers();
+                } catch (err) {
+                    console.error('Erro ao salvar membro:', err);
+                    this.elements.modalTeam.close();
                 }
             });
         }
@@ -120,6 +131,11 @@ class TeamModule {
         // 3. Modais e Ações de Clientes & Fornecedores
         if (this.elements.btnNewClient && this.elements.modalClient) {
             this.elements.btnNewClient.addEventListener('click', () => {
+                this.elements.formClient?.reset();
+                const editId = document.getElementById('clientEditId');
+                if (editId) editId.value = '';
+                const title = document.getElementById('modalClientTitle');
+                if (title) title.textContent = 'Cadastrar Novo Cliente / Fornecedor';
                 this.elements.modalClient.showModal();
             });
         }
@@ -139,6 +155,7 @@ class TeamModule {
         if (this.elements.formClient) {
             this.elements.formClient.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const editId = document.getElementById('clientEditId')?.value;
                 const type = document.getElementById('clientType').value;
                 const name = document.getElementById('clientName').value;
                 const documentVal = document.getElementById('clientDocument').value;
@@ -146,20 +163,27 @@ class TeamModule {
                 const category = document.getElementById('clientCategory').value;
 
                 try {
-                    const res = await fetch('/api/clients', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type, name, document: documentVal, phone, category })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        this.elements.formClient.reset();
-                        this.elements.modalClient.close();
+                    if (editId) {
+                        await fetch(`/api/clients/${editId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type, name, document: documentVal, phone, category })
+                        });
+                        window.showToast?.(`Cadastro de ${name} atualizado com sucesso!`);
+                    } else {
+                        await fetch('/api/clients', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type, name, document: documentVal, phone, category })
+                        });
                         window.showToast?.(`${type === 'fornecedor' ? 'Fornecedor' : 'Cliente'} ${name} cadastrado com sucesso!`);
-                        this.renderClients();
                     }
+                    this.elements.formClient.reset();
+                    this.elements.modalClient.close();
+                    this.renderClients();
                 } catch (err) {
-                    console.error('Erro ao cadastrar cliente:', err);
+                    console.error('Erro ao salvar cliente:', err);
+                    this.elements.modalClient.close();
                 }
             });
         }
@@ -254,7 +278,10 @@ class TeamModule {
                 </div>
                 <div class="team-card-footer" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 10px; font-size: 11.5px;">
                     <span style="color: #00a884; font-weight: 600;">● ${member.status || 'Conectado'}</span>
-                    <button class="btn btn-ghost btn-sm text-danger" onclick="window.teamModule.deleteMember('${member.id}')">Remover</button>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-ghost btn-sm text-xs" onclick="window.teamModule.editMember('${member.id}')" title="Editar dados do membro">✏️</button>
+                        <button class="btn btn-ghost btn-sm text-danger text-xs" onclick="window.teamModule.deleteMember('${member.id}')" title="Desconectar">Remover</button>
+                    </div>
                 </div>
             `;
 
@@ -286,7 +313,7 @@ class TeamModule {
             this.elements.clientsTableBody.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4 text-muted">
-                        Nenhum cadastro encontrado. Digite "salva [Nome] como cliente" no WhatsApp para registrar instantaneamente.
+                        Nenhum cadastro encontrado. Digite "salva [Nome] como cliente" no WhatsApp ou clique em "+ Novo Cadastro" acima.
                     </td>
                 </tr>
             `;
@@ -314,12 +341,6 @@ class TeamModule {
                 }
             });
 
-            // Se for Ótica Vieira e estiver em 0 nas transações locais, aplica o mock do print R$ 3.600 em 3 pagamentos
-            if (totalMonth === 0 && cleanName.includes('vieira')) {
-                totalMonth = 3600.0;
-                countTxs = 3;
-            }
-
             const formattedTotal = totalMonth > 0 
                 ? `<strong>R$ ${totalMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> <span class="text-xs text-muted">(${countTxs} pagtos)</span>`
                 : `<span class="text-muted text-xs">Sem lançamentos</span>`;
@@ -338,17 +359,52 @@ class TeamModule {
                 <td><span class="badge badge-subtle">${c.category || 'Geral'}</span></td>
                 <td>${formattedTotal}</td>
                 <td style="text-align: right;">
-                    <button class="btn btn-outline btn-sm py-1 px-2 text-xs" onclick="window.teamModule.askReceipts('${c.name}')" title="Perguntar ao Bernardo no WhatsApp">
-                        💬 Consultar
-                    </button>
-                    <button class="btn btn-ghost btn-sm py-1 px-2 text-danger text-xs" onclick="window.teamModule.deleteClient('${c.id}')" title="Excluir">
-                        🗑️
-                    </button>
+                    <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                        <button class="btn btn-outline btn-sm py-1 px-2 text-xs" onclick="window.teamModule.askReceipts('${c.name}')" title="Consultar faturamento">
+                            💬 Consultar
+                        </button>
+                        <button class="btn btn-ghost btn-sm py-1 px-2 text-xs" onclick="window.teamModule.editClient('${c.id}')" title="Editar cadastro">
+                            ✏️
+                        </button>
+                        <button class="btn btn-ghost btn-sm py-1 px-2 text-danger text-xs" onclick="window.teamModule.deleteClient('${c.id}')" title="Excluir">
+                            🗑️
+                        </button>
+                    </div>
                 </td>
             `;
 
             this.elements.clientsTableBody.appendChild(row);
         });
+    }
+
+    editMember(id) {
+        const members = this.store.state.teamMembers || [];
+        const member = members.find(m => m.id === id);
+        if (!member) return;
+
+        document.getElementById('teamMemberEditId').value = member.id;
+        document.getElementById('modalTeamTitle').textContent = 'Editar Membro da Equipe';
+        document.getElementById('teamMemberName').value = member.name || '';
+        document.getElementById('teamMemberPhone').value = member.phone || '';
+        document.getElementById('teamMemberRole').value = member.role || 'Colaborador';
+
+        this.elements.modalTeam.showModal();
+    }
+
+    editClient(id) {
+        const clients = this.store.state.clients || [];
+        const client = clients.find(c => c.id === id);
+        if (!client) return;
+
+        document.getElementById('clientEditId').value = client.id;
+        document.getElementById('modalClientTitle').textContent = 'Editar Cadastro';
+        document.getElementById('clientType').value = client.type || 'cliente';
+        document.getElementById('clientName').value = client.name || '';
+        document.getElementById('clientDocument').value = client.document || '';
+        document.getElementById('clientPhone').value = client.phone || '';
+        document.getElementById('clientCategory').value = client.category || '';
+
+        this.elements.modalClient.showModal();
     }
 
     async deleteMember(id) {

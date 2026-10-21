@@ -39,6 +39,7 @@ class DbService {
         this._createTables();
         this._migrateFromLegacyJson();
         this._prepareStatements();
+        this.checkAndGenerateSmartNotifications();
     }
 
     _createTables() {
@@ -55,6 +56,8 @@ class DbService {
                 paymentMethod TEXT,
                 registeredBy TEXT,
                 pluggyId TEXT,
+                buyer TEXT,
+                account TEXT,
                 createdAt INTEGER NOT NULL
             );
 
@@ -179,7 +182,29 @@ class DbService {
 
             CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name);
             CREATE INDEX IF NOT EXISTS idx_clients_type ON clients(type);
+
+            CREATE TABLE IF NOT EXISTS notifications (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                type TEXT NOT NULL DEFAULT 'financeiro',
+                read INTEGER DEFAULT 0,
+                priority TEXT DEFAULT 'normal',
+                linkTab TEXT DEFAULT 'financas',
+                createdAt INTEGER NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+            CREATE INDEX IF NOT EXISTS idx_notifications_createdAt ON notifications(createdAt);
         `);
+
+        // Assegura colunas buyer e account na tabela transactions caso ela já existisse
+        try {
+            this.sqlite.exec(`ALTER TABLE transactions ADD COLUMN buyer TEXT;`);
+        } catch (e) {}
+        try {
+            this.sqlite.exec(`ALTER TABLE transactions ADD COLUMN account TEXT;`);
+        } catch (e) {}
 
         // Garante que orçamentos padrão existam
         const countBudgets = this.sqlite.prepare('SELECT COUNT(*) as count FROM budgets').get().count;
@@ -188,56 +213,47 @@ class DbService {
             INITIAL_BUDGETS.forEach(b => insertBudget.run(b.category, b.ceiling, b.spent, b.profile));
         }
 
-        // Garante código de convite padrão da Conta Compartilhada
+        // Garante código de convite ativo
         const countCodes = this.sqlite.prepare('SELECT COUNT(*) as count FROM invite_codes WHERE active = 1').get().count;
         if (countCodes === 0) {
             this.sqlite.prepare('INSERT OR IGNORE INTO invite_codes (code, createdAt, active, usesCount) VALUES (?, ?, 1, 0)')
                 .run('COD-CONVITE-7QF3ZD', Date.now());
         }
 
-        // Garante membros iniciais da equipe
-        const countTeam = this.sqlite.prepare('SELECT COUNT(*) as count FROM team_members').get().count;
-        if (countTeam === 0) {
-            const insertTeam = this.sqlite.prepare('INSERT INTO team_members (id, name, phone, role, status, joinedAt) VALUES (?, ?, ?, ?, ?, ?)');
-            insertTeam.run('team-1', 'Amauri Castro', '+55 (85) 98801-4049', 'Titular / Diretor', 'Conectado', Date.now() - 86400000 * 30);
-            insertTeam.run('team-2', 'Bia Castro', '+55 (85) 99120-3456', 'Família / Co-titular', 'Conectado', Date.now() - 86400000 * 5);
-            insertTeam.run('team-3', 'Carlos Eduardo', '+55 (11) 98765-4321', 'Sócio / Empresa', 'Conectado', Date.now() - 86400000 * 2);
-        }
+        // ==========================================
+        // LIMPEZA DE DADOS FICTÍCIOS DE DEMONSTRAÇÃO
+        // ==========================================
+        try {
+            // Remove transações simuladas da Ótica Vieira
+            this.sqlite.prepare("DELETE FROM transactions WHERE LOWER(description) LIKE '%ótica vieira%' OR id LIKE 'tx-ov-%'").run();
 
-        // Garante clientes e fornecedores iniciais (incluindo a Ótica Vieira do print)
-        const countClients = this.sqlite.prepare('SELECT COUNT(*) as count FROM clients').get().count;
-        if (countClients === 0) {
-            const insertClient = this.sqlite.prepare('INSERT INTO clients (id, name, type, document, phone, category, notes, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-            insertClient.run('cli-1', 'Ótica Vieira', 'cliente', '12.345.678/0001-90', '+55 (11) 97123-4567', 'Serviços Prestados', 'Cliente atendido no WhatsApp', Date.now() - 86400000 * 10);
-            insertClient.run('cli-2', 'Projeto Alpha', 'cliente', '98.765.432/0001-10', '+55 (11) 98888-2222', 'Consultoria Executiva', 'Contrato mensal', Date.now() - 86400000 * 20);
-            insertClient.run('cli-3', 'Posto Ipiranga', 'fornecedor', '55.444.333/0001-22', '', 'Transporte & Combustível', 'Abastecimento frota', Date.now() - 86400000 * 15);
-        }
+            // Remove clientes fictícios de demonstração (mantém vazio para cadastro real pelo usuário)
+            this.sqlite.prepare("DELETE FROM clients WHERE id IN ('cli-1', 'cli-2', 'cli-3') OR LOWER(name) IN ('ótica vieira', 'projeto alpha', 'posto ipiranga')").run();
 
-        // Garante transações exemplo da Ótica Vieira para bater 100% com o print (R$ 3.600 em 3 pagamentos)
-        const countVieira = this.sqlite.prepare("SELECT COUNT(*) as count FROM transactions WHERE LOWER(description) LIKE '%ótica vieira%'").get().count;
-        if (countVieira === 0) {
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const insertTx = this.sqlite.prepare(`
-                INSERT INTO transactions (id, type, description, amount, category, status, profile, date, paymentMethod, registeredBy, createdAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `);
-            insertTx.run(`tx-ov-1`, 'receita', 'Recebimento PIX · Ótica Vieira', 1200.0, 'Serviços Prestados', 'conciliado', 'cnpj', `${yyyy}-${mm}-05`, 'PIX', 'WhatsApp (KIT)', Date.now() - 86400000 * 12);
-            insertTx.run(`tx-ov-2`, 'receita', 'Fatura Mensalidade · Ótica Vieira', 1200.0, 'Serviços Prestados', 'conciliado', 'cnpj', `${yyyy}-${mm}-12`, 'Transferência', 'WhatsApp (KIT)', Date.now() - 86400000 * 6);
-            insertTx.run(`tx-ov-3`, 'receita', 'Liquidação Parcela · Ótica Vieira', 1200.0, 'Serviços Prestados', 'conciliado', 'cnpj', `${yyyy}-${mm}-18`, 'PIX', 'WhatsApp (KIT)', Date.now() - 86400000 * 2);
+            // Remove membros fictícios da equipe mantendo apenas o usuário administrador real
+            this.sqlite.prepare("DELETE FROM team_members WHERE id IN ('team-2', 'team-3') OR phone LIKE '%99120-3456%' OR phone LIKE '%98765-4321%'").run();
+
+            // Garante o usuário titular real
+            const countRealAdmin = this.sqlite.prepare("SELECT COUNT(*) as count FROM team_members WHERE id = 'team-1' OR name LIKE '%Amauri%'").get().count;
+            if (countRealAdmin === 0) {
+                this.sqlite.prepare('INSERT OR REPLACE INTO team_members (id, name, phone, role, status, joinedAt) VALUES (?, ?, ?, ?, ?, ?)')
+                    .run('team-1', 'Amauri Castro', '+55 (85) 98801-4049', 'Titular / Administrador', 'Conectado', Date.now() - 86400000 * 30);
+            }
+        } catch (err) {
+            console.error('[SQLite] Aviso na limpeza de dados fictícios:', err.message);
         }
     }
 
     _prepareStatements() {
         this.stmtInsertTx = this.sqlite.prepare(`
-            INSERT INTO transactions (id, type, description, amount, category, status, profile, date, paymentMethod, registeredBy, pluggyId, createdAt)
-            VALUES (@id, @type, @description, @amount, @category, @status, @profile, @date, @paymentMethod, @registeredBy, @pluggyId, @createdAt)
+            INSERT INTO transactions (id, type, description, amount, category, status, profile, date, paymentMethod, registeredBy, pluggyId, buyer, account, createdAt)
+            VALUES (@id, @type, @description, @amount, @category, @status, @profile, @date, @paymentMethod, @registeredBy, @pluggyId, @buyer, @account, @createdAt)
         `);
 
         this.stmtUpdateTx = this.sqlite.prepare(`
             UPDATE transactions 
-            SET amount = @amount, description = @description, category = @category, type = @type
+            SET amount = @amount, description = @description, category = @category, type = @type,
+                date = @date, paymentMethod = @paymentMethod, profile = @profile, buyer = @buyer, account = @account
             WHERE id = @id
         `);
 
@@ -275,9 +291,27 @@ class DbService {
             VALUES (@id, @name, @phone, @role, @status, @joinedAt)
         `);
 
+        this.stmtUpdateTeamMember = this.sqlite.prepare(`
+            UPDATE team_members
+            SET name = @name, phone = @phone, role = @role, status = @status
+            WHERE id = @id
+        `);
+
         this.stmtInsertClient = this.sqlite.prepare(`
             INSERT INTO clients (id, name, type, document, phone, category, notes, createdAt)
             VALUES (@id, @name, @type, @document, @phone, @category, @notes, @createdAt)
+        `);
+
+        this.stmtUpdateClient = this.sqlite.prepare(`
+            UPDATE clients 
+            SET name = @name, type = @type, document = @document, phone = @phone, category = @category, notes = @notes
+            WHERE id = @id
+        `);
+
+        // Statements para Notificações
+        this.stmtInsertNotification = this.sqlite.prepare(`
+            INSERT INTO notifications (id, title, message, type, read, priority, linkTab, createdAt)
+            VALUES (@id, @title, @message, @type, @read, @priority, @linkTab, @createdAt)
         `);
     }
 
@@ -442,7 +476,8 @@ class DbService {
             chatMessages,
             inviteCode: this.getActiveInviteCode(),
             teamMembers: this.getTeamMembers(),
-            clients: this.getClients()
+            clients: this.getClients(),
+            notifications: this.getNotifications(50)
         };
     }
 
@@ -476,17 +511,19 @@ class DbService {
                 const txData = action.data || {};
                 const amount = Math.abs(parseFloat(txData.amount) || 0);
                 applied = {
-                    id: `tx-${Date.now()}`,
+                    id: txData.id || `tx-${Date.now()}`,
                     type: txData.type || 'despesa',
-                    description: txData.description || 'Despesa registrada via WhatsApp',
+                    description: txData.description || 'Despesa registrada',
                     amount: amount,
                     category: txData.category || 'Geral',
-                    status: 'conciliado',
+                    status: txData.status || 'conciliado',
                     profile: txData.profile || 'personal',
                     date: txData.date || dateStr,
-                    paymentMethod: txData.paymentMethod || 'Open Finance',
-                    registeredBy: txData.registeredBy || 'WhatsApp (KIT)',
+                    paymentMethod: txData.paymentMethod || 'Cartão / Pix',
+                    registeredBy: txData.registeredBy || 'Painel Web (Manual)',
                     pluggyId: txData.pluggyId || null,
+                    buyer: txData.buyer || null,
+                    account: txData.account || txData.paymentMethod || 'Carteira',
                     createdAt: Date.now()
                 };
 
@@ -498,6 +535,18 @@ class DbService {
                         UPDATE budgets SET spent = spent + ? 
                         WHERE LOWER(category) = LOWER(?)
                     `).run(applied.amount, applied.category);
+                }
+
+                // Gera notificação automática para transação manual ou relevante
+                if (applied.amount >= 200 || applied.buyer) {
+                    const buyerTxt = applied.buyer ? ` por ${applied.buyer}` : '';
+                    this.addNotification({
+                        title: applied.type === 'receita' ? '💰 Nova Receita Registrada' : '💳 Compra Registrada',
+                        message: `${applied.description} - R$ ${applied.amount.toFixed(2)}${buyerTxt} (${applied.account || 'Cartão'})`,
+                        type: 'financeiro',
+                        priority: 'normal',
+                        linkTab: 'financas'
+                    });
                 }
 
                 this.lastAction = { type: 'transaction', item: applied, timestamp: Date.now() };
@@ -533,13 +582,23 @@ class DbService {
                     const newDesc = updData.description || target.description;
                     const newCat = updData.category || target.category;
                     const newType = updData.type || target.type;
+                    const newDate = updData.date || target.date;
+                    const newPayment = updData.paymentMethod || target.paymentMethod;
+                    const newProfile = updData.profile || target.profile;
+                    const newBuyer = updData.buyer !== undefined ? updData.buyer : target.buyer;
+                    const newAccount = updData.account !== undefined ? updData.account : target.account;
 
                     this.stmtUpdateTx.run({
                         id: target.id,
                         amount: newAmount,
                         description: newDesc,
                         category: newCat,
-                        type: newType
+                        type: newType,
+                        date: newDate,
+                        paymentMethod: newPayment,
+                        profile: newProfile,
+                        buyer: newBuyer,
+                        account: newAccount
                     });
 
                     // Aplica novo valor ao orçamento
@@ -550,7 +609,18 @@ class DbService {
                         `).run(newAmount, newCat);
                     }
 
-                    applied = { ...target, amount: newAmount, description: newDesc, category: newCat, type: newType };
+                    applied = {
+                        ...target,
+                        amount: newAmount,
+                        description: newDesc,
+                        category: newCat,
+                        type: newType,
+                        date: newDate,
+                        paymentMethod: newPayment,
+                        profile: newProfile,
+                        buyer: newBuyer,
+                        account: newAccount
+                    };
                     this.lastAction = { type: 'transaction', item: applied, timestamp: Date.now() };
                 }
                 break;
@@ -926,6 +996,195 @@ class DbService {
             totalPaid
         };
     }
+
+    // ==========================================
+    // TRANSAÇÕES FINANCEIRAS (CRUD COMPLETO)
+    // ==========================================
+
+    addTransaction(tx) {
+        return this.applyAction({
+            type: 'transaction',
+            data: tx
+        });
+    }
+
+    updateTransaction(id, txData) {
+        return this.applyAction({
+            type: 'update_transaction',
+            data: { id, ...txData }
+        });
+    }
+
+    deleteTransaction(id) {
+        return this.applyAction({
+            type: 'delete_transaction',
+            data: { id }
+        });
+    }
+
+    // ==========================================
+    // ATUALIZAÇÃO DE MEMBROS E CLIENTES
+    // ==========================================
+
+    updateTeamMember(id, memberData) {
+        const existing = this.sqlite.prepare('SELECT * FROM team_members WHERE id = ?').get(id);
+        if (!existing) return null;
+
+        const updated = {
+            id,
+            name: memberData.name || existing.name,
+            phone: memberData.phone || existing.phone,
+            role: memberData.role || existing.role,
+            status: memberData.status || existing.status
+        };
+
+        this.stmtUpdateTeamMember.run(updated);
+        this.broadcast('data_updated', {
+            type: 'team_member_updated',
+            item: updated,
+            fullDb: this.getAll()
+        });
+        return updated;
+    }
+
+    updateClient(id, clientData) {
+        const existing = this.sqlite.prepare('SELECT * FROM clients WHERE id = ?').get(id);
+        if (!existing) return null;
+
+        const updated = {
+            id,
+            name: clientData.name || existing.name,
+            type: clientData.type || existing.type,
+            document: clientData.document !== undefined ? clientData.document : existing.document,
+            phone: clientData.phone !== undefined ? clientData.phone : existing.phone,
+            category: clientData.category || existing.category,
+            notes: clientData.notes !== undefined ? clientData.notes : existing.notes
+        };
+
+        this.stmtUpdateClient.run(updated);
+        this.broadcast('data_updated', {
+            type: 'client_updated',
+            item: updated,
+            fullDb: this.getAll()
+        });
+        return updated;
+    }
+
+    // ==========================================
+    // SISTEMA DE NOTIFICAÇÕES INTELIGENTES
+    // ==========================================
+
+    getNotifications(limit = 40) {
+        return this.sqlite.prepare('SELECT * FROM notifications ORDER BY createdAt DESC LIMIT ?').all(limit);
+    }
+
+    addNotification(notif) {
+        const id = notif.id || `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const item = {
+            id,
+            title: notif.title || 'Alerta Executivo',
+            message: notif.message || '',
+            type: notif.type || 'financeiro',
+            read: 0,
+            priority: notif.priority || 'normal',
+            linkTab: notif.linkTab || 'financas',
+            createdAt: Date.now()
+        };
+
+        this.stmtInsertNotification.run(item);
+        this.broadcast('data_updated', {
+            type: 'notification',
+            item,
+            fullDb: this.getAll()
+        });
+        return item;
+    }
+
+    markNotificationAsRead(id) {
+        this.sqlite.prepare('UPDATE notifications SET read = 1 WHERE id = ?').run(id);
+        this.broadcast('data_updated', {
+            type: 'notification_read',
+            item: { id },
+            fullDb: this.getAll()
+        });
+        return true;
+    }
+
+    markAllNotificationsAsRead() {
+        this.sqlite.prepare('UPDATE notifications SET read = 1').run();
+        this.broadcast('data_updated', {
+            type: 'notifications_all_read',
+            fullDb: this.getAll()
+        });
+        return true;
+    }
+
+    deleteNotification(id) {
+        this.sqlite.prepare('DELETE FROM notifications WHERE id = ?').run(id);
+        this.broadcast('data_updated', {
+            type: 'notification_deleted',
+            item: { id },
+            fullDb: this.getAll()
+        });
+        return true;
+    }
+
+    /**
+     * Varre as regras de negócio para gerar notificações proativas automáticas
+     */
+    checkAndGenerateSmartNotifications() {
+        try {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            // 1. Notificação de Boletos / Dívidas Pendentes
+            const pendingDebts = this.sqlite.prepare("SELECT * FROM debts WHERE status = 'pendente' LIMIT 5").all();
+            pendingDebts.forEach(d => {
+                const existing = this.sqlite.prepare("SELECT id FROM notifications WHERE message LIKE ?").get(`%${d.name}%`);
+                if (!existing) {
+                    this.addNotification({
+                        title: '⏳ Conta a Pagar / Receber Pendente',
+                        message: `${d.name}: R$ ${parseFloat(d.amount).toFixed(2)} (${d.reason || 'Cobrança em aberto'})`,
+                        type: 'cobranca',
+                        priority: 'urgente',
+                        linkTab: 'cobrancas'
+                    });
+                }
+            });
+
+            // 2. Alerta de Orçamento se categoria ultrapassou 80% do teto
+            const budgets = this.sqlite.prepare("SELECT * FROM budgets WHERE ceiling > 0").all();
+            budgets.forEach(b => {
+                if (b.spent >= b.ceiling * 0.8) {
+                    const existing = this.sqlite.prepare("SELECT id FROM notifications WHERE title LIKE ?").get(`%${b.category}%`);
+                    if (!existing) {
+                        this.addNotification({
+                            title: `⚠️ Atenção ao Orçamento (${b.category})`,
+                            message: `Você já utilizou ${Math.round((b.spent / b.ceiling) * 100)}% do teto mensal estabelecido.`,
+                            type: 'financeiro',
+                            priority: 'normal',
+                            linkTab: 'financas'
+                        });
+                    }
+                }
+            });
+
+            // 3. Notificação de Boas-Vindas da Conta Ativa
+            const countNotifs = this.sqlite.prepare("SELECT COUNT(*) as count FROM notifications").get().count;
+            if (countNotifs === 0) {
+                this.addNotification({
+                    title: '⚡ KIT OS Ativo e Operacional',
+                    message: 'Seus 6 assessores de IA estão monitorando seus lançamentos, agenda e WhatsApp em tempo real.',
+                    type: 'sistema',
+                    priority: 'normal',
+                    linkTab: 'overview'
+                });
+            }
+        } catch (e) {
+            console.error('[Notifications] Erro ao gerar notificações inteligentes:', e.message);
+        }
+    }
 }
 
 module.exports = new DbService();
+

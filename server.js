@@ -337,6 +337,11 @@ app.post('/api/team', (req, res) => {
     res.json({ success: true, member });
 });
 
+app.put('/api/team/:id', (req, res) => {
+    const member = dbService.updateTeamMember(req.params.id, req.body);
+    res.json({ success: true, member });
+});
+
 app.delete('/api/team/:id', (req, res) => {
     dbService.deleteTeamMember(req.params.id);
     res.json({ success: true });
@@ -352,6 +357,11 @@ app.post('/api/clients', (req, res) => {
     res.json({ success: true, client });
 });
 
+app.put('/api/clients/:id', (req, res) => {
+    const client = dbService.updateClient(req.params.id, req.body);
+    res.json({ success: true, client });
+});
+
 app.delete('/api/clients/:id', (req, res) => {
     dbService.deleteClient(req.params.id);
     res.json({ success: true });
@@ -360,6 +370,61 @@ app.delete('/api/clients/:id', (req, res) => {
 app.get('/api/clients/query', (req, res) => {
     const summary = dbService.queryClientReceipts(req.query.name);
     res.json({ success: true, summary });
+});
+
+// 15. REST API: Transações Financeiras (CRUD Manual com Comprador/Responsável)
+app.post('/api/transactions', (req, res) => {
+    const tx = dbService.addTransaction(req.body);
+    res.json({ success: true, transaction: tx });
+});
+
+app.put('/api/transactions/:id', (req, res) => {
+    const tx = dbService.updateTransaction(req.params.id, req.body);
+    res.json({ success: true, transaction: tx });
+});
+
+app.delete('/api/transactions/:id', (req, res) => {
+    dbService.deleteTransaction(req.params.id);
+    res.json({ success: true });
+});
+
+// 16. REST API: Notificações & Alertas no WhatsApp
+app.get('/api/notifications', (req, res) => {
+    res.json({ success: true, notifications: dbService.getNotifications(50) });
+});
+
+app.post('/api/notifications', (req, res) => {
+    const notif = dbService.addNotification(req.body);
+    res.json({ success: true, notification: notif });
+});
+
+app.put('/api/notifications/:id/read', (req, res) => {
+    dbService.markNotificationAsRead(req.params.id);
+    res.json({ success: true });
+});
+
+app.put('/api/notifications/read-all', (req, res) => {
+    dbService.markAllNotificationsAsRead();
+    res.json({ success: true });
+});
+
+app.delete('/api/notifications/:id', (req, res) => {
+    dbService.deleteNotification(req.params.id);
+    res.json({ success: true });
+});
+
+app.post('/api/notifications/whatsapp-alert', async (req, res) => {
+    const { message, phone } = req.body;
+    const targetPhone = phone || '+55 (85) 98801-4049';
+    try {
+        if (whatsappService.isReady()) {
+            await whatsappService.sendTestMessage(targetPhone, `*KIT Alerta Executivo*\n\n${message || 'Você possui um alerta importante no seu painel.'}`);
+            return res.json({ success: true, sentWhatsApp: true });
+        }
+        res.json({ success: true, sentWhatsApp: false, reason: 'WhatsApp offline no momento' });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 // 15. REST API: Direct AI Chat Endpoint (Powered by Gemini Pro)

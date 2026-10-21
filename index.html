@@ -236,11 +236,38 @@
                         <span>Ação Rápida</span>
                     </button>
 
-                    <!-- Notification Button -->
-                    <button class="icon-action-btn" id="btnNotifications" title="Lembretes e Alertas" aria-label="Notificações">
-                        <span class="icon">🔔</span>
-                        <span class="notif-badge" id="notifBadgeCount">2</span>
-                    </button>
+                    <!-- Central de Notificações & Alertas -->
+                    <div class="notifications-wrapper" style="position: relative;">
+                        <button class="icon-action-btn" id="btnNotifications" title="Central de Alertas e Notificações" aria-label="Notificações">
+                            <span class="icon">🔔</span>
+                            <span class="notif-badge" id="notifBadgeCount">0</span>
+                        </button>
+
+                        <div class="notifications-dropdown" id="notificationsDropdown" style="display: none;">
+                            <div class="notif-dropdown-header">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.1rem;">🔔</span>
+                                    <div>
+                                        <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">Central de Notificações</h4>
+                                        <p style="margin: 0; font-size: 0.72rem; color: var(--text-muted);" id="notifSubCount">Nenhuma notificação nova</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-ghost btn-xs" id="btnMarkAllNotifsRead" title="Marcar todas como lidas" style="font-size: 0.72rem;">
+                                    ✓ Limpar
+                                </button>
+                            </div>
+
+                            <div class="notif-dropdown-body" id="notifListContainer">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+
+                            <div class="notif-dropdown-footer">
+                                <button class="btn btn-ghost btn-xs w-full text-center" id="btnSendTestWaAlert" style="font-size: 0.75rem; color: #10b981; justify-content: center;">
+                                    💬 Enviar Alerta Resumo no WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -1094,12 +1121,15 @@
                 <div class="row-2-cols">
                     <!-- Quem te Deve (Martin) -->
                     <div class="card p-4">
-                        <div class="card-header-clean mb-3">
+                        <div class="card-header-clean mb-3" style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <h3 class="card-title">Quem te Deve · Empréstimos & Prazos</h3>
                                 <p class="text-muted text-xs">Diga "emprestei X pro fulano" e o Martin acompanha até a baixa.</p>
                             </div>
-                            <span class="badge">Martin Cobrando</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="badge">Martin Cobrando</span>
+                                <button class="btn btn-primary btn-xs" id="btnNewDebtModal">+ Nova Cobrança / Dívida</button>
+                            </div>
                         </div>
                         <div class="debts-list-box" id="debtsListContainer">
                             <!-- Populated dynamically -->
@@ -1468,13 +1498,16 @@
     </div>
 
     <!-- MODAL: NOVO LANÇAMENTO (FINANCEIRO) -->
+    <!-- MODAL: NOVO LANÇAMENTO & EDIÇÃO (FINANCEIRO) -->
     <dialog class="modal-dialog" id="modalTransaction">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Novo Lançamento Financeiro</h3>
+                <h3 class="modal-title" id="modalTransactionTitle">Novo Lançamento Financeiro</h3>
                 <button class="modal-close-btn" id="modalCloseTransaction">✕</button>
             </div>
             <form id="formTransaction" class="modal-body">
+                <input type="hidden" id="txEditId" value="">
+
                 <div class="form-group mb-3">
                     <label class="form-label">Tipo de Movimentação</label>
                     <div class="segmented-control">
@@ -1491,7 +1524,7 @@
 
                 <div class="form-group mb-3">
                     <label class="form-label">Descrição do Gasto ou Entrada</label>
-                    <input type="text" class="form-control" id="txDescription" placeholder="Ex: Almoço com cliente, Assinatura AWS, PIX recebido..." required>
+                    <input type="text" class="form-control" id="txDescription" placeholder="Ex: Farmácia São Paulo, Almoço com cliente, Assinatura AWS..." required>
                 </div>
 
                 <div class="form-row mb-3">
@@ -1505,12 +1538,42 @@
                     </div>
                 </div>
 
+                <!-- Quem Realizou a Compra / Cartão Usado por Outra Pessoa -->
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">
+                            👤 Quem realizou a compra? <span style="font-size: 0.75rem; color: #3b82f6; font-weight: normal;">(Uso do Cartão)</span>
+                        </label>
+                        <input type="text" class="form-control" id="txBuyer" placeholder="Ex: Amauri, Esposa, Filho, Sócio..." list="teamBuyersList">
+                        <datalist id="teamBuyersList">
+                            <option value="Amauri Castro">
+                        </datalist>
+                        <small style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 3px;">
+                            Identifique quem usou seu cartão para facilitar o acerto de contas e cobranças.
+                        </small>
+                    </div>
+
+                    <div class="form-col">
+                        <label class="form-label">Banco / Conta de Origem</label>
+                        <select class="form-select" id="txAccount">
+                            <option value="Nubank">Nubank (Conta + Cartão)</option>
+                            <option value="Mercado Pago">Mercado Pago</option>
+                            <option value="Itaú">Itaú (Conta + Cartão Black)</option>
+                            <option value="C6 Bank">C6 Bank (Conta + Cartão)</option>
+                            <option value="Carteira / Espécie">Carteira / Dinheiro em Espécie</option>
+                            <option value="Cartão Corporativo">Cartão Corporativo (PJ)</option>
+                            <option value="Outros Bancos">Outros Bancos</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="form-row mb-3">
                     <div class="form-col">
                         <label class="form-label">Categoria</label>
                         <select class="form-select" id="txCategory">
-                            <option value="Alimentação">Alimentação</option>
-                            <option value="Transporte">Transporte / Deslocamento</option>
+                            <option value="Alimentação">Alimentação & Restaurantes</option>
+                            <option value="Transporte">Transporte & Combustível</option>
+                            <option value="Saúde & Farmácia">Saúde & Farmácia</option>
                             <option value="Software & Nuvem">Software & Nuvem</option>
                             <option value="Impostos & Tributos">Impostos & Tributos</option>
                             <option value="Serviços Prestados">Serviços Prestados</option>
@@ -1521,10 +1584,11 @@
                     <div class="form-col">
                         <label class="form-label">Meio de Pagamento</label>
                         <select class="form-select" id="txPaymentMethod">
-                            <option value="PIX">PIX</option>
                             <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="PIX">PIX</option>
                             <option value="Cartão de Débito">Cartão de Débito</option>
                             <option value="Boleto">Boleto Bancário</option>
+                            <option value="Dinheiro">Dinheiro em Espécie</option>
                             <option value="Transferência">Transferência</option>
                         </select>
                     </div>
@@ -1532,7 +1596,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="btnCancelTransaction">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitTransaction">Salvar Lançamento</button>
                 </div>
             </form>
         </div>
@@ -1636,14 +1700,15 @@
         </div>
     </dialog>
 
-    <!-- MODAL: NOVO LEMBRETE -->
+    <!-- MODAL: NOVO LEMBRETE & EDIÇÃO -->
     <dialog class="modal-dialog" id="modalReminder">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Programar Novo Lembrete no WhatsApp</h3>
+                <h3 class="modal-title" id="modalReminderTitle">Programar Novo Lembrete no WhatsApp</h3>
                 <button class="modal-close-btn" id="modalCloseReminder">✕</button>
             </div>
             <form id="formReminder" class="modal-body">
+                <input type="hidden" id="reminderEditId" value="">
                 <div class="form-group mb-3">
                     <label class="form-label">O que você quer que os assessores te lembrem?</label>
                     <input type="text" class="form-control" id="reminderText" placeholder="Ex: Lembrar de tomar remédio, Pagar fatura do cartão..." required>
@@ -1672,20 +1737,77 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="btnCancelReminder">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Ativar Lembrete</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitReminder">Salvar Lembrete</button>
                 </div>
             </form>
         </div>
     </dialog>
 
-    <!-- MODAL: NOVO MEMBRO DA EQUIPE -->
+    <!-- MODAL: NOVA COBRANÇA / DÍVIDA & EDIÇÃO -->
+    <dialog class="modal-dialog" id="modalDebt">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalDebtTitle">Nova Cobrança ou Dívida</h3>
+                <button class="modal-close-btn" id="modalCloseDebt">✕</button>
+            </div>
+            <form id="formDebt" class="modal-body">
+                <input type="hidden" id="debtEditId" value="">
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Tipo de Lançamento</label>
+                    <select class="form-select" id="debtType" required>
+                        <option value="receber">📥 A Receber (Alguém me deve / Empréstimo feito)</option>
+                        <option value="pagar">📤 A Pagar (Eu devo / Compromisso com terceiro)</option>
+                    </select>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Nome da Pessoa / Empresa</label>
+                        <input type="text" class="form-control" id="debtPerson" placeholder="Ex: Carlos Mecânico, Amanda..." required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Valor (R$)</label>
+                        <input type="number" step="0.01" class="form-control" id="debtAmount" placeholder="Ex: 350.00" required>
+                    </div>
+                </div>
+
+                <div class="form-row mb-3">
+                    <div class="form-col">
+                        <label class="form-label">Data de Vencimento / Prazo</label>
+                        <input type="date" class="form-control" id="debtDueDate" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="debtStatus">
+                            <option value="pendente">⏳ Pendente (Aguardando)</option>
+                            <option value="pago">✓ Baixado (Quitado)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Motivo / Descrição</label>
+                    <input type="text" class="form-control" id="debtDesc" placeholder="Ex: Empréstimo para reparo do carro, Adiantamento..." required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnCancelDebt">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitDebt">Salvar Cobrança</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- MODAL: NOVO MEMBRO DA EQUIPE & EDIÇÃO -->
     <dialog class="modal-dialog" id="modalTeam">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Convidar Novo Usuário (Ilimitado)</h3>
+                <h3 class="modal-title" id="modalTeamTitle">Convidar Novo Usuário (Ilimitado)</h3>
                 <button class="modal-close-btn" id="modalCloseTeam">✕</button>
             </div>
             <form id="formTeam" class="modal-body">
+                <input type="hidden" id="teamMemberEditId" value="">
                 <div class="form-group mb-3">
                     <label class="form-label">Nome Completo</label>
                     <input type="text" class="form-control" id="teamMemberName" placeholder="Ex: Carolina Silva, Rodrigo Sócio..." required>
@@ -1708,20 +1830,21 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="btnCancelTeam">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Vincular ao WhatsApp</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitTeam">Salvar Membro</button>
                 </div>
             </form>
         </div>
     </dialog>
 
-    <!-- MODAL: NOVO CLIENTE OU FORNECEDOR (CENTRO DE CUSTO / CNPJ & CPF) -->
+    <!-- MODAL: NOVO CLIENTE OU FORNECEDOR (CENTRO DE CUSTO / CNPJ & CPF) & EDIÇÃO -->
     <dialog class="modal-dialog" id="modalClient">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Novo Cliente / Fornecedor</h3>
+                <h3 class="modal-title" id="modalClientTitle">Cadastrar Novo Cliente / Fornecedor</h3>
                 <button class="modal-close-btn" id="modalCloseClient">✕</button>
             </div>
             <form id="formClient" class="modal-body">
+                <input type="hidden" id="clientEditId" value="">
                 <div class="form-group mb-3">
                     <label class="form-label">Tipo de Cadastro</label>
                     <select class="form-select" id="clientType">
@@ -1731,7 +1854,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Nome Fantasia / Razão Social</label>
-                    <input type="text" class="form-control" id="clientName" placeholder="Ex: Ótica Vieira, Posto Ipiranga..." required>
+                    <input type="text" class="form-control" id="clientName" placeholder="Ex: Clínica Alpha, Auto Posto Central..." required>
                 </div>
                 <div class="form-row mb-3">
                     <div class="form-col">
@@ -1749,7 +1872,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="btnCancelClient">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar no Sistema</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitClient">Salvar no Sistema</button>
                 </div>
             </form>
         </div>
@@ -1839,6 +1962,7 @@
     <script src="js/modules/listas.js?v=2.9"></script>
     <script src="js/modules/reports.js?v=2.9"></script>
     <script src="js/modules/conexao.js?v=2.9"></script>
+    <script src="js/modules/notifications.js?v=2.9"></script>
     <script src="js/app.js?v=2.9"></script>
 
 </body>

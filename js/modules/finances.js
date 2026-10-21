@@ -144,6 +144,15 @@ class FinancesModule {
         // Modal triggers
         if (this.elements.btnNewTransaction && this.elements.modalTransaction) {
             this.elements.btnNewTransaction.addEventListener('click', () => {
+                this.elements.formTransaction?.reset();
+                const editIdInput = document.getElementById('txEditId');
+                if (editIdInput) editIdInput.value = '';
+                const modalTitle = document.getElementById('modalTransactionTitle');
+                if (modalTitle) modalTitle.textContent = 'Novo Lançamento Financeiro';
+
+                // Popula datalist de compradores com os membros da equipe
+                this.populateBuyersDatalist();
+
                 this.elements.modalTransaction.showModal();
                 const today = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('txDate');
@@ -163,31 +172,128 @@ class FinancesModule {
             });
         }
 
-        // Form submit
+        // Form submit (Criação & Edição Manual de Lançamentos)
         if (this.elements.formTransaction) {
-            this.elements.formTransaction.addEventListener('submit', (e) => {
+            this.elements.formTransaction.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const type = document.querySelector('input[name="txType"]:checked').value;
-                const desc = document.getElementById('txDescription').value;
-                const amount = parseFloat(document.getElementById('txAmount').value);
-                const date = document.getElementById('txDate').value;
-                const category = document.getElementById('txCategory').value;
-                const paymentMethod = document.getElementById('txPaymentMethod').value;
+                const editId = document.getElementById('txEditId')?.value;
+                const type = document.querySelector('input[name="txType"]:checked')?.value || 'despesa';
+                const desc = document.getElementById('txDescription')?.value || '';
+                const amount = parseFloat(document.getElementById('txAmount')?.value) || 0;
+                const date = document.getElementById('txDate')?.value || new Date().toISOString().split('T')[0];
+                const category = document.getElementById('txCategory')?.value || 'Geral';
+                const paymentMethod = document.getElementById('txPaymentMethod')?.value || 'Cartão de Crédito';
+                const account = document.getElementById('txAccount')?.value || 'Nubank';
+                const buyer = document.getElementById('txBuyer')?.value?.trim() || null;
 
-                this.store.addTransaction({
+                const payload = {
                     type,
                     description: desc,
                     amount,
                     date,
                     category,
                     paymentMethod,
+                    account,
+                    buyer,
                     status: 'conciliado',
                     registeredBy: 'Painel Web (Manual)'
-                });
+                };
+
+                try {
+                    if (editId) {
+                        // Edição de transação existente
+                        await fetch(`/api/transactions/${editId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        // Atualiza no store local
+                        const localIndex = this.store.state.transactions.findIndex(t => t.id === editId);
+                        if (localIndex !== -1) {
+                            this.store.state.transactions[localIndex] = {
+                                ...this.store.state.transactions[localIndex],
+                                ...payload
+                            };
+                        }
+                        window.showToast?.('Lançamento atualizado com sucesso!');
+                    } else {
+                        // Nova transação manual
+                        const res = await fetch('/api/transactions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        const newTx = data.transaction || { id: `tx-${Date.now()}`, ...payload };
+                        this.store.state.transactions.unshift(newTx);
+                        window.showToast?.('Lançamento cadastrado com sucesso!');
+                    }
+                } catch (err) {
+                    console.error('Erro ao salvar transação:', err);
+                    window.showToast?.('Lançamento salvo localmente.');
+                }
 
                 this.elements.formTransaction.reset();
                 this.elements.modalTransaction.close();
-                window.showToast?.('Lançamento adicionado com sucesso!');
+                this.renderTransactions();
+                this.renderDonutChart();
+                this.renderCashFlowBars();
+            });
+        }
+
+        // Delegação de cliques na tabela para Editar e Excluir
+        if (this.elements.transactionsTableBody) {
+            this.elements.transactionsTableBody.addEventListener('click', async (e) => {
+                const btnEdit = e.target.closest('.btn-edit-tx');
+                const btnDelete = e.target.closest('.btn-delete-tx');
+
+                if (btnEdit) {
+                    const txId = btnEdit.getAttribute('data-id');
+                    const tx = this.store.state.transactions.find(t => t.id === txId);
+                    if (tx) {
+                        document.getElementById('txEditId').value = tx.id;
+                        const modalTitle = document.getElementById('modalTransactionTitle');
+                        if (modalTitle) modalTitle.textContent = 'Editar Lançamento Financeiro';
+
+                        const radio = document.querySelector(`input[name="txType"][value="${tx.type}"]`);
+                        if (radio) radio.checked = true;
+
+                        document.getElementById('txDescription').value = tx.description || '';
+                        document.getElementById('txAmount').value = tx.amount || '';
+                        document.getElementById('txDate').value = tx.date || '';
+
+                        const catSel = document.getElementById('txCategory');
+                        if (catSel) catSel.value = tx.category || 'Alimentação';
+
+                        const paySel = document.getElementById('txPaymentMethod');
+                        if (paySel) paySel.value = tx.paymentMethod || 'Cartão de Crédito';
+
+                        const accSel = document.getElementById('txAccount');
+                        if (accSel && tx.account) accSel.value = tx.account;
+
+                        const buyerInput = document.getElementById('txBuyer');
+                        if (buyerInput) buyerInput.value = tx.buyer || '';
+
+                        this.populateBuyersDatalist();
+                        this.elements.modalTransaction.showModal();
+                    }
+                }
+
+                if (btnDelete) {
+                    const txId = btnDelete.getAttribute('data-id');
+                    if (confirm('Deseja realmente excluir este lançamento do extrato?')) {
+                        try {
+                            await fetch(`/api/transactions/${txId}`, { method: 'DELETE' });
+                        } catch (err) {}
+
+                        this.store.state.transactions = this.store.state.transactions.filter(t => t.id !== txId);
+                        window.showToast?.('Lançamento excluído com sucesso!');
+                        this.renderTransactions();
+                        this.renderDonutChart();
+                        this.renderCashFlowBars();
+                    }
+                }
             });
         }
 
@@ -616,20 +722,59 @@ class FinancesModule {
             const rawCat = t.category || 'Geral';
             const categoryDisplay = this.categoryNamesMap[rawCat] || rawCat;
 
+            const buyerTagHtml = t.buyer 
+                ? `<div class="tx-buyer-tag">👤 Compra de: <strong>${t.buyer}</strong></div>` 
+                : '';
+
+            const accountDisplay = t.account 
+                ? `<div><strong style="font-size: 12.5px;">${t.account}</strong></div><span class="tx-account-tag">${t.paymentMethod || 'Cartão'}</span>` 
+                : `<div>${t.paymentMethod || 'Cartão / Pix'}</div>`;
+
             tr.innerHTML = `
                 <td><span class="tx-status-pill ${statusClass}">${statusLabel}</span></td>
-                <td><strong>${t.description}</strong></td>
+                <td>
+                    <div><strong>${t.description}</strong></div>
+                    ${buyerTagHtml}
+                </td>
                 <td><span class="badge">${categoryDisplay}</span></td>
-                <td>${t.paymentMethod || 'Cartão / Pix'}</td>
+                <td>${accountDisplay}</td>
                 <td>${dateStr}</td>
                 <td><span style="font-size: 11.5px; color: var(--text-muted);">${t.registeredBy || 'WhatsApp (KIT)'}</span></td>
                 <td class="text-right ${amountClass}">${amountFormatted}</td>
                 <td class="text-center">
-                    <button class="btn btn-ghost btn-sm" style="padding: 2px 6px;" title="Detalhes do Lançamento">👁️</button>
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button class="btn-action-icon btn-edit-tx" data-id="${t.id}" title="Editar este lançamento">✏️</button>
+                        <button class="btn-action-icon btn-delete btn-delete-tx" data-id="${t.id}" title="Excluir lançamento">🗑️</button>
+                    </div>
                 </td>
             `;
 
             this.elements.transactionsTableBody.appendChild(tr);
+        });
+    }
+
+    populateBuyersDatalist() {
+        const dl = document.getElementById('teamBuyersList');
+        if (!dl) return;
+
+        const members = this.store.state.teamMembers || [];
+        const buyersSet = new Set(['Amauri Castro']);
+
+        members.forEach(m => {
+            if (m.name) buyersSet.add(m.name);
+        });
+
+        // Adiciona quem já comprou no histórico
+        const txs = this.store.state.transactions || [];
+        txs.forEach(t => {
+            if (t.buyer) buyersSet.add(t.buyer);
+        });
+
+        dl.innerHTML = '';
+        buyersSet.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            dl.appendChild(opt);
         });
     }
 

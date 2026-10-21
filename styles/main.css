@@ -3807,5 +3807,196 @@ html, body {
     margin-bottom: 0;
 }
 
+/* ==========================================================================
+   CENTRAL DE NOTIFICAÇÕES & ALERTAS
+   ========================================================================== */
+.notifications-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 360px;
+    max-width: 90vw;
+    background: #111b21;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    overflow: hidden;
+    animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.notif-dropdown-body {
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.notif-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.notif-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.notif-item.notif-unread {
+    background: rgba(0, 168, 132, 0.08);
+}
+
+.notif-item.notif-unread::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00a884;
+}
+
+.notif-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.notif-icon-cobranca {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.notif-icon-financeiro {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.notif-icon-equipe {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.notif-icon-sistema {
+    background: rgba(14, 165, 233, 0.2);
+    color: #0ea5e9;
+}
+
+.notif-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.notif-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f0f2f5;
+    margin: 0;
+}
+
+.notif-message {
+    font-size: 11.5px;
+    color: #8696a0;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.notif-time {
+    font-size: 10px;
+    color: #667781;
+    margin-top: 4px;
+}
+
+.notif-dropdown-footer {
+    padding: 10px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.notif-empty-state {
+    padding: 30px 20px;
+    text-align: center;
+    color: #8696a0;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Tag de Comprador / Quem usou o Cartão */
+.tx-buyer-tag {
+    font-size: 11px;
+    color: #3b82f6;
+    margin-top: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.tx-account-tag {
+    font-size: 11px;
+    color: #8696a0;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Botões de Ação na Tabela de Transações e Clientes */
+.btn-action-icon {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8696a0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+.btn-action-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-action-icon.btn-delete:hover {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border-color: rgba(244, 63, 94, 0.3);
+}
+
+
 
 

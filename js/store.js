@@ -516,41 +516,20 @@ const DEFAULT_STATE = {
             advisor: 'Sofi'
         }
     ],
-    // Equipe Multiusuário sem limites
+    // Equipe Multiusuário Real (Conta Compartilhada)
     team: [
         {
             id: 'tm-1',
-            name: 'Amauri (Você)',
-            phone: '+55 (11) 98765-4321',
-            role: 'Administrador (Master)',
+            name: 'Amauri Castro',
+            phone: '+55 (85) 98801-4049',
+            role: 'Administrador (Titular)',
             status: 'Ativo · Conectado',
             avatar: 'AM'
-        },
-        {
-            id: 'tm-2',
-            name: 'Carolina Prado',
-            phone: '+55 (11) 99123-4567',
-            role: 'Sócio / Gestor (Vê finanças empresa)',
-            status: 'Ativo · WhatsApp Conectado',
-            avatar: 'CP'
-        },
-        {
-            id: 'tm-3',
-            name: 'Mariana Silva',
-            phone: '+55 (11) 98456-7890',
-            role: 'Família (Gastos Pessoais & Casa)',
-            status: 'Ativo · WhatsApp Conectado',
-            avatar: 'MS'
-        },
-        {
-            id: 'tm-4',
-            name: 'Lucas Ferreira',
-            phone: '+55 (11) 97788-9900',
-            role: 'Colaborador (Projetos & Tarefas)',
-            status: 'Ativo · WhatsApp Conectado',
-            avatar: 'LF'
         }
     ],
+    teamMembers: [],
+    clients: [],
+    notifications: [],
     // Feed de Execução ao Vivo
     executionFeed: [
         {
@@ -710,6 +689,20 @@ class Store {
         if (Array.isArray(backendDb.lists)) {
             this.state.lists = backendDb.lists;
         }
+        if (Array.isArray(backendDb.teamMembers)) {
+            this.state.teamMembers = backendDb.teamMembers;
+        }
+        if (Array.isArray(backendDb.clients)) {
+            this.state.clients = backendDb.clients;
+        }
+        if (Array.isArray(backendDb.notifications)) {
+            const oldUnread = (this.state.notifications || []).filter(n => !n.read).length;
+            const newUnread = backendDb.notifications.filter(n => !n.read).length;
+            if (newUnread > oldUnread && isLiveEvent) {
+                window.notificationsModule?.playNotificationSound();
+            }
+            this.state.notifications = backendDb.notifications;
+        }
 
         this.saveState();
     }
@@ -855,6 +848,31 @@ class Store {
         }
     }
 
+    addDebt(debt) {
+        const id = 'debt-' + Date.now();
+        this.state.debts.unshift({
+            id,
+            status: 'pendente',
+            dueDate: new Date().toISOString().split('T')[0],
+            ...debt
+        });
+        this.saveState();
+        return id;
+    }
+
+    updateDebt(debtId, updatedFields) {
+        const idx = this.state.debts.findIndex(item => item.id === debtId);
+        if (idx !== -1) {
+            this.state.debts[idx] = { ...this.state.debts[idx], ...updatedFields };
+            this.saveState();
+        }
+    }
+
+    deleteDebt(debtId) {
+        this.state.debts = this.state.debts.filter(item => item.id !== debtId);
+        this.saveState();
+    }
+
     // Billing links
     addBillingLink(link) {
         this.state.billingLinks.unshift({
@@ -864,6 +882,11 @@ class Store {
             createdAt: new Date().toISOString().split('T')[0],
             ...link
         });
+        this.saveState();
+    }
+
+    deleteBillingLink(linkId) {
+        this.state.billingLinks = this.state.billingLinks.filter(item => item.id !== linkId);
         this.saveState();
     }
 
@@ -1048,7 +1071,6 @@ class Store {
         this.saveState();
     }
 
-    // Reminders
     addReminder(rem) {
         this.state.reminders.unshift({
             id: 'rem-' + Date.now(),
@@ -1056,6 +1078,19 @@ class Store {
             advisor: 'Theo & Equipe',
             ...rem
         });
+        this.saveState();
+    }
+
+    updateReminder(reminderId, updatedFields) {
+        const idx = this.state.reminders.findIndex(item => item.id === reminderId);
+        if (idx !== -1) {
+            this.state.reminders[idx] = { ...this.state.reminders[idx], ...updatedFields };
+            this.saveState();
+        }
+    }
+
+    deleteReminder(reminderId) {
+        this.state.reminders = this.state.reminders.filter(item => item.id !== reminderId);
         this.saveState();
     }
 

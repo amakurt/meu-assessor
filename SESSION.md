@@ -214,6 +214,27 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 - **Script de Automação:** Criado `scripts/deploy-ssl.sh` para facilitar re-emissões e futuros apontamentos de domínio próprio.
 - **Roadmap SaaS Documentado:** Criado `docs/ROADMAP_SAAS.md` com arquitetura de transição para PostgreSQL 16, Prisma ORM, TypeScript e Evolution API multi-sessão.
 
+### 🚀 Sessão: Limpeza de Dados Fictícios, Central de Notificações & Controles de Edição Manual Completa (21/10/2026)
+
+#### 1. Limpeza de Dados Simulados / Fictícios
+- **Extrato Financeiro:** Removidas do SQLite todas as transações de exemplo (como a *Ótica Vieira*), preservando rigorosamente as **751 transações bancárias reais** integradas via Open Finance (Nubank, Mercado Pago, Itaú e C6 Bank).
+- **Conta Compartilhada & Equipe:** Removidos membros simulados de teste (`team-2`, `team-3`), mantendo o titular real **Amauri Castro** (`+55 (85) 98801-4049`).
+- **Clientes & Fornecedores:** Limpeza de cadastros de teste para que a base inicie pronta apenas com clientes reais adicionados pelo painel ou via WhatsApp.
+
+#### 2. Central de Notificações Ativa (Painel Web & WhatsApp)
+- **Engine no SQLite (`notifications`):** Tabela nativa para persistir alertas inteligentes (vencimentos de contas, desvios de orçamento, avisos de sistema e novos membros).
+- **Interface Interativa:** Ícone do sino no cabeçalho com badge contador em tempo real (`#notifBadgeCount`), dropdown moderno com filtro de prioridade, som de aviso via Web Audio API e marcação de lido/lidos.
+- **Integração WhatsApp:** Botão para disparar resumo executivo instantâneo de pendências e notificações diretamente no WhatsApp do titular.
+
+#### 3. Edição Manual e Campos Especiais (Cartões de Dependentes & Contas)
+- **Quem Realizou a Compra (`buyer`):** Campo implementado em todas as transações manuais e na tabela do SQLite, permitindo associar qual dependente, familiar ou sócio usou o cartão, facilitando a cobrança posterior.
+- **Conta / Cartão / Banco (`account`):** Seleção ágil entre bancos conectados (Nubank, Mercado Pago, Itaú, C6 Bank, Carteira Física / Dinheiro, Outros).
+- **CRUD Completo com Botões de Ação:**
+  - **Extrato:** Botões `✏️ Editar` e `🗑️ Excluir` em cada lançamento, com modal dinâmico (`modalTransaction`).
+  - **Equipe & Clientes:** Edição e exclusão rápida nos cards e tabelas.
+  - **Cobranças & Dívidas:** Modal `#modalDebt` para registrar e editar empréstimos/cobranças pendentes e dar baixa.
+  - **Lembretes WhatsApp:** Edição de texto, horário e recorrência (`modalReminder`) com exclusão direta.
+
 ---
 
 ## 📋 Backlog / Próximos Passos Sugeridos
@@ -233,8 +254,12 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 - [x] Documentação técnica de arquitetura SaaS criada em `docs/ROADMAP_SAAS.md`.
 - [x] Porta 443 TCP liberada na Security List da Oracle Cloud Console (HTTPS 100% ativo com Cadeado Verde).
 - [x] Redirecionamento automático 301 de HTTP para HTTPS ativado no Nginx.
+- [x] Limpeza completa de dados fictícios / simulação de demonstração.
+- [x] Central de Notificações ativa com badges, dropdown e disparo de alerta no WhatsApp.
+- [x] Botões e modais de adição e edição manual em todas as abas (com comprador de cartão e conta).
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
+
 
 
 
