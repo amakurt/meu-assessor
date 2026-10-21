@@ -79,6 +79,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+
+        if (tabKey === 'chat') {
+            localStorage.setItem('kit_last_read_chat_time', Date.now().toString());
+            const badge = document.getElementById('badgeUnread');
+            if (badge) {
+                badge.style.display = 'none';
+                badge.textContent = '0';
+            }
+        } else {
+            window.updateChatBadge?.();
+        }
     };
 
     navItems.forEach(item => {
@@ -328,6 +339,53 @@ document.addEventListener('DOMContentLoaded', () => {
             window.showToast('Você bloqueou o acesso ao KIT OS.');
         });
     }
+
+    // ==========================================================================
+    // BADGE DINÂMICO DE MENSAGENS NÃO LIDAS (CONVERSA WHATSAPP)
+    // ==========================================================================
+    window.updateChatBadge = function () {
+        const badge = document.getElementById('badgeUnread');
+        if (!badge) return;
+
+        const activeTab = localStorage.getItem('kit_active_tab') || 'overview';
+        if (activeTab === 'chat') {
+            badge.style.display = 'none';
+            badge.textContent = '0';
+            localStorage.setItem('kit_last_read_chat_time', Date.now().toString());
+            return;
+        }
+
+        const lastReadTime = parseInt(localStorage.getItem('kit_last_read_chat_time') || '0', 10);
+        const msgs = window.appStore?.state?.chatMessages || [];
+
+        // Na primeira execução, marca as mensagens históricas como vistas para não prender em 3
+        if (!lastReadTime) {
+            localStorage.setItem('kit_last_read_chat_time', Date.now().toString());
+            badge.style.display = 'none';
+            badge.textContent = '0';
+            return;
+        }
+
+        const unreadCount = msgs.filter(m => {
+            const time = m.timestamp || (m.createdAt ? Number(m.createdAt) : 0);
+            return m.sender !== 'user' && time > lastReadTime;
+        }).length;
+
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? '99+' : unreadCount.toString();
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+            badge.textContent = '0';
+        }
+    };
+
+    if (window.appStore) {
+        window.appStore.subscribe(() => {
+            window.updateChatBadge();
+        });
+    }
+    window.updateChatBadge();
 
     // Inicializa verificação de segurança
     checkAuth();

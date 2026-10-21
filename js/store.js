@@ -743,8 +743,12 @@ class Store {
 
     // Chat
     addChatMessage(msg) {
+        if (!msg.timestamp) msg.timestamp = Date.now();
         this.state.chatMessages.push(msg);
         this.saveState();
+        if (typeof window !== 'undefined' && window.updateChatBadge) {
+            window.updateChatBadge();
+        }
     }
 
     // Finances & Transactions
