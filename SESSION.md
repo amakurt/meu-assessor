@@ -190,6 +190,7 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - **Gráficos Visuais de Finanças:** Donut SVG de despesas por categoria com legendas interativas filtráveis e gráfico de barras de Fluxo Mensal (Entradas vs. Saídas).
 - **Busca & Filtro de Mês:** Busca instantânea com debounce (`#txSearchInput`) e seletor dinâmico de mês (`#txMonthFilter`).
 - **Paginação de Alta Performance:** Renderização sob demanda (`50 em 50`) de 1.638 lançamentos reais sem travamento de tela.
+- **Migração para SQLite com WAL Mode:** Migrado `db.json` para banco relacional `kit.db` via `better-sqlite3` com índices, transações ACID, zero latência e zero consumo de RAM em background.
 
 ---
 
@@ -202,7 +203,7 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - [x] Nova aba Visão Geral (Home) com briefing executivo e status dos 6 assessores.
 - [x] Gráficos visuais de finanças (Donut de Categorias e Barras de Fluxo Mensal).
 - [x] Busca instantânea, filtro de mês e paginação rápida no extrato.
-- [ ] Conectar banco de dados de alta performance sem impacto de memória (SQLite WAL / Turso Cloud).
+- [x] Banco de dados de alta performance sem impacto de memória (SQLite WAL Mode com migração automática).
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
 

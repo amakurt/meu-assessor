@@ -7,6 +7,9 @@ node_modules/
 .env.*.local
 auth_info_baileys/
 data/
+*.db
+*.db-wal
+*.db-shm
 
 # OS generated files
 .DS_Store

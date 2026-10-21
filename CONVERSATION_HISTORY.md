@@ -199,6 +199,16 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Implementou **Paginação de Alta Performance** (`Exibindo 50 de X lançamentos` com `Carregar Mais` e `Mostrar Todos`) garantindo que 1.638 transações carreguem com renderização instantânea sem travamentos.
   - Testou e validou todos os fluxos de ponta a ponta via `browser_subagent`.
 
+### 🔹 Conversa 17: Migração para SQLite com WAL Mode
+- **Data:** 21/10/2026
+- **Usuário:** *"qual melhor banco de dados pra nosso sistema? no caso dos dois que sugeriu" / "sim"*
+- **Assistente:**
+  - Analisou e recomendou o SQLite com WAL mode (`better-sqlite3`) como a melhor opção técnica (latência < 0.2ms, zero consumo de RAM em background, sem dependência externa e 100% compatível com LibSQL/Turso).
+  - Instalou `better-sqlite3` e validou funcionamento local e na VM Oracle.
+  - Reestruturou `js/db-service.js` para SQLite transacional com índices otimizados (`pluggyId`, `date`, `category`, `type`).
+  - Implementou rotina de migração automática e transparente de `db.json` para `data/kit.db` com backup automático (`db.json.bak`).
+  - Manteve 100% de retrocompatibilidade com todas as rotas e módulos do sistema.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras
