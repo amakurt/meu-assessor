@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tab Navigation
     const navItems = document.querySelectorAll('.nav-item');
     const tabPanels = {
+        overview: document.getElementById('tabContentOverview'),
         chat: document.getElementById('tabContentChat'),
         financas: document.getElementById('tabContentFinancas'),
         agenda: document.getElementById('tabContentAgenda'),
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageBreadcrumb = document.getElementById('pageBreadcrumb');
 
     const tabTitles = {
+        overview: { title: 'Visão Geral Executiva', sub: 'Briefing Geral do Dia · Finanças, Agenda e Metas com seus 6 Assessores' },
         chat: { title: 'Conversa WhatsApp', sub: 'Assessoria de IA em Tempo Real · Selo Oficial Meta' },
         financas: { title: 'Finanças & Contas', sub: 'Gerenciadas pelo Martin · Open Finance Conectado (114 Bancos)' },
         agenda: { title: 'Agenda & Reuniões', sub: 'Gerenciada pela Sofi · Google Agenda & Link Público' },
@@ -75,9 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Restaura imediatamente a aba salva (Finanças, Agenda, etc.)
+    // Inicializa módulo de Visão Geral Executiva
+    if (window.OverviewModule && window.appStore) {
+        window.overviewModule = new window.OverviewModule(window.appStore);
+    }
+    if (window.FinancesModule && window.appStore && !window.financesModule) {
+        window.financesModule = new window.FinancesModule(window.appStore);
+    }
+
+    // Restaura imediatamente a aba salva (Overview, Finanças, Agenda, etc.)
     const hashTab = window.location.hash ? window.location.hash.replace('#', '') : null;
-    const initialSavedTab = hashTab || localStorage.getItem('kit_active_tab') || 'chat';
+    const initialSavedTab = hashTab || localStorage.getItem('kit_active_tab') || 'overview';
     if (initialSavedTab && tabPanels[initialSavedTab]) {
         window.switchTab(initialSavedTab);
     }

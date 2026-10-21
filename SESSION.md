@@ -186,6 +186,10 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - **SSH Casa Liberado:** `amakurt-casa` adicionada ao `~/.ssh/authorized_keys` da Oracle VM.
 - **Produção Sincronizada:** Servidor Oracle atualizado com a branch `main` e PM2 reiniciado (`uptime` online, WhatsApp conectado).
 - **Groq Whisper Ativo em Produção:** Chave configurada em ambos os `.env` e validada via `/api/config/groq` (`{"success":true,"configured":true}`).
+- **Visão Geral (Home):** Nova aba principal com briefing dinâmico (bom dia/tarde/noite), status dos sistemas, 4 KPIs consolidados e resumos rápidos de agenda e tarefas da Luna.
+- **Gráficos Visuais de Finanças:** Donut SVG de despesas por categoria com legendas interativas filtráveis e gráfico de barras de Fluxo Mensal (Entradas vs. Saídas).
+- **Busca & Filtro de Mês:** Busca instantânea com debounce (`#txSearchInput`) e seletor dinâmico de mês (`#txMonthFilter`).
+- **Paginação de Alta Performance:** Renderização sob demanda (`50 em 50`) de 1.638 lançamentos reais sem travamento de tela.
 
 ---
 
@@ -195,8 +199,11 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - [x] Correção inteligente e cancelamento de despesas via áudio/texto no WhatsApp.
 - [x] Transcrição de áudio ultra-rápida com Groq Whisper (~300ms) ativa na nuvem e local.
 - [x] Acesso SSH direto e sem atrito do PC de casa para a VM Oracle liberado.
+- [x] Nova aba Visão Geral (Home) com briefing executivo e status dos 6 assessores.
+- [x] Gráficos visuais de finanças (Donut de Categorias e Barras de Fluxo Mensal).
+- [x] Busca instantânea, filtro de mês e paginação rápida no extrato.
+- [ ] Conectar banco de dados de alta performance sem impacto de memória (SQLite WAL / Turso Cloud).
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
-- [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
 
 

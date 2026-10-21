@@ -88,7 +88,12 @@
             <!-- Navigation Links -->
             <nav class="sidebar-nav" aria-label="Navegação do Sistema">
                 <div class="nav-section-title">Central Executiva</div>
-                <button class="nav-item active" data-tab="chat" id="tabNavChat">
+                <button class="nav-item active" data-tab="overview" id="tabNavOverview">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-label">Visão Geral (Home)</span>
+                    <span class="nav-sublabel">Briefing Executivo</span>
+                </button>
+                <button class="nav-item" data-tab="chat" id="tabNavChat">
                     <span class="nav-icon">💬</span>
                     <span class="nav-label">Conversa WhatsApp</span>
                     <span class="nav-badge count" id="badgeUnread">3</span>
@@ -239,8 +244,155 @@
                 </div>
             </header>
 
+            <!-- TAB 0: VISÃO GERAL EXECUTIVA (HOME BRIEFING) -->
+            <section class="tab-panel active" id="tabContentOverview">
+                <!-- Executive Hero Banner -->
+                <div class="overview-hero-banner">
+                    <div>
+                        <h2 class="overview-hero-title">
+                            <span>⚡</span>
+                            <span id="overviewGreeting">Bom dia, Amauri</span>
+                        </h2>
+                        <p class="overview-hero-sub">
+                            <span id="overviewDateDisplay">Carregando data...</span>
+                            <span>·</span>
+                            <span>Sua equipe de 6 assessores de IA está 100% ativa</span>
+                        </p>
+                    </div>
+                    <div class="overview-system-status-pills">
+                        <span class="status-pill-exec" title="WhatsApp Conectado">
+                            <span class="status-dot"></span>
+                            <span>WhatsApp Ativo</span>
+                        </span>
+                        <span class="status-pill-exec" title="Groq Whisper LPU (~300ms)">
+                            <span class="status-dot"></span>
+                            <span>Groq Whisper</span>
+                        </span>
+                        <span class="status-pill-exec" title="Google Gemini Pro">
+                            <span class="status-dot"></span>
+                            <span>Gemini Pro</span>
+                        </span>
+                        <span class="status-pill-exec" title="Open Finance 4 Bancos">
+                            <span class="status-dot"></span>
+                            <span>4 Bancos (Pluggy)</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 4 KPI Cards -->
+                <div class="kpi-grid mb-4">
+                    <div class="kpi-card" style="cursor: pointer;" onclick="window.switchTab('financas')">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Saldo Consolidado</span>
+                            <span class="kpi-icon-pill bg-emerald">💳</span>
+                        </div>
+                        <div class="kpi-value text-emerald" id="overviewKpiSaldo">R$ 0,00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub">4 Bancos Conectados</span>
+                            <span class="trend-up" style="margin-left: auto;">Ver Finanças ➔</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" style="cursor: pointer;" onclick="window.switchTab('financas')">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Entradas vs Saídas</span>
+                            <span class="kpi-icon-pill bg-blue">📊</span>
+                        </div>
+                        <div class="kpi-value" id="overviewKpiFluxo">R$ 0,00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub" id="overviewKpiFluxoSub">Balanço líquido</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" style="cursor: pointer;" onclick="window.switchTab('agenda')">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Compromissos</span>
+                            <span class="kpi-icon-pill bg-purple">📅</span>
+                        </div>
+                        <div class="kpi-value" id="overviewKpiAgendaCount">0</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub">Reuniões com a Sofi</span>
+                            <span class="trend-up" style="margin-left: auto;">Ver Agenda ➔</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card" style="cursor: pointer;" onclick="window.switchTab('tarefas')">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Tarefas Urgentes</span>
+                            <span class="kpi-icon-pill bg-rose">📋</span>
+                        </div>
+                        <div class="kpi-value text-rose" id="overviewKpiTarefasCount">0</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-sub">Pirâmide da Luna</span>
+                            <span class="trend-up" style="margin-left: auto;">Ver Tarefas ➔</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Split Grid: Finanças & Categorias (Esquerda) vs Agenda & Tarefas (Direita) -->
+                <div class="overview-split-grid">
+                    <!-- Left Column: Mini Resumo Financeiro & Categorias -->
+                    <div class="card p-4">
+                        <div class="card-header-clean mb-3">
+                            <div>
+                                <h3 class="card-title">💰 Panorama Financeiro Rápido · Martin</h3>
+                                <p class="text-muted text-xs">Visão imediata dos maiores centros de custo</p>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="window.switchTab('financas')">
+                                <span>Extrato Completo ➔</span>
+                            </button>
+                        </div>
+                        <div id="overviewTopCategoriesList" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border-radius: var(--radius-md); padding: 14px; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Projeção de Fim de Mês</span>
+                                <span style="font-size: 1.1rem; font-weight: 700; color: #10b981;" id="overviewProjectionVal">Calculando...</span>
+                            </div>
+                            <span class="badge bg-emerald">30 Dias no Azul</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Próximos Compromissos & Tarefas Urgentes -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <!-- Próximos Compromissos -->
+                        <div class="card p-4">
+                            <div class="card-header-clean mb-3">
+                                <div>
+                                    <h3 class="card-title">📅 Próximos Compromissos · Sofi</h3>
+                                    <p class="text-muted text-xs">Reuniões e eventos sincronizados</p>
+                                </div>
+                                <button class="btn btn-ghost btn-sm" onclick="window.switchTab('agenda')">
+                                    <span>Ver Todos</span>
+                                </button>
+                            </div>
+                            <div class="overview-agenda-list" id="overviewAgendaList">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Tarefas Prioritárias da Luna -->
+                        <div class="card p-4">
+                            <div class="card-header-clean mb-3">
+                                <div>
+                                    <h3 class="card-title">📋 Prioridades da Luna</h3>
+                                    <p class="text-muted text-xs">Itens do topo da pirâmide (Urgente / Alta)</p>
+                                </div>
+                                <button class="btn btn-ghost btn-sm" onclick="window.switchTab('tarefas')">
+                                    <span>Ver Quadro</span>
+                                </button>
+                            </div>
+                            <div class="overview-task-list" id="overviewTaskList">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 1: WHATSAPP LIVE SIMULATOR -->
-            <section class="tab-panel active" id="tabContentChat">
+            <section class="tab-panel" id="tabContentChat">
                 <div class="chat-dashboard-split">
                     <!-- Left: Interactive WhatsApp Device Mockup -->
                     <div class="wa-phone-container">
@@ -500,6 +652,58 @@
                     </div>
                 </div>
 
+                <!-- Gráficos Visuais de Finanças: Donut por Categoria & Fluxo de Caixa -->
+                <div class="chart-card-split mb-4">
+                    <!-- Donut de Despesas por Categoria -->
+                    <div class="card p-4">
+                        <div class="chart-card-header">
+                            <div>
+                                <h3 class="chart-card-title">🍩 Despesas por Categoria</h3>
+                                <p class="text-muted text-xs">Distribuição percentual do dinheiro gasto</p>
+                            </div>
+                            <span class="badge bg-emerald" id="categoryChartTotalBadge">R$ 0,00</span>
+                        </div>
+                        <div class="donut-chart-container" id="categoryChartContainer">
+                            <div class="donut-svg-wrapper">
+                                <svg width="170" height="170" viewBox="0 0 170 170" id="categoryDonutSvg">
+                                    <circle cx="85" cy="85" r="65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="22" />
+                                </svg>
+                                <div class="donut-center-text">
+                                    <span class="donut-center-label">Despesas</span>
+                                    <span class="donut-center-val" id="categoryDonutCenterVal">R$ 0</span>
+                                </div>
+                            </div>
+                            <div class="donut-legend-list" id="categoryLegendList">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fluxo Mensal Comparativo (Entradas vs Saídas) -->
+                    <div class="card p-4">
+                        <div class="chart-card-header">
+                            <div>
+                                <h3 class="chart-card-title">📊 Fluxo Mensal (Entradas vs Saídas)</h3>
+                                <p class="text-muted text-xs">Comparativo de superávit / déficit por período</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; font-size: 0.75rem;">
+                                <span style="display: flex; align-items: center; gap: 4px; color: #10b981;">
+                                    <span style="width: 8px; height: 8px; border-radius: 2px; background: #10b981;"></span> Entradas
+                                </span>
+                                <span style="display: flex; align-items: center; gap: 4px; color: #f43f5e;">
+                                    <span style="width: 8px; height: 8px; border-radius: 2px; background: #f43f5e;"></span> Saídas
+                                </span>
+                            </div>
+                        </div>
+                        <div class="cashflow-bars-container" id="cashFlowBarsContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <div class="text-center pt-2">
+                            <span class="text-muted text-xs" id="cashFlowSummaryText">Calculando balanço dos últimos meses...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Transactions Controls & Table -->
                 <div class="card p-4">
                     <!-- Filtro Interativo por Banco / Origem -->
@@ -537,19 +741,30 @@
                         </div>
                     </div>
 
-                    <div class="table-toolbar">
+                    <div class="table-toolbar" style="flex-wrap: wrap; gap: 12px;">
                         <div class="table-title-box">
                             <h3 class="card-title">Extrato Geral & Lançamentos</h3>
                             <span class="badge" id="transactionsCountBadge">1.638 lançamentos</span>
                         </div>
 
-                        <div class="table-actions">
+                        <!-- Barra de Busca Instantânea -->
+                        <div class="table-search-box">
+                            <input type="text" id="txSearchInput" class="table-search-input" placeholder="🔍 Buscar lançamento, valor ou banco...">
+                        </div>
+
+                        <!-- Filtro de Mês e Filtro de Tipo -->
+                        <div class="table-actions" style="flex-wrap: wrap; gap: 8px;">
+                            <select id="txMonthFilter" class="table-month-select" title="Filtrar por Mês">
+                                <option value="all">Todo o Período</option>
+                            </select>
+
                             <div class="filter-group">
                                 <button class="filter-btn active" data-filter="all">Todos</button>
                                 <button class="filter-btn" data-filter="receita">Receitas</button>
                                 <button class="filter-btn" data-filter="despesa">Despesas</button>
                                 <button class="filter-btn" data-filter="pendente">Pendentes</button>
                             </div>
+
                             <button class="btn btn-primary btn-sm" id="btnNewTransaction">
                                 <span>+ Novo Lançamento</span>
                             </button>
@@ -574,6 +789,19 @@
                                 <!-- Populated dynamically -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Paginação Amigável de Alta Performance -->
+                    <div class="table-pagination" id="txPaginationControls">
+                        <span class="pagination-info" id="txPaginationInfo">Exibindo 1 a 50 de 1.638 lançamentos</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-sm" id="btnLoadMoreTx">
+                                <span>Carregar Mais (+50)</span>
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btnShowAllTx">
+                                <span>Mostrar Todos</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1426,21 +1654,22 @@
     <script src="https://cdn.pluggy.ai/pluggy-connect/v2.5.0/pluggy-connect.js"></script>
 
     <!-- Scripts with Cache-Busting -->
-    <script src="js/store.js?v=2.8"></script>
-    <script src="js/ai-engine.js?v=2.8"></script>
-    <script src="js/whatsapp-simulator.js?v=2.8"></script>
-    <script src="js/modules/finances.js?v=2.8"></script>
-    <script src="js/modules/agenda.js?v=2.8"></script>
-    <script src="js/modules/tasks.js?v=2.8"></script>
-    <script src="js/modules/vault.js?v=2.8"></script>
-    <script src="js/modules/reminders.js?v=2.8"></script>
-    <script src="js/modules/team.js?v=2.8"></script>
-    <script src="js/modules/researches.js?v=2.8"></script>
-    <script src="js/modules/cobrancas.js?v=2.8"></script>
-    <script src="js/modules/listas.js?v=2.8"></script>
-    <script src="js/modules/reports.js?v=2.8"></script>
-    <script src="js/modules/conexao.js?v=2.8"></script>
-    <script src="js/app.js?v=2.8"></script>
+    <script src="js/store.js?v=2.9"></script>
+    <script src="js/ai-engine.js?v=2.9"></script>
+    <script src="js/whatsapp-simulator.js?v=2.9"></script>
+    <script src="js/modules/overview.js?v=2.9"></script>
+    <script src="js/modules/finances.js?v=2.9"></script>
+    <script src="js/modules/agenda.js?v=2.9"></script>
+    <script src="js/modules/tasks.js?v=2.9"></script>
+    <script src="js/modules/vault.js?v=2.9"></script>
+    <script src="js/modules/reminders.js?v=2.9"></script>
+    <script src="js/modules/team.js?v=2.9"></script>
+    <script src="js/modules/researches.js?v=2.9"></script>
+    <script src="js/modules/cobrancas.js?v=2.9"></script>
+    <script src="js/modules/listas.js?v=2.9"></script>
+    <script src="js/modules/reports.js?v=2.9"></script>
+    <script src="js/modules/conexao.js?v=2.9"></script>
+    <script src="js/app.js?v=2.9"></script>
 
 </body>
 </html>

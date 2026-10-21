@@ -188,6 +188,17 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Injetou a nova chave da Groq (`GROQ_API_KEY`) no `.env` local e no `.env` da VM Oracle.
   - Validou que o endpoint `/api/config/groq` retornou ativo (`configured: true`) e o WhatsApp reconectou automaticamente.
 
+### 🔹 Conversa 16: Visão Geral Executiva, Gráficos Interativos e Otimizações no Painel
+- **Data:** 21/10/2026
+- **Usuário:** *"1. todas as melhorias pode aplicar / 2. se não afetar negativamente no desempenho do sistema sim"*
+- **Assistente:**
+  - Análise de infraestrutura: esclarecido que para a VM Oracle (1GB RAM) não ter risco de OOM ou degradação de performance, SQLite com WAL ou Turso Cloud são as melhores abordagens de persistência com 0 MB de daemon em segundo plano.
+  - Criou a nova aba **Visão Geral (Home)** (`#tabContentOverview` e `js/modules/overview.js`) com briefing do dia, saudação dinâmica, KPIs consolidados, atalhos rápidos e status dos sistemas.
+  - Implementou **Gráficos Visuais Interativos de Finanças**: Donut SVG de despesas por categoria com legendas dinâmicas e cálculo percentual, e Gráfico de barras de Fluxo Mensal (Entradas vs. Saídas).
+  - Adicionou **Busca Instantânea** (`#txSearchInput`) com debounce e **Filtro de Mês** (`#txMonthFilter`) populado dinamicamente das datas das transações.
+  - Implementou **Paginação de Alta Performance** (`Exibindo 50 de X lançamentos` com `Carregar Mais` e `Mostrar Todos`) garantindo que 1.638 transações carreguem com renderização instantânea sem travamentos.
+  - Testou e validou todos os fluxos de ponta a ponta via `browser_subagent`.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras
