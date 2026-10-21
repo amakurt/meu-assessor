@@ -149,6 +149,29 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
   4. Rode localmente com `npm start` ou conecte na VM via SSH:
      `ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171`
 
+### 3. Como Retomar Amanhã Direto do PC do Trabalho:
+1. Abra o terminal na pasta do projeto e faça o pull das novidades:
+   ```bash
+   git pull
+   ```
+2. Conecte na máquina Oracle via SSH e atualize o servidor de produção:
+   ```bash
+   ssh -i ~/.ssh/oracle-gincana.key ubuntu@137.131.160.171
+   ```
+3. Dentro da máquina Oracle:
+   ```bash
+   cd /home/ubuntu/meu-assessor
+   git pull
+   # Adicione a GROQ_API_KEY no .env da Oracle:
+   nano .env
+   # Reinicie o processo:
+   pm2 restart meu-assessor
+   ```
+4. *(Opcional)* Para liberar o acesso SSH permanente deste computador de casa (sem precisar de senhas ou chaves manuais no futuro), rode dentro da Oracle:
+   ```bash
+   echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGz2JHs0UUKh3ZMT84BRo1xq17zcuyFsqOQbW8R56HSN amakurt-casa" >> ~/.ssh/authorized_keys
+   ```
+
 ---
 
 ## 📋 Backlog / Próximos Passos Sugeridos
@@ -159,6 +182,7 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
 
 
 

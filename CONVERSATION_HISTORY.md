@@ -168,6 +168,16 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Adicionou a variável `GROQ_API_KEY` no `.env`.
   - Salvou, comitou e fez push das alterações para o GitHub.
 
+### 🔹 Conversa 14: Preparação de Acesso Remoto e Planejamento de Retomada no Trabalho
+- **Data:** 20/10/2026
+- **Usuário:** *"pode mandar para oracle as atualizações sempre que ouver modificações" / "ok então salve nosso historico de conversas e o arquivo de sessão mande tudo para o git e amanhã continuaremos do pc do trabalho"*
+- **Assistente:**
+  - Gerou par de chaves SSH no PC de casa (`C:\Users\Usuario\.ssh\oracle-gincana.key` e `.pub`).
+  - Analisou a console serial e conexão VCN na Oracle Cloud, verificando bloqueio de senha padrão por segurança da imagem Ubuntu.
+  - Alinhou que a chave privada oficial (`oracle-gincana.key`) está segura no PC do trabalho.
+  - Documentou passo a passo de sincronização na Oracle para o dia seguinte via `git pull` e adição da chave pública de casa em `authorized_keys`.
+  - Salvou, comitou e sincronizou todos os registros no GitHub.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras
@@ -179,6 +189,7 @@ Sempre que uma nova conversa for realizada, adicione um novo bloco neste documen
 - **Usuário:** *"[Texto do pedido do usuário]"*
 - **Assistente:** [Resumo das ações realizadas, arquivos editados e resultados]
 ```
+
 
 
 
