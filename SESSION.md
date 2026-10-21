@@ -253,6 +253,8 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
 - `js/modules/overview.js`: Indicadores de fluxo do mês e Top Categorias escopados ao mês atual.
 - `js/db-service.js`: Recálculo dinâmico dos tetos de orçamento com mapeamento de sinônimos de categorias.
 - `js/store.js`: Correção do toast de notificação em tempo real para exibir o item recém-adicionado via WebSocket/SSE.
+- `index.html` & `js/modules/finances.js`: Blindagem contra preenchimento automático (autofill) de gerenciadores de senhas no campo de busca do extrato (`type="search"`, `autocomplete="new-password"`).
+- `index.html`, `js/app.js` & `js/store.js`: O badge de mensagens não lidas do WhatsApp (`#badgeUnread`) foi tornado 100% dinâmico e funcional, zerando ao abrir a aba de conversa e incrementando apenas quando chegam novas mensagens de assessores.
 - **Produção Atualizada:** Git push realizado e processo `meu-assessor` reiniciado no PM2 da Oracle Cloud.
 
 ---
@@ -278,6 +280,8 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
 - [x] Central de Notificações ativa com badges, dropdown e disparo de alerta no WhatsApp.
 - [x] Botões e modais de adição e edição manual em todas as abas (com comprador de cartão e conta).
 - [x] Filtro de mês padrão no mês corrente e KPIs financeiros escopados ao mês ativo.
+- [x] Blindagem anti-autofill de gerenciadores de senhas nos campos de busca.
+- [x] Badge dinâmico e funcional de mensagens não lidas no WhatsApp.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
 
