@@ -207,11 +207,12 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 - **Cadastro de Clientes/Fornecedores:** Comando *"salva a [Nome] como cliente/fornecedor"* interpretado pelo Gemini ou regex fallback com confirmação imediata.
 - **Consulta de Faturamento:** Pergunta *"quanto recebi da [Nome] esse mês?"* respondida por Bernardo com o consolidado de pagamentos.
 
-#### 4. Painel Web Executivo (`index.html`, `styles/main.css`, `js/modules/team.js`)
-- **Card de Código de Convite:** Botão funcional de copiar código para o clipboard e botão direto para compartilhar via WhatsApp (`wa.me/?text=...`), acompanhado de simulação visual de chat.
-- **Card de Empresa x Pessoal:** Visualização dos critérios de separação CPF/CNPJ, centros de custo gerenciais e chat de demonstração com a Ótica Vieira.
-- **Gestão de Membros:** Tabela de equipe conectada com remoção e identificação de administrador/membro.
-- **Gestão de Clientes e Fornecedores:** Tabela interativa com busca, filtros de tipo, modal de novo cadastro e botão de consulta rápida de faturamento por cliente.
+
+#### 5. Infraestrutura & Segurança (Nginx + SSL Let's Encrypt)
+- **Diagnóstico da VM Oracle:** Nginx 1.24 instalado, rodando como proxy reverso para o Node.js (`127.0.0.1:3000`).
+- **Certificado SSL Emitido:** Certificado oficial Let's Encrypt já ativo em `/etc/letsencrypt/live/137.131.160.171.nip.io`.
+- **Script de Automação:** Criado `scripts/deploy-ssl.sh` para facilitar re-emissões e futuros apontamentos de domínio próprio.
+- **Roadmap SaaS Documentado:** Criado `docs/ROADMAP_SAAS.md` com arquitetura de transição para PostgreSQL 16, Prisma ORM, TypeScript e Evolution API multi-sessão.
 
 ---
 
@@ -228,8 +229,12 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 - [x] Rebrand dos assessores (Arthur, Bernardo, Clara, Sara, Diego, Elisa).
 - [x] Implementação de Conta Compartilhada com Código de Convite no WhatsApp.
 - [x] Cadastro e Consulta de Faturamento de Clientes/Fornecedores no WhatsApp e Painel.
+- [x] Nginx e SSL Let's Encrypt configurados com script `scripts/deploy-ssl.sh`.
+- [x] Documentação técnica de arquitetura SaaS criada em `docs/ROADMAP_SAAS.md`.
+- [ ] Liberar porta 443 TCP na Security List da Oracle Cloud Console para o HTTPS externo.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
-- [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+- [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
+
 
 
 
