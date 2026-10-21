@@ -172,16 +172,33 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
    echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGz2JHs0UUKh3ZMT84BRo1xq17zcuyFsqOQbW8R56HSN amakurt-casa" >> ~/.ssh/authorized_keys
    ```
 
+
+## 📅 Sessão 06 · 21/10/2026 (Deploy na Nuvem, Groq Ativo e Acesso SSH Casa Liberado)
+
+### 🎯 Objetivos da Sessão
+1. Puxar alterações feitas ontem no PC de casa para o Mac de trabalho via `git pull`.
+2. Autorizar a chave pública SSH do PC de casa (`amakurt-casa`) na Oracle VM.
+3. Atualizar o código na VM Oracle com `git pull` e reiniciar processos PM2.
+4. Injetar a nova `GROQ_API_KEY` (chave `meuacessor2`) no `.env` local e da Oracle VM.
+5. Validar transcrição Groq Whisper e conexão contínua do WhatsApp.
+
+### 🛠️ Entregas e Módulos Atualizados
+- **SSH Casa Liberado:** `amakurt-casa` adicionada ao `~/.ssh/authorized_keys` da Oracle VM.
+- **Produção Sincronizada:** Servidor Oracle atualizado com a branch `main` e PM2 reiniciado (`uptime` online, WhatsApp conectado).
+- **Groq Whisper Ativo em Produção:** Chave configurada em ambos os `.env` e validada via `/api/config/groq` (`{"success":true,"configured":true}`).
+
 ---
 
 ## 📋 Backlog / Próximos Passos Sugeridos
 - [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
 - [x] Filtros por banco interativos no extrato financeiro.
 - [x] Correção inteligente e cancelamento de despesas via áudio/texto no WhatsApp.
-- [x] Transcrição de áudio ultra-rápida com Groq Whisper (~300ms).
+- [x] Transcrição de áudio ultra-rápida com Groq Whisper (~300ms) ativa na nuvem e local.
+- [x] Acesso SSH direto e sem atrito do PC de casa para a VM Oracle liberado.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
 
 
 

@@ -178,6 +178,16 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Documentou passo a passo de sincronização na Oracle para o dia seguinte via `git pull` e adição da chave pública de casa em `authorized_keys`.
   - Salvou, comitou e sincronizou todos os registros no GitHub.
 
+### 🔹 Conversa 15: Sincronização Geral, Ativação do Groq e Liberação do SSH de Casa
+- **Data:** 21/10/2026
+- **Usuário:** *"leia o arquivo de sessão e o histórico de conversas pra continuarmos e ontem nós fizemos modificações do pc de casa que só foram mandados pro github ainda não foram mandados pra nuvem pois o o outro pc de casa não tem ainda acesso a chavekey" / "coloquei como nome de meuacessor2 já que o outra tá meu acessor: [CHAVE_GROQ_CONFIGURADA]"*
+- **Assistente:**
+  - Puxou os commits de ontem do GitHub para o Mac de trabalho via `git pull`.
+  - Inseriu a chave pública do PC de casa (`amakurt-casa`) no `~/.ssh/authorized_keys` da VM Oracle, liberando acesso SSH direto permanente a partir de casa.
+  - Sincronizou o repositório na máquina Oracle e reiniciou o PM2.
+  - Injetou a nova chave da Groq (`GROQ_API_KEY`) no `.env` local e no `.env` da VM Oracle.
+  - Validou que o endpoint `/api/config/groq` retornou ativo (`configured: true`) e o WhatsApp reconectou automaticamente.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras
