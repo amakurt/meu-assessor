@@ -237,6 +237,26 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 
 ---
 
+## 📅 Sessão 08 · 21/10/2026 (Sincronização Casa/Trabalho & Correção de Escopo Mensal no Extrato)
+
+### 🎯 Diagnóstico da Dúvida do Usuário
+O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e relatou que não estava visualizando na nuvem.
+
+### 🔍 Causa Raiz Identificada
+1. **Gravação no Banco Confirmada:** A transação foi gravada com sucesso no SQLite da nuvem (`id: tx-1792615378542`, R$ 50,00, data `2026-10-21`).
+2. **Parcelas Futuras do Cartão Ocultando a Data de Hoje:** O Open Finance sincronizou 115 lançamentos com datas futuras (parcelas de cartão até julho de 2027). Com a ordenação decrescente por data e paginação de 50 itens sem filtro de mês padrão (`all`), a data de hoje ficava na posição 116 (página 3).
+3. **KPIs Não Escopados por Mês:** "Despesas do Mês" e "Receitas do Mês" somavam todas as transações de anos passados e futuros (~R$ 492 mil), tornando um gasto de R$ 50 imperceptível visualmente.
+4. **Categorias de Orçamento:** O teto de "Transporte & Viagens" não contabilizava a categoria "Transporte / Combustível".
+
+### 🛠️ Correções Implementadas e Deployed
+- `js/modules/finances.js`: Filtro de mês agora seleciona o **Mês Atual** (`Outubro / 2026`) por padrão, colocando o lançamento de hoje imediatamente na primeira linha da tabela. KPIs de "Receitas do Mês" e "Despesas do Mês" agora calculam exclusivamente o mês ativo.
+- `js/modules/overview.js`: Indicadores de fluxo do mês e Top Categorias escopados ao mês atual.
+- `js/db-service.js`: Recálculo dinâmico dos tetos de orçamento com mapeamento de sinônimos de categorias.
+- `js/store.js`: Correção do toast de notificação em tempo real para exibir o item recém-adicionado via WebSocket/SSE.
+- **Produção Atualizada:** Git push realizado e processo `meu-assessor` reiniciado no PM2 da Oracle Cloud.
+
+---
+
 ## 📋 Backlog / Próximos Passos Sugeridos
 - [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
 - [x] Filtros por banco interativos no extrato financeiro.
@@ -257,8 +277,10 @@ Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
 - [x] Limpeza completa de dados fictícios / simulação de demonstração.
 - [x] Central de Notificações ativa com badges, dropdown e disparo de alerta no WhatsApp.
 - [x] Botões e modais de adição e edição manual em todas as abas (com comprador de cartão e conta).
+- [x] Filtro de mês padrão no mês corrente e KPIs financeiros escopados ao mês ativo.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
+
 
 
 
