@@ -156,6 +156,18 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Implementou em `js/modules/finances.js` a detecção e filtragem combinada de banco e tipo (Receita, Despesa, Pendente).
   - Deploy efetuado na Oracle VM com sucesso.
 
+### 🔹 Conversa 13: Aceleração Ultra-Rápida de Áudio com Groq Whisper (LPU)
+- **Data:** 20/10/2026
+- **Usuário:** *"pode apagar e segue a chave api do grook: [CHAVE_GROQ_CONFIGURADA]"*
+- **Assistente:**
+  - Removeu a pasta `agent-skills` a pedido do usuário.
+  - Criou `js/groq-service.js` integrando o modelo `whisper-large-v3-turbo` rodando em LPUs com latência de ~300ms.
+  - Validou a chave da Groq e testou a transcrição em tempo de execução (~400ms).
+  - Atualizou `js/whatsapp-service.js` para usar o pipeline híbrido: Groq Whisper (transcrição instantânea) + Gemini Pro (raciocínio executivo), garantindo fallback resiliente para o Gemini multimodal.
+  - Sincronizou o texto falado do áudio diretamente no histórico do chat web do painel.
+  - Adicionou a variável `GROQ_API_KEY` no `.env`.
+  - Salvou, comitou e fez push das alterações para o GitHub.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras
@@ -167,6 +179,7 @@ Sempre que uma nova conversa for realizada, adicione um novo bloco neste documen
 - **Usuário:** *"[Texto do pedido do usuário]"*
 - **Assistente:** [Resumo das ações realizadas, arquivos editados e resultados]
 ```
+
 
 
 

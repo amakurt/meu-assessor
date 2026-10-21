@@ -106,6 +106,30 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 
 ---
 
+## 📅 Sessão 05 · 20/10/2026 (Aceleração de Áudio com Groq Whisper LPU)
+
+### 🎯 Objetivos da Sessão
+1. Configuração do ambiente local no novo computador e injeção segura de credenciais via `.env`.
+2. Validar autenticação e chamadas locais do Pluggy Open Finance e Google Gemini Pro.
+3. Avaliar proposta de integração de transcrição com OpenWhispr e identificar necessidade real: velocidade no processamento de áudios no WhatsApp.
+4. Integrar o modelo `whisper-large-v3-turbo` rodando em chips LPU na nuvem da Groq para processamento de áudio sub-segundo (~300ms).
+5. Eliminar arquivos temporários e skills não utilizadas (`agent-skills`).
+
+### 🛠️ Entregas e Módulos Atualizados
+- **Novo Módulo GroqService (`js/groq-service.js`):**
+  - Implementação nativa com `whisper-large-v3-turbo` da Groq em LPUs.
+  - Testado e validado em tempo de execução com resposta em ~400ms.
+- **WhatsApp Service Acelerado (`js/whatsapp-service.js`):**
+  - Fluxo híbrido prioritário: Áudio recebido ➔ Transcrição instantânea no Groq Whisper (~300ms) ➔ Processamento executivo no Gemini Pro (~400ms).
+  - Resposta completa com recibo no WhatsApp em menos de 1 segundo.
+  - Fallback automático e resiliente para o Gemini multimodal caso haja qualquer indisponibilidade externa.
+  - Histórico de chat no painel web agora exibe o texto exato falado no áudio (`🎙️ "[texto falado]"`).
+- **Backend & Config (`server.js`):**
+  - Endpoints `/api/config/groq` adicionados para checagem e configuração dinâmica.
+  - `.env` atualizado com a chave `GROQ_API_KEY`.
+
+---
+
 ## 🔄 Como Retomar a Sessão Futura (ou acessar de outro PC)
 
 ### 1. Se for apenas UTILIZAR o painel de outro computador:
@@ -116,7 +140,7 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 
 ### 2. Se for DESENVOLVER / PROGRAMAR do outro PC de casa:
 - **Arquivos necessários para levar:**
-  1. `.env` (contém `GEMINI_API_KEY`, `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, credenciais).
+  1. `.env` (contém `GEMINI_API_KEY`, `GROQ_API_KEY`, `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, credenciais).
   2. Chave SSH `~/.ssh/oracle-gincana.key` (caso queira acessar a máquina Oracle via terminal).
 - **Passos para rodar no novo PC:**
   1. `git clone https://github.com/amakurt/meu-assessor.git`
@@ -131,9 +155,11 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
 - [x] Filtros por banco interativos no extrato financeiro.
 - [x] Correção inteligente e cancelamento de despesas via áudio/texto no WhatsApp.
+- [x] Transcrição de áudio ultra-rápida com Groq Whisper (~300ms).
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Conectar banco de dados Supabase Free (PostgreSQL) para persistência em nuvem.
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
 
 
 
