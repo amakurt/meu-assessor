@@ -68,6 +68,17 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('kit_active_tab', tabKey);
             history.replaceState(null, null, '#' + tabKey);
         } catch(e) {}
+
+        if (tabKey === 'financas') {
+            const searchInput = document.getElementById('txSearchInput');
+            if (searchInput && searchInput.value.toLowerCase() === 'amauri') {
+                searchInput.value = '';
+                if (window.financesModule) {
+                    window.financesModule.searchTerm = '';
+                    window.financesModule.renderTransactions();
+                }
+            }
+        }
     };
 
     navItems.forEach(item => {

@@ -219,7 +219,7 @@
                     <!-- Global Search -->
                     <div class="global-search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="globalSearchInput" placeholder="Buscar lançamentos, reuniões, tarefas..." aria-label="Busca global">
+                        <input type="search" id="globalSearchInput" placeholder="Buscar lançamentos, reuniões, tarefas..." aria-label="Busca global" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_global" data-lpignore="true">
                     </div>
 
                     <!-- Report Export Buttons -->
@@ -784,7 +784,7 @@
 
                         <!-- Barra de Busca Instantânea -->
                         <div class="table-search-box">
-                            <input type="text" id="txSearchInput" class="table-search-input" placeholder="🔍 Buscar lançamento, valor ou banco...">
+                            <input type="search" id="txSearchInput" class="table-search-input" placeholder="🔍 Buscar lançamento, valor ou banco..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_tx" data-lpignore="true">
                         </div>
 
                         <!-- Filtro de Mês e Filtro de Tipo -->
@@ -1367,7 +1367,7 @@
                         </div>
 
                         <div class="clients-toolbar d-flex gap-2 flex-wrap mb-3">
-                            <input type="text" class="form-control form-control-sm" id="clientSearchInput" placeholder="🔍 Buscar por nome, CNPJ/CPF ou categoria..." style="max-width: 320px;">
+                            <input type="search" class="form-control form-control-sm" id="clientSearchInput" placeholder="🔍 Buscar por nome, CNPJ/CPF ou categoria..." style="max-width: 320px;" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_client" data-lpignore="true">
                             <div class="btn-group" role="group">
                                 <button class="btn btn-outline btn-sm active" data-client-filter="all" id="btnFilterClientAll">Todos</button>
                                 <button class="btn btn-outline btn-sm" data-client-filter="cliente" id="btnFilterClientOnly">Clientes</button>
