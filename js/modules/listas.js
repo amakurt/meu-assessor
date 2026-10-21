@@ -54,6 +54,7 @@ class ListasModule {
         const container = document.getElementById('dynamicListsContainer');
         if (!container) return;
 
+        const lists = this.store.state.lists || [];
         if (!lists || lists.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
@@ -111,7 +112,7 @@ class ListasModule {
         const container = document.getElementById('ideasVaultContainer');
         if (!container) return;
 
-        const ideas = this.store.state.ideas;
+        const ideas = this.store.state.ideas || [];
         container.innerHTML = ideas.map(idea => `
             <div class="idea-card">
                 <div class="idea-card-header">

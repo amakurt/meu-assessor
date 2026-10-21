@@ -578,11 +578,11 @@ class Store {
         // Snapshot inicial
         this.syncWithBackend();
 
-        // Polling contínuo de 2.5 segundos (garantia de sincronização em qualquer navegador/rede)
+        // Polling suave de fallback a cada 20 segundos (SSE é o canal primário em tempo real)
         if (typeof window !== 'undefined') {
             setInterval(() => {
                 this.syncWithBackend();
-            }, 2500);
+            }, 20000);
         }
 
         // Conecta ao fluxo de eventos em tempo real (Server-Sent Events)
@@ -627,7 +627,20 @@ class Store {
 
     mergeBackendData(backendDb, isLiveEvent = false, payload = null) {
         if (!backendDb) return;
-        let hasChanges = false;
+        let hasChanges = isLiveEvent;
+
+        // Verifica se houve mudança real em coleções principais
+        const oldTxCount = this.state.transactions?.length || 0;
+        const newTxCount = backendDb.transactions?.length || 0;
+        const oldFirstTx = this.state.transactions?.[0]?.id;
+        const newFirstTx = backendDb.transactions?.[0]?.id;
+        if (oldTxCount !== newTxCount || oldFirstTx !== newFirstTx) {
+            hasChanges = true;
+        }
+
+        if ((this.state.events?.length || 0) !== (backendDb.events?.length || 0)) hasChanges = true;
+        if ((this.state.tasks?.length || 0) !== (backendDb.tasks?.length || 0)) hasChanges = true;
+        if ((this.state.notifications?.length || 0) !== (backendDb.notifications?.length || 0)) hasChanges = true;
 
         if (isLiveEvent && payload) {
             if (payload.type === 'update_transaction') {
@@ -635,35 +648,20 @@ class Store {
                 window.showToast?.(`✏️ KIT: Lançamento corrigido para R$ ${Number(item?.amount || 0).toFixed(2)}`, 'financas');
             } else if (payload.type === 'delete_transaction' || payload.type === 'undo') {
                 window.showToast?.(`↩️ KIT: Lançamento anterior cancelado/desfeito`, 'financas');
+            } else if (payload.type === 'transaction' && payload.item) {
+                window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${payload.item.description} (R$ ${Number(payload.item.amount).toFixed(2)})`, 'financas');
             }
         }
 
         if (Array.isArray(backendDb.transactions)) {
-            if (isLiveEvent && payload?.type === 'transaction' && payload.item) {
-                window.showToast?.(`⚡ KIT: Nova despesa adicionada: ${payload.item.description} (R$ ${Number(payload.item.amount).toFixed(2)})`, 'financas');
-            }
             this.state.transactions = backendDb.transactions;
         }
 
         if (Array.isArray(backendDb.events)) {
-            const oldFirstId = this.state.events?.[0]?.id;
-            const newFirstId = backendDb.events?.[0]?.id;
-            if (oldFirstId !== newFirstId) {
-                hasChanges = true;
-                const newEv = backendDb.events[0];
-                if (newEv && isLiveEvent) {
-                    window.showToast?.(`📅 KIT: Novo compromisso na agenda: ${newEv.title}`, 'agenda');
-                }
-            }
             this.state.events = backendDb.events;
         }
 
         if (Array.isArray(backendDb.tasks)) {
-            const oldFirstId = this.state.tasks?.[0]?.id;
-            const newFirstId = backendDb.tasks?.[0]?.id;
-            if (oldFirstId !== newFirstId) {
-                hasChanges = true;
-            }
             this.state.tasks = backendDb.tasks;
         }
 
@@ -698,7 +696,11 @@ class Store {
             this.state.notifications = backendDb.notifications;
         }
 
-        this.saveState();
+        // Apenas persiste no localStorage e notifica os componentes se houve alteração real
+        if (hasChanges || !this._hasInitialMerged) {
+            this._hasInitialMerged = true;
+            this.saveState();
+        }
     }
 
     loadState() {
