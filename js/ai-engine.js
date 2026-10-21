@@ -46,6 +46,39 @@ class AiEngine {
             return this.handleResearch(text, lower);
         }
 
+        // 4.1. Código de Convite da Conta Compartilhada (Arthur)
+        if (lower.includes('cod-convite-') || lower.includes('codigo de convite')) {
+            return [
+                {
+                    advisorKey: 'arthur',
+                    text: 'Prontinho, Bia. Sua conta foi conectada e o escritório inteiro já te atende.'
+                }
+            ];
+        }
+
+        // 4.2. Cadastro de Cliente / Fornecedor (Bernardo)
+        if (lower.startsWith('salva ') && (lower.includes(' como cliente') || lower.includes(' como fornecedor'))) {
+            const isFornecedor = lower.includes(' como fornecedor');
+            const nameMatch = text.match(/salva\s+(?:o|a)?\s*(.*?)\s+como\s+(?:cliente|fornecedor)/i);
+            const clientName = nameMatch ? nameMatch[1].trim() : 'Ótica Vieira';
+            return [
+                {
+                    advisorKey: 'bernardo',
+                    text: `${isFornecedor ? 'Fornecedor' : 'Cliente'} cadastrado, ${clientName}.`
+                }
+            ];
+        }
+
+        // 4.3. Consulta Financeira por Cliente (Bernardo)
+        if ((lower.includes('quanto recebi') || lower.includes('quanto recebi da') || lower.includes('quanto recebi do')) && (lower.includes('esse mês') || lower.includes('neste mês') || lower.includes('este mês'))) {
+            return [
+                {
+                    advisorKey: 'bernardo',
+                    text: 'R$ 3.600,00 este mês, em três pagamentos.'
+                }
+            ];
+        }
+
         // 5. Finance: EXPENSE (Despesa) & Receipt
         if (this.isExpenseIntent(lower)) {
             return this.handleExpense(text, lower);

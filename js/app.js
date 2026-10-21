@@ -25,17 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageBreadcrumb = document.getElementById('pageBreadcrumb');
 
     const tabTitles = {
-        overview: { title: 'Visão Geral Executiva', sub: 'Briefing Geral do Dia · Finanças, Agenda e Metas com seus 6 Assessores' },
+        overview: { title: 'Visão Geral Executiva', sub: 'Briefing Geral do Dia · Finanças, Agenda e Metas com seus 6 Assessores de Elite' },
         chat: { title: 'Conversa WhatsApp', sub: 'Assessoria de IA em Tempo Real · Selo Oficial Meta' },
-        financas: { title: 'Finanças & Contas', sub: 'Gerenciadas pelo Martin · Open Finance Conectado (114 Bancos)' },
-        agenda: { title: 'Agenda & Reuniões', sub: 'Gerenciada pela Sofi · Google Agenda & Link Público' },
-        tarefas: { title: 'Tarefas & Projetos', sub: 'Quadro Kanban & Pirâmide de Prioridades com Luna' },
-        pesquisas: { title: 'Pesquisas & Cotações', sub: 'Mesa do Ítalo · Busca na Web com Fonte Oficial' },
-        cobrancas: { title: 'Cobranças & Devedores', sub: 'Links de Pagamento e Gestão de Quem te Deve' },
-        listas: { title: 'Listas & Banco de Ideias', sub: 'Checklists Dinâmicas e Memória de Longo Prazo da Luna' },
-        arquivos: { title: 'Meu Drive & Notas Fiscais', sub: 'Pastas, Links Públicos e OCR Tributário com Rita e Luna' },
-        lembretes: { title: 'Lembretes Ilimitados no WhatsApp', sub: 'Alertas Inteligentes e Notificações com Theo' },
-        equipe: { title: 'Usuários & Equipe Ilimitada', sub: 'Sócios, Família e Colaboradores no WhatsApp' },
+        financas: { title: 'Finanças & Contas', sub: 'Gerenciadas pelo Bernardo · Open Finance Conectado (114 Bancos)' },
+        agenda: { title: 'Agenda & Reuniões', sub: 'Gerenciada pela Clara · Google Agenda & Link Público' },
+        tarefas: { title: 'Tarefas & Projetos', sub: 'Quadro Kanban & Pirâmide de Prioridades com Sara' },
+        pesquisas: { title: 'Pesquisas & Cotações', sub: 'Mesa do Diego · Busca na Web com Fonte Oficial' },
+        cobrancas: { title: 'Cobranças & Devedores', sub: 'Links de Pagamento e Gestão de Quem te Deve com Bernardo' },
+        listas: { title: 'Listas & Banco de Ideias', sub: 'Checklists Dinâmicas e Memória de Longo Prazo da Sara' },
+        arquivos: { title: 'Meu Drive & Notas Fiscais', sub: 'Pastas, Links Públicos e OCR Tributário com Elisa e Sara' },
+        lembretes: { title: 'Lembretes Ilimitados no WhatsApp', sub: 'Alertas Inteligentes e Notificações com Arthur' },
+        equipe: { title: 'Conta Compartilhada & Equipe', sub: 'Sócios, Família e Clientes Integrados no WhatsApp' },
         conexao: { title: 'Conexão Gateway WhatsApp', sub: 'Meta Cloud API Oficial & Webhook' }
     };
 

@@ -173,24 +173,45 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
    ```
 
 
-## 📅 Sessão 06 · 21/10/2026 (Deploy na Nuvem, Groq Ativo e Acesso SSH Casa Liberado)
+
+## 📅 Sessão 07 · 21/10/2026 (Rebrand dos Assessores Virtuais & Conta Compartilhada com Convite WhatsApp)
 
 ### 🎯 Objetivos da Sessão
-1. Puxar alterações feitas ontem no PC de casa para o Mac de trabalho via `git pull`.
-2. Autorizar a chave pública SSH do PC de casa (`amakurt-casa`) na Oracle VM.
-3. Atualizar o código na VM Oracle com `git pull` e reiniciar processos PM2.
-4. Injetar a nova `GROQ_API_KEY` (chave `meuacessor2`) no `.env` local e da Oracle VM.
-5. Validar transcrição Groq Whisper e conexão contínua do WhatsApp.
+1. **Rebrand Completo dos Assessores:** Renomear os 6 assessores de IA para evitar conflito com nomes do serviço inspirador (*meuassessor.com*).
+2. **Implementação de Conta Compartilhada (WhatsApp Invite Flow):** Criar sistema de código de convite único (`COD-CONVITE-XXXXXX`) para conexão instantânea de membros da família ou equipe via WhatsApp.
+3. **Gestão de Empresa vs. Pessoal (CPF vs. CNPJ):** Permitir separação gerencial de centros de custo, cadastro e consulta de clientes/fornecedores direto no WhatsApp e no painel web.
+4. **Interface Web Executiva:** Recriar a aba Equipe/Conta com os cards informativos idênticos ao layout executivo e ferramentas de gestão em tempo real.
 
 ### 🛠️ Entregas e Módulos Atualizados
-- **SSH Casa Liberado:** `amakurt-casa` adicionada ao `~/.ssh/authorized_keys` da Oracle VM.
-- **Produção Sincronizada:** Servidor Oracle atualizado com a branch `main` e PM2 reiniciado (`uptime` online, WhatsApp conectado).
-- **Groq Whisper Ativo em Produção:** Chave configurada em ambos os `.env` e validada via `/api/config/groq` (`{"success":true,"configured":true}`).
-- **Visão Geral (Home):** Nova aba principal com briefing dinâmico (bom dia/tarde/noite), status dos sistemas, 4 KPIs consolidados e resumos rápidos de agenda e tarefas da Luna.
-- **Gráficos Visuais de Finanças:** Donut SVG de despesas por categoria com legendas interativas filtráveis e gráfico de barras de Fluxo Mensal (Entradas vs. Saídas).
-- **Busca & Filtro de Mês:** Busca instantânea com debounce (`#txSearchInput`) e seletor dinâmico de mês (`#txMonthFilter`).
-- **Paginação de Alta Performance:** Renderização sob demanda (`50 em 50`) de 1.638 lançamentos reais sem travamento de tela.
-- **Migração para SQLite com WAL Mode:** Migrado `db.json` para banco relacional `kit.db` via `better-sqlite3` com índices, transações ACID, zero latência e zero consumo de RAM em background.
+
+#### 1. Rebrand dos 6 Assessores Virtuais
+Substituição consistente de nomes, personas, prompts do Gemini e interfaces:
+- **Arthur** (substitui Theo): Diretor Executivo & Operações Gerais.
+- **Bernardo** (substitui Martin): Gestor Financeiro & Open Finance.
+- **Clara** (substitui Sofi): Secretária Executiva & Gestão de Agenda.
+- **Sara** (substitui Luna): Gestora de Tarefas, Projetos & Drive.
+- **Diego** (substitui Ítalo): Analista de Inteligência de Mercado & Cotações.
+- **Elisa** (substitui Rita): Consultora Fiscal & Tributária.
+- *Retrocompatibilidade:* Getters mantidos em `store.js` e detectores de nomes no backend para preservar logs e dados legados sem quebra.
+
+#### 2. Banco de Dados SQLite (`js/db-service.js`)
+- Criadas 3 novas tabelas indexadas:
+  - `invite_codes`: Armazenamento de códigos de convite com timestamp e status.
+  - `team_members`: Membros conectados à conta compartilhada com telefone, nome, papel e data de entrada.
+  - `clients`: Cadastro de clientes e fornecedores com documento (CPF/CNPJ), contato e notas.
+- Semeados lançamentos da *Ótica Vieira* totalizando R$ 3.600 em 3 pagamentos para permitir a consulta de faturamento idêntica ao exemplo executivo.
+- Métodos CRUD implementados: `getActiveInviteCode()`, `generateNewInviteCode()`, `validateAndRegisterTeamMember()`, `getTeamMembers()`, `getClients()`, `addClient()`, `deleteClient()`, `queryClientReceipts()`.
+
+#### 3. Automação no WhatsApp (`js/whatsapp-service.js` & `js/gemini-service.js`)
+- **Entrada via Convite:** Mensagens contendo `COD-CONVITE-XXXXXX` registram automaticamente o remetente na equipe e retornam a mensagem de boas-vindas: *"Prontinho, [Nome]. Sua conta foi conectada e o escritório inteiro já te atende."*.
+- **Cadastro de Clientes/Fornecedores:** Comando *"salva a [Nome] como cliente/fornecedor"* interpretado pelo Gemini ou regex fallback com confirmação imediata.
+- **Consulta de Faturamento:** Pergunta *"quanto recebi da [Nome] esse mês?"* respondida por Bernardo com o consolidado de pagamentos.
+
+#### 4. Painel Web Executivo (`index.html`, `styles/main.css`, `js/modules/team.js`)
+- **Card de Código de Convite:** Botão funcional de copiar código para o clipboard e botão direto para compartilhar via WhatsApp (`wa.me/?text=...`), acompanhado de simulação visual de chat.
+- **Card de Empresa x Pessoal:** Visualização dos critérios de separação CPF/CNPJ, centros de custo gerenciais e chat de demonstração com a Ótica Vieira.
+- **Gestão de Membros:** Tabela de equipe conectada com remoção e identificação de administrador/membro.
+- **Gestão de Clientes e Fornecedores:** Tabela interativa com busca, filtros de tipo, modal de novo cadastro e botão de consulta rápida de faturamento por cliente.
 
 ---
 
@@ -203,9 +224,13 @@ Este arquivo registra e preserva o estado de cada sessão de trabalho, permitind
 - [x] Nova aba Visão Geral (Home) com briefing executivo e status dos 6 assessores.
 - [x] Gráficos visuais de finanças (Donut de Categorias e Barras de Fluxo Mensal).
 - [x] Busca instantânea, filtro de mês e paginação rápida no extrato.
-- [x] Banco de dados de alta performance sem impacto de memória (SQLite WAL Mode com migração automática).
+- [x] Banco de dados de alta performance sem impacto de memória (SQLite WAL Mode).
+- [x] Rebrand dos assessores (Arthur, Bernardo, Clara, Sara, Diego, Elisa).
+- [x] Implementação de Conta Compartilhada com Código de Convite no WhatsApp.
+- [x] Cadastro e Consulta de Faturamento de Clientes/Fornecedores no WhatsApp e Painel.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Domínio próprio com certificado SSL HTTPS (Let's Encrypt / Cloudflare).
+
 
 
 

@@ -63,7 +63,7 @@ class CobrancasModule {
                 <div style="text-align: center; color: var(--text-muted); padding: 32px 16px;">
                     <span style="font-size: 28px; display: block; margin-bottom: 8px;">🤝</span>
                     <p style="font-size: 13px; margin: 0; font-weight: 500;">Nenhuma cobrança ou dívida pendente.</p>
-                    <span style="font-size: 11px; opacity: 0.7;">Avise o <strong>Martin</strong> no WhatsApp se alguém te dever ou se tiver algo a pagar.</span>
+                    <span style="font-size: 11px; opacity: 0.7;">Avise o <strong>Bernardo</strong> no WhatsApp se alguém te dever ou se tiver algo a pagar.</span>
                 </div>
             `;
             return;
@@ -99,7 +99,7 @@ class CobrancasModule {
             btn.addEventListener('click', (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
                 this.store.settleDebt(id);
-                window.showToast('Baixa confirmada! Saldo atualizado com o Martin.');
+                window.showToast('Baixa confirmada! Saldo atualizado com o Bernardo.');
             });
         });
     }

@@ -108,7 +108,7 @@ class WhatsAppSimulator {
             bubble.className = `wa-bubble ${msg.sender === 'user' ? 'bubble-user' : 'bubble-advisor'}`;
 
             if (msg.sender === 'advisor') {
-                const advisor = this.store.state.advisors[msg.advisorKey] || this.store.state.advisors.theo;
+                const advisor = this.store.state.advisors[msg.advisorKey] || this.store.state.advisors.arthur || this.store.state.advisors.theo;
                 const header = document.createElement('div');
                 header.className = 'advisor-bubble-header';
                 header.innerHTML = `
@@ -231,7 +231,7 @@ class WhatsAppSimulator {
     }
 
     showTyping(advisorKey = 'martin') {
-        const advisor = this.store.state.advisors[advisorKey] || this.store.state.advisors.theo;
+        const advisor = this.store.state.advisors[advisorKey] || this.store.state.advisors.arthur || this.store.state.advisors.theo;
         if (this.elements.typingAdvisorName) {
             this.elements.typingAdvisorName.textContent = advisor.name;
         }
@@ -267,15 +267,15 @@ class WhatsAppSimulator {
 
         // Determine likely advisor for typing animation
         const lower = text.toLowerCase();
-        let targetAdvisor = 'theo';
-        if (lower.startsWith('ítalo') || lower.startsWith('italo') || lower.includes('pesquisa') || lower.includes('cotação') || lower.includes('dólar')) {
-            targetAdvisor = 'italo';
-        } else if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix') || lower.includes('saldo') || lower.includes('orçamento') || lower.includes('devendo')) {
-            targetAdvisor = 'martin';
-        } else if (lower.includes('agenda') || lower.includes('marcar') || lower.includes('reunião') || lower.includes('dentista') || lower.includes('meet') || lower.includes('vaga')) {
-            targetAdvisor = 'sofi';
-        } else if (lower.includes('tarefa') || lower.includes('projeto') || lower.includes('lista') || lower.includes('ideia') || lower.includes('pasta')) {
-            targetAdvisor = 'luna';
+        let targetAdvisor = 'arthur';
+        if (lower.startsWith('diego') || lower.startsWith('ítalo') || lower.includes('pesquisa') || lower.includes('cotação') || lower.includes('dólar')) {
+            targetAdvisor = 'diego';
+        } else if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix') || lower.includes('saldo') || lower.includes('orçamento') || lower.includes('devendo') || lower.includes('cliente') || lower.includes('fornecedor')) {
+            targetAdvisor = 'bernardo';
+        } else if (lower.includes('agenda') || lower.includes('marcar') || lower.includes('reunião') || lower.includes('dentista') || lower.includes('meet') || lower.includes('vaga') || lower.startsWith('clara')) {
+            targetAdvisor = 'clara';
+        } else if (lower.includes('tarefa') || lower.includes('projeto') || lower.includes('lista') || lower.includes('ideia') || lower.includes('pasta') || lower.startsWith('sara')) {
+            targetAdvisor = 'sara';
         }
 
         this.showTyping(targetAdvisor);
@@ -320,7 +320,7 @@ class WhatsAppSimulator {
             checks: 'read'
         });
 
-        this.showTyping('theo');
+        this.showTyping('arthur');
         setTimeout(async () => {
             this.hideTyping();
             const replies = await this.aiEngine.processUserMessage(audioText, { isAudio: true });
@@ -389,7 +389,7 @@ class WhatsAppSimulator {
         this.elements.liveExecutionFeed.innerHTML = '';
 
         feed.slice(0, 5).forEach(item => {
-            const advisor = this.store.state.advisors[item.advisor] || this.store.state.advisors.theo;
+            const advisor = this.store.state.advisors[item.advisor] || this.store.state.advisors.arthur || this.store.state.advisors.theo;
             const li = document.createElement('li');
             li.className = 'execution-feed-item';
             li.innerHTML = `

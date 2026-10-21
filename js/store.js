@@ -18,35 +18,42 @@ const DEFAULT_STATE = {
         useEmojis: true
     },
     advisors: {
-        theo: { name: 'Theo', role: 'Diretor de Operações', avatar: 'images/theo.jpg', color: '#8b5cf6', badge: 'Operações' },
-        martin: { name: 'Martin', role: 'Gerente Financeiro', avatar: 'images/martin.jpg', color: '#10b981', badge: 'Finanças' },
-        sofi: { name: 'Sofi', role: 'Secretária Executiva', avatar: 'images/sofi.jpg', color: '#3b82f6', badge: 'Agenda' },
-        luna: { name: 'Luna', role: 'Organização & Docs', avatar: 'images/luna.jpg', color: '#f59e0b', badge: 'Docs & Tarefas' },
-        italo: { name: 'Ítalo', role: 'Estagiário de Pesquisas', avatar: 'images/italo_otim.jpg', color: '#06b6d4', badge: 'Pesquisas' },
-        rita: { name: 'Rita', role: 'Assistente Fiscal', avatar: 'images/rita.jpg', color: '#ec4899', badge: 'Fiscal' }
+        arthur: { name: 'Arthur', role: 'Diretor de Operações', avatar: 'images/theo.jpg', color: '#8b5cf6', badge: 'Operações' },
+        bernardo: { name: 'Bernardo', role: 'Gerente Financeiro', avatar: 'images/martin.jpg', color: '#10b981', badge: 'Finanças' },
+        clara: { name: 'Clara', role: 'Secretária Executiva', avatar: 'images/sofi.jpg', color: '#3b82f6', badge: 'Agenda' },
+        sara: { name: 'Sara', role: 'Organização & Docs', avatar: 'images/luna.jpg', color: '#f59e0b', badge: 'Docs & Tarefas' },
+        diego: { name: 'Diego', role: 'Analista de Mercado & Cotações', avatar: 'images/italo_otim.jpg', color: '#06b6d4', badge: 'Pesquisas' },
+        elisa: { name: 'Elisa', role: 'Assistente Fiscal & Tributária', avatar: 'images/rita.jpg', color: '#ec4899', badge: 'Fiscal' },
+        // Aliases para total retrocompatibilidade
+        get theo() { return this.arthur; },
+        get martin() { return this.bernardo; },
+        get sofi() { return this.clara; },
+        get luna() { return this.sara; },
+        get italo() { return this.diego; },
+        get rita() { return this.elisa; }
     },
     chatMessages: [
         {
             id: 'm1',
             sender: 'advisor',
-            advisorKey: 'theo',
-            text: 'Olá Amauri! Sou o Theo, diretor de operações da sua equipe de assessores. Já preparei seu dia com o Martin, a Sofi, a Luna, o Ítalo e a Rita. O que precisar organizar hoje, basta me mandar uma mensagem ou áudio.',
+            advisorKey: 'arthur',
+            text: 'Olá Amauri! Sou o Arthur, diretor de operações da sua equipe de assessores. Já preparei seu dia com o Bernardo, a Clara, a Sara, o Diego e a Elisa. O que precisar organizar hoje, basta me mandar uma mensagem ou áudio.',
             time: '08:30',
             checks: 'read'
         },
         {
             id: 'm2',
             sender: 'advisor',
-            advisorKey: 'martin',
-            text: 'Bom dia! Martin aqui. O Open Finance sincronizou com o Itaú e Nubank. Temos R$ 4.250,00 de boletos para vencer esta semana e o orçamento de Alimentação atingiu 65% do teto. Já projetei seu fluxo de caixa do mês.',
+            advisorKey: 'bernardo',
+            text: 'Bom dia! Bernardo aqui. O Open Finance sincronizou com o Itaú e Nubank. Temos R$ 4.250,00 de boletos para vencer esta semana e o orçamento de Alimentação atingiu 65% do teto. Já projetei seu fluxo de caixa do mês.',
             time: '08:32',
             checks: 'read'
         },
         {
             id: 'm3',
             sender: 'advisor',
-            advisorKey: 'sofi',
-            text: 'Sofi na escuta! Você tem 3 reuniões hoje. A principal é com a Ana Prado às 15h. Já reservei 25 min de deslocamento para você não se atrasar. Também enviei o link do Meet para o time.',
+            advisorKey: 'clara',
+            text: 'Clara na escuta! Você tem 3 reuniões hoje. A principal é com a Ana Prado às 15h. Já reservei 25 min de deslocamento para você não se atrasar. Também enviei o link do Meet para o time.',
             time: '08:35',
             checks: 'read'
         }

@@ -124,7 +124,7 @@ class ReportsModule {
                     </tbody>
                 </table>
                 <div style="margin-top: 40px; text-align: center; color: #94a3b8; font-size: 12px;">
-                    Relatório gerado automaticamente pelos assessores Theo, Martin e Rita · Conforme LGPD e Banco Central
+                    Relatório gerado automaticamente pelos assessores Arthur, Bernardo e Elisa · Conforme LGPD e Banco Central
                 </div>
                 <script>
                     window.onload = function() { window.print(); };

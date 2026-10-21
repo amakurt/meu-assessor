@@ -3601,4 +3601,211 @@ html, body {
     color: var(--text-muted);
 }
 
+/* ============================================================
+   CONTA COMPARTILHADA (ESTILO LUXO EXECUTIVO IDÊNTICO AO SCREENSHOT)
+   ============================================================ */
+
+.shared-account-wrapper {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.shared-main-title {
+    font-size: 2.6rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+    margin-bottom: 24px;
+}
+
+.shared-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+}
+
+@media (max-width: 980px) {
+    .shared-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.shared-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shared-card:hover {
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.shared-card-top {
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 28px;
+}
+
+.invite-code-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.invite-code-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.invite-code-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+}
+
+.invite-actions-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-pill-outline {
+    border-radius: 9999px;
+    padding: 9px 24px;
+    font-weight: 600;
+    font-size: 13.5px;
+    border: 1px solid var(--border-card);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-pill-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-muted);
+}
+
+.btn-pill-wa {
+    border-radius: 9999px;
+    padding: 9px 28px;
+    font-weight: 600;
+    font-size: 13.5px;
+    background: #00a884;
+    color: #ffffff !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 168, 132, 0.35);
+}
+
+.btn-pill-wa:hover {
+    background: #008f6f;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 168, 132, 0.45);
+}
+
+.shared-wa-preview {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sw-bubble {
+    border-radius: 14px;
+    padding: 10px 14px;
+    max-width: 86%;
+    font-size: 13px;
+    line-height: 1.45;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.sw-bubble-user {
+    align-self: flex-end;
+    background: #d9fdd3;
+    color: #111b21 !important;
+    border-bottom-right-radius: 3px;
+}
+
+.sw-bubble-user .sw-time {
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.sw-bubble-advisor {
+    align-self: flex-start;
+    background: #ffffff;
+    color: #111b21 !important;
+    border-bottom-left-radius: 3px;
+}
+
+.sw-bubble-advisor .sw-time {
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.sw-advisor-name {
+    font-weight: 700;
+    font-size: 11.5px;
+    margin-bottom: 2px;
+}
+
+.sw-text {
+    font-weight: 500;
+}
+
+.sw-time {
+    font-size: 10px;
+    align-self: flex-end;
+    margin-top: 4px;
+    margin-left: 14px;
+}
+
+.sw-checks {
+    color: #53bdeb;
+    font-weight: 700;
+}
+
+.shared-card-bottom {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.shared-card-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.35;
+    font-family: 'Outfit', sans-serif;
+    margin-bottom: 4px;
+}
+
+.shared-card-p {
+    font-size: 0.94rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0;
+}
+
+
 

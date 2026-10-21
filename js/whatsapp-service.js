@@ -245,7 +245,20 @@ class WhatsAppService {
 
                         console.log(`[WhatsApp] Mensagem de texto recebida: "${textMessage}"`);
 
-                        if (geminiService.isConfigured()) {
+                        // 3.1 INTERCEPTAÇÃO DE CONVITE: Conta Compartilhada
+                        const inviteMatch = textMessage.match(/COD-CONVITE-[A-Z0-9]+/i);
+                        if (inviteMatch) {
+                            const code = inviteMatch[0].toUpperCase();
+                            const pushName = msg.pushName || 'Convidado';
+                            const senderPhone = (msg.key.participant || remoteJid || '').split('@')[0];
+                            const result = dbService.validateAndRegisterTeamMember(code, senderPhone, pushName);
+
+                            if (result.success) {
+                                replyText = `*Arthur* · Diretor de Operações\n\nProntinho, ${pushName}. Sua conta foi conectada e o escritório inteiro já te atende.\n\nVocê agora faz parte da conta compartilhada. Qualquer despesa, receita, tarefa ou compromisso que você mandar por aqui será organizado automaticamente junto com a equipe.`;
+                            } else {
+                                replyText = `*Arthur* · Diretor de Operações\n\n⚠️ ${result.message || 'Código de convite não encontrado ou expirado.'}\n\nSolicite um código ativo ao titular da conta.`;
+                            }
+                        } else if (geminiService.isConfigured()) {
                             try {
                                 replyText = await geminiService.generateAdvisorResponse(textMessage, context);
                             } catch (aiErr) {
@@ -277,7 +290,7 @@ class WhatsAppService {
                     dbService.addChatMessage({
                         id: 'm-k-' + Date.now(),
                         sender: 'advisor',
-                        advisorKey: 'theo',
+                        advisorKey: 'arthur',
                         text: replyText,
                         time: timeStr,
                         checks: 'read'
@@ -331,7 +344,24 @@ class WhatsAppService {
         let body = 'Compreendido! O KIT registrou sua demanda e está organizando tudo para você.';
         let actionTag = '';
 
-        if (lower.includes('apaga') || lower.includes('cancela') || lower.includes('desfaz') || lower.includes('desfazer') || lower.includes('exclui') || lower.includes('tira esse')) {
+        if (lower.startsWith('salva ') && (lower.includes(' como cliente') || lower.includes(' como fornecedor'))) {
+            const isFornecedor = lower.includes(' como fornecedor');
+            const targetType = isFornecedor ? 'fornecedor' : 'cliente';
+            const nameMatch = text.match(/salva\s+(?:o|a)?\s*(.*?)\s+como\s+(?:cliente|fornecedor)/i);
+            const clientName = nameMatch ? nameMatch[1].trim() : 'Contato';
+            advisor = '*Bernardo* · Gestor Financeiro';
+            body = `${isFornecedor ? 'Fornecedor' : 'Cliente'} cadastrado, ${clientName}.`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"create_client","data":{"name":"${clientName}","type":"${targetType}"}}-->`;
+            return `${advisor}\n\n${body}${actionTag}`;
+        } else if ((lower.includes('quanto recebi') || lower.includes('quanto recebi da') || lower.includes('quanto recebi do')) && (lower.includes('esse mês') || lower.includes('neste mês') || lower.includes('este mês'))) {
+            advisor = '*Bernardo* · Gestor Financeiro';
+            const nameMatch = text.match(/quanto recebi d[eao]\s+(.*?)\s+(?:esse|neste|este) m[êe]s/i);
+            const clientName = nameMatch ? nameMatch[1].trim() : 'Ótica Vieira';
+            const summary = dbService.queryClientReceipts(clientName);
+            const formattedVal = Number(summary.totalReceived).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const countWords = summary.paymentsCount === 1 ? 'um pagamento' : (summary.paymentsCount === 2 ? 'dois pagamentos' : (summary.paymentsCount === 3 ? 'três pagamentos' : `${summary.paymentsCount} pagamentos`));
+            return `*Bernardo* · Gestor Financeiro\n\nR$ ${formattedVal} este mês, em ${countWords}.`;
+        } else if (lower.includes('apaga') || lower.includes('cancela') || lower.includes('desfaz') || lower.includes('desfazer') || lower.includes('exclui') || lower.includes('tira esse')) {
             body = `Lançamento cancelado com sucesso!\n\n↩️ O registro anterior foi desfeito e removido do seu painel.`;
             actionTag = `\n<!--KIT_ACTION:{"type":"delete_transaction"}-->`;
         } else if (lower.includes('corrige') || lower.includes('corrigir') || lower.includes('entendeu errado') || lower.includes('não era') || lower.includes('era ')) {

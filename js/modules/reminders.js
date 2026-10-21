@@ -100,7 +100,7 @@ class RemindersModule {
                 </div>
                 <div class="reminder-footer">
                     <span>Recorrência: ${recurrenceLabels[rem.recurrence] || 'Pontual'}</span>
-                    <span style="color: var(--brand-purple); font-weight: 600;">Equipe: ${rem.advisor || 'Theo'}</span>
+                    <span style="color: var(--brand-purple); font-weight: 600;">Equipe: ${rem.advisor || 'Arthur'}</span>
                 </div>
             `;
 

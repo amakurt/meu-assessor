@@ -101,12 +101,12 @@ app.get('/api/status', (req, res) => {
         version: '2.0.0',
         whatsappConnected: true,
         advisors: [
-            { name: 'Theo', role: 'Diretor de Operações', photo: 'img/advisors/theo.png' },
-            { name: 'Martin', role: 'Gestor Financeiro', photo: 'img/advisors/martin.png' },
-            { name: 'Sofi', role: 'Secretária Executiva', photo: 'img/advisors/sofi.png' },
-            { name: 'Luna', role: 'Docs & Tarefas', photo: 'img/advisors/luna.png' },
-            { name: 'Ítalo', role: 'Estagiário de Pesquisa', photo: 'img/advisors/italo.png' },
-            { name: 'Rita', role: 'Assistente Fiscal', photo: 'img/advisors/rita.png' }
+            { name: 'Arthur', role: 'Diretor de Operações', photo: 'images/theo.jpg' },
+            { name: 'Bernardo', role: 'Gestor Financeiro', photo: 'images/martin.jpg' },
+            { name: 'Clara', role: 'Secretária Executiva', photo: 'images/sofi.jpg' },
+            { name: 'Sara', role: 'Docs & Tarefas', photo: 'images/luna.jpg' },
+            { name: 'Diego', role: 'Analista de Mercado', photo: 'images/italo_otim.jpg' },
+            { name: 'Elisa', role: 'Assistente Fiscal', photo: 'images/rita.jpg' }
         ],
         activeBancosOpenFinance: 114,
         featuresCount: 36
@@ -312,12 +312,57 @@ app.get('/api/listas', (req, res) => {
     res.json({ success: true, lists: dbService.getAll().lists });
 });
 
-// 11. REST API: Cloud Drive Folders (Luna)
+// 11. REST API: Cloud Drive Folders (Sara)
 app.get('/api/drive/pastas', (req, res) => {
     res.json({ success: true, data: dbService.getAll().cloudDrive });
 });
 
-// 12. REST API: Direct AI Chat Endpoint (Powered by Gemini Pro)
+// 12. REST API: Conta Compartilhada & Código de Convite
+app.get('/api/invite-code', (req, res) => {
+    res.json({ success: true, code: dbService.getActiveInviteCode() });
+});
+
+app.post('/api/invite-code/regenerate', (req, res) => {
+    const newCode = dbService.generateNewInviteCode();
+    res.json({ success: true, code: newCode });
+});
+
+// 13. REST API: Usuários & Equipe
+app.get('/api/team', (req, res) => {
+    res.json({ success: true, team: dbService.getTeamMembers() });
+});
+
+app.post('/api/team', (req, res) => {
+    const member = dbService.addTeamMember(req.body);
+    res.json({ success: true, member });
+});
+
+app.delete('/api/team/:id', (req, res) => {
+    dbService.deleteTeamMember(req.params.id);
+    res.json({ success: true });
+});
+
+// 14. REST API: Clientes & Fornecedores (Gestão CNPJ / CPF)
+app.get('/api/clients', (req, res) => {
+    res.json({ success: true, clients: dbService.getClients(req.query.type) });
+});
+
+app.post('/api/clients', (req, res) => {
+    const client = dbService.addClient(req.body);
+    res.json({ success: true, client });
+});
+
+app.delete('/api/clients/:id', (req, res) => {
+    dbService.deleteClient(req.params.id);
+    res.json({ success: true });
+});
+
+app.get('/api/clients/query', (req, res) => {
+    const summary = dbService.queryClientReceipts(req.query.name);
+    res.json({ success: true, summary });
+});
+
+// 15. REST API: Direct AI Chat Endpoint (Powered by Gemini Pro)
 app.post('/api/chat', async (req, res) => {
     const { message, senderPhone } = req.body;
     if (!message) {
@@ -325,17 +370,17 @@ app.post('/api/chat', async (req, res) => {
     }
 
     let reply = '';
-    let advisor = 'Theo';
+    let advisor = 'Arthur';
 
     if (geminiService.isConfigured()) {
         try {
             reply = await geminiService.generateAdvisorResponse(message);
             // Extrai o nome do assessor da resposta se existir
-            if (reply.includes('Martin')) advisor = 'Martin';
-            else if (reply.includes('Sofi')) advisor = 'Sofi';
-            else if (reply.includes('Luna')) advisor = 'Luna';
-            else if (reply.includes('Ítalo') || reply.includes('Italo')) advisor = 'Ítalo';
-            else if (reply.includes('Rita')) advisor = 'Rita';
+            if (reply.includes('Bernardo') || reply.includes('Martin')) advisor = 'Bernardo';
+            else if (reply.includes('Clara') || reply.includes('Sofi')) advisor = 'Clara';
+            else if (reply.includes('Sara') || reply.includes('Luna')) advisor = 'Sara';
+            else if (reply.includes('Diego') || reply.includes('Ítalo')) advisor = 'Diego';
+            else if (reply.includes('Elisa') || reply.includes('Rita')) advisor = 'Elisa';
         } catch (e) {
             console.error('[Chat API] Erro no Gemini:', e.message);
         }
