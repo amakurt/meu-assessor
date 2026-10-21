@@ -11,6 +11,7 @@ const fs = require('fs');
 
 const whatsappService = require('./js/whatsapp-service');
 const geminiService = require('./js/gemini-service');
+const groqService = require('./js/groq-service');
 const dbService = require('./js/db-service');
 const pluggyService = require('./js/pluggy-service');
 const crypto = require('crypto');
@@ -165,6 +166,28 @@ app.post('/api/config/gemini', (req, res) => {
         } catch (e) {}
     }
     res.json({ success: true, configured: geminiService.isConfigured() });
+});
+
+app.get('/api/config/groq', (req, res) => {
+    res.json({ success: true, configured: groqService.isConfigured() });
+});
+
+app.post('/api/config/groq', (req, res) => {
+    const { apiKey } = req.body;
+    if (apiKey) {
+        groqService.setApiKey(apiKey);
+        try {
+            const envPath = path.join(__dirname, '.env');
+            let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+            if (envContent.includes('GROQ_API_KEY=')) {
+                envContent = envContent.replace(/GROQ_API_KEY=.*/, `GROQ_API_KEY=${apiKey}`);
+            } else {
+                envContent += `\nGROQ_API_KEY=${apiKey}\n`;
+            }
+            fs.writeFileSync(envPath, envContent);
+        } catch (e) {}
+    }
+    res.json({ success: true, configured: groqService.isConfigured() });
 });
 
 

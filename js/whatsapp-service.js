@@ -16,6 +16,7 @@ const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const geminiService = require('./gemini-service');
+const groqService = require('./groq-service');
 const dbService = require('./db-service');
 
 class WhatsAppService {
@@ -157,6 +158,7 @@ class WhatsAppService {
                     } catch (pErr) {}
 
                     let replyText = '';
+                    let transcribedAudioText = '';
                     const context = {
                         lastActionSummary: dbService.getLastActionSummary(),
                         chatSummary: dbService.getRecentChatSummary(6)
@@ -168,10 +170,43 @@ class WhatsAppService {
                         try {
                             const audioBuffer = await downloadMediaMessage(msg, 'buffer', {});
                             const mimeType = msg.message.audioMessage.mimetype || 'audio/ogg';
-                            if (geminiService.isConfigured()) {
+
+                            // ESTRATÉGIA 1: Groq Whisper Ultra-Rápido (~300ms) + Gemini Flash
+                            if (groqService.isConfigured()) {
+                                try {
+                                    const { text: transcribedText, durationMs } = await groqService.transcribeAudio(audioBuffer, mimeType);
+                                    if (transcribedText && transcribedText.length > 0 && transcribedText !== '.') {
+                                        transcribedAudioText = transcribedText;
+                                        console.log(`[WhatsApp] ⚡ Áudio transcrito via Groq Whisper em ${durationMs}ms: "${transcribedText}"`);
+                                        if (geminiService.isConfigured()) {
+                                            const aiResponse = await geminiService.generateAdvisorResponse(transcribedText, context);
+                                            const header = '*KIT* · Seu Assessor Pessoal';
+                                            const audioBadge = `🎙️ *Áudio compreendido:* "${transcribedText}"`;
+                                            if (aiResponse.includes(header)) {
+                                                replyText = aiResponse.replace(header, `${header}\n\n${audioBadge}`);
+                                            } else {
+                                                replyText = `${header}\n\n${audioBadge}\n\n${aiResponse}`;
+                                            }
+                                        } else {
+                                            replyText = this.fallbackRouter(transcribedText);
+                                        }
+                                    } else {
+                                        replyText = `*KIT* · Seu Assessor Pessoal\n\n🎙️ Recebi seu áudio, mas não consegui identificar a fala com clareza. Poderia repetir ou mandar por texto?\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                                    }
+                                } catch (groqErr) {
+                                    console.warn(`[WhatsApp] Falha no Groq Whisper (${groqErr.message}). Acionando fallback multimodal do Gemini...`);
+                                    if (geminiService.isConfigured()) {
+                                        replyText = await geminiService.generateAdvisorAudioResponse(audioBuffer, mimeType, context);
+                                    } else {
+                                        throw groqErr;
+                                    }
+                                }
+                            }
+                            // ESTRATÉGIA 2: Fallback direto no Gemini multimodal
+                            else if (geminiService.isConfigured()) {
                                 replyText = await geminiService.generateAdvisorAudioResponse(audioBuffer, mimeType, context);
                             } else {
-                                replyText = `*KIT* · Seu Assessor Pessoal\n\n🎙️ Recebi seu áudio! Configure a chave do Gemini Pro para transcrição e ação automática.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                                replyText = `*KIT* · Seu Assessor Pessoal\n\n🎙️ Recebi seu áudio! Configure a chave do Gemini Pro ou Groq Whisper para transcrição automática.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
                             }
                         } catch (audioErr) {
                             console.error('[WhatsApp] Erro ao processar áudio:', audioErr.message);
@@ -229,7 +264,7 @@ class WhatsAppService {
                     const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     const userMsgText = msg.message?.conversation ||
                                         msg.message?.extendedTextMessage?.text ||
-                                        (msg.message?.audioMessage ? '🎙️ [Mensagem de Áudio]' : '📷 [Foto / Comprovante]');
+                                        (transcribedAudioText ? `🎙️ "${transcribedAudioText}"` : (msg.message?.audioMessage ? '🎙️ [Mensagem de Áudio]' : '📷 [Foto / Comprovante]'));
 
                     dbService.addChatMessage({
                         id: 'm-u-' + Date.now(),
