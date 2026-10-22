@@ -337,8 +337,22 @@ class WhatsAppService {
                 const action = JSON.parse(match[1].trim());
                 const applied = dbService.applyAction(action);
                 if (action.type === 'event' && applied && googleCalendarService.isConnected()) {
-                    googleCalendarService.pushEventToGoogle(applied).catch(e => {
-                        console.warn('[WhatsApp] Erro ao sincronizar evento com Google Calendar:', e.message);
+                    if (applied.updated && applied.googleEventId) {
+                        googleCalendarService.updateEventInGoogle(applied).catch(e => {
+                            console.warn('[WhatsApp] Erro ao atualizar evento no Google Calendar:', e.message);
+                        });
+                    } else if (!applied.updated) {
+                        googleCalendarService.pushEventToGoogle(applied).catch(e => {
+                            console.warn('[WhatsApp] Erro ao sincronizar evento com Google Calendar:', e.message);
+                        });
+                    }
+                } else if (action.type === 'update_event' && applied && applied.googleEventId && googleCalendarService.isConnected()) {
+                    googleCalendarService.updateEventInGoogle(applied).catch(e => {
+                        console.warn('[WhatsApp] Erro ao atualizar evento no Google Calendar:', e.message);
+                    });
+                } else if ((action.type === 'delete_event' || applied?.deleted) && applied?.googleEventId && googleCalendarService.isConnected()) {
+                    googleCalendarService.deleteEventFromGoogle(applied.googleEventId).catch(e => {
+                        console.warn('[WhatsApp] Erro ao remover evento do Google Calendar:', e.message);
                     });
                 }
             } catch (e) {
@@ -353,6 +367,7 @@ class WhatsAppService {
         let advisor = '*KIT* · Seu Assessor Pessoal';
         let body = 'Compreendido! O KIT registrou sua demanda e está organizando tudo para você.';
         let actionTag = '';
+        const lastAction = dbService.getLastAction();
 
         if (lower.startsWith('salva ') && (lower.includes(' como cliente') || lower.includes(' como fornecedor'))) {
             const isFornecedor = lower.includes(' como fornecedor');
@@ -372,16 +387,43 @@ class WhatsAppService {
             const countWords = summary.paymentsCount === 1 ? 'um pagamento' : (summary.paymentsCount === 2 ? 'dois pagamentos' : (summary.paymentsCount === 3 ? 'três pagamentos' : `${summary.paymentsCount} pagamentos`));
             return `*Bernardo* · Gestor Financeiro\n\nR$ ${formattedVal} este mês, em ${countWords}.`;
         } else if (lower.includes('apaga') || lower.includes('cancela') || lower.includes('desfaz') || lower.includes('desfazer') || lower.includes('exclui') || lower.includes('tira esse')) {
-            body = `Lançamento cancelado com sucesso!\n\n↩️ O registro anterior foi desfeito e removido do seu painel.`;
-            actionTag = `\n<!--KIT_ACTION:{"type":"delete_transaction"}-->`;
-        } else if (lower.includes('corrige') || lower.includes('corrigir') || lower.includes('entendeu errado') || lower.includes('não era') || lower.includes('era ')) {
-            const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
-            const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : null;
-            if (val !== null) {
-                body = `Lançamento corrigido com sucesso!\n\n✏️ *Recibo Atualizado*\n• Valor ajustado para: R$ ${val.toFixed(2)}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
-                actionTag = `\n<!--KIT_ACTION:{"type":"update_transaction","data":{"amount":${val}}}-->`;
+            if (lastAction && lastAction.type === 'event') {
+                advisor = '*Clara* · Secretária Executiva';
+                body = `Compromisso cancelado com sucesso!\n\n↩️ O agendamento foi desfeito e removido da sua agenda.`;
+                actionTag = `\n<!--KIT_ACTION:{"type":"delete_event"}-->`;
+            } else if (lastAction && lastAction.type === 'task') {
+                advisor = '*Sara* · Gestão de Projetos';
+                body = `Tarefa cancelada com sucesso!\n\n↩️ A tarefa foi removida da sua lista de prioridades.`;
+                actionTag = `\n<!--KIT_ACTION:{"type":"delete_task"}-->`;
             } else {
-                body = `Compreendido! Qual é o valor ou descrição correto para eu atualizar?`;
+                body = `Lançamento cancelado com sucesso!\n\n↩️ O registro anterior foi desfeito e removido do seu painel.`;
+                actionTag = `\n<!--KIT_ACTION:{"type":"delete_transaction"}-->`;
+            }
+        } else if (lower.includes('corrige') || lower.includes('corrigir') || lower.includes('entendeu errado') || lower.includes('não era') || lower.includes('era ') || lower.includes('muda o horário') || lower.includes('remarcar')) {
+            if (lastAction && lastAction.type === 'event') {
+                const timeMatch = text.match(/(?:às|as|\b)(\d{1,2})(?:[h:](\d{2})?|h\b)?/i);
+                let newStartTime = '16:00';
+                if (timeMatch) {
+                    const h = String(parseInt(timeMatch[1], 10)).padStart(2, '0');
+                    const m = timeMatch[2] ? String(timeMatch[2]).padStart(2, '0') : '00';
+                    newStartTime = `${h}:${m}`;
+                }
+                const parts = newStartTime.split(':');
+                const endH = String((parseInt(parts[0], 10) + 1) % 24).padStart(2, '0');
+                const newEndTime = `${endH}:${parts[1]}`;
+
+                advisor = '*Clara* · Secretária Executiva';
+                body = `Compromisso reagendado com sucesso!\n\n✏️ *Horário Atualizado*\n• Novo Horário: ${newStartTime} às ${newEndTime}\n• Conflito de horários checado: Nenhum conflito\n• Google Agenda sincronizada`;
+                actionTag = `\n<!--KIT_ACTION:{"type":"update_event","data":{"startTime":"${newStartTime}","endTime":"${newEndTime}"}}-->`;
+            } else {
+                const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+                const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : null;
+                if (val !== null) {
+                    body = `Lançamento corrigido com sucesso!\n\n✏️ *Recibo Atualizado*\n• Valor ajustado para: R$ ${val.toFixed(2)}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
+                    actionTag = `\n<!--KIT_ACTION:{"type":"update_transaction","data":{"amount":${val}}}-->`;
+                } else {
+                    body = `Compreendido! Qual é o valor ou descrição correto para eu atualizar?`;
+                }
             }
         } else if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix')) {
             const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);

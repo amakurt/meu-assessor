@@ -359,8 +359,47 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
 - [x] Bateria de 20 testes automatizados dos fluxos conversacionais (100% aprovados).
 - [x] Correção de bugs críticos em `db-service.js` (tarefas) e `whatsapp-service.js` (`isReady`).
 - [x] Retry resiliente com backoff para picos de demanda no Gemini Pro.
+- [x] Deduplicação e correção inteligente de eventos/compromissos na Agenda (Clara & Google Calendar).
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
+
+---
+
+## 📅 Sessão 10 · 22/10/2026 (Eliminação de Agendamentos Duplicados, Reagendamento com Clara & Sincronização Google)
+
+### 🎯 Diagnóstico da Dúvida do Usuário
+O usuário relatou: *"testei ontem pedindo pra agendar uma coisa, e depois pedi pra corrigi e ficou dois agendamentos na oracle na nuvem"*.
+
+### 🔍 Causa Raiz Identificada
+1. **Falta de Instruções de Eventos no Prompt do Gemini (`js/gemini-service.js`):**
+   - O prompt ensinava apenas a tag `update_transaction` e `delete_transaction` (para despesas).
+   - Não havia menção a `update_event` ou `delete_event`. Quando o usuário dizia "corrige o horário para as 16h", a IA entendia como um novo agendamento e emitia uma segunda tag `event`.
+2. **Ausência de `update_event` e `delete_event` no Backend (`js/db-service.js`):**
+   - No método `applyAction()`, não existia o `case 'update_event'`.
+   - No `case 'delete_transaction'` / `'undo'`, havia um bug de sombreamento: a busca pelo último lançamento manual de transação (`stmtGetRecentManualTx`) interceptava a exclusão mesmo quando a ação anterior havia sido um evento, deletando uma transação do passado em vez da reunião.
+3. **Falta de Reagendamento na API do Google Calendar (`js/google-calendar-service.js`):**
+   - Existia apenas `pushEventToGoogle()` (criação) e `deleteEventFromGoogle()`. Não havia o método `updateEventInGoogle()` para atualizar via `PATCH` horário, título ou link na Google Agenda quando o compromisso fosse corrigido.
+4. **Fallback Router Roteando Correções de Agenda para Finanças (`js/whatsapp-service.js`):**
+   - Quando o fallback era acionado, qualquer mensagem com "corrige" ou número ("corrige para as 16h") caía no extrato financeiro como despesa de R$ 16,00.
+
+### 🛠️ Correções Implementadas e Deployed
+- **`js/db-service.js`:**
+  - Adicionados prepared statements: `stmtUpdateEvent`, `stmtGetEventById`, `stmtGetRecentEvent`, `stmtUpdateTask`, `stmtGetTaskById`, `stmtGetRecentTask`.
+  - Implementado `update_event`, `delete_event`, `update_task` e `delete_task` no `applyAction()`.
+  - **Mecanismo de Deduplicação Ativa:** Quando uma ação `event` é recebida em até 15 minutos de um evento anterior similar, o sistema atualiza o evento existente em vez de inserir um novo.
+  - Correção no `undo` para desmarcar o evento correto se a última ação foi de agenda.
+- **`js/gemini-service.js`:**
+  - Prompt atualizado com instrução explícita para a assessora **Clara**: correções de horário ou data devem emitir obrigatoriamente `update_event` sem duplicar.
+  - Fallback atualizado para `gemini-3.8-flash` (substituindo o descontinuado `gemini-2.5-flash`).
+- **`js/google-calendar-service.js`:**
+  - Implementado método `updateEventInGoogle(event)` com chamadas `PATCH` na Google API v3 para sincronizar reagendamentos em tempo real.
+- **`js/whatsapp-service.js`:**
+  - `_extractAndApplyAction()` agora sincroniza atualizações (`updateEventInGoogle`) e cancelamentos (`deleteEventFromGoogle`).
+  - `fallbackRouter()` agora reconhece quando a última ação foi um evento e gera `update_event` com novo horário em vez de gerar lançamento financeiro.
+- **`tests/test-conversational-flows.js`:**
+  - Bateria expandida para **29 testes automatizados** cobrindo criação, correção, deduplicação em memória e cancelamento de eventos.
+  - **Resultado:** 29 PASSARAM | 0 FALHARAM (100% de aprovação).
+
 
 
 

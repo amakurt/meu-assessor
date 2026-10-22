@@ -281,6 +281,15 @@ class DbService {
         this.stmtDeleteEvent = this.sqlite.prepare('DELETE FROM events WHERE id = ?');
         this.stmtUpdateEventGoogleId = this.sqlite.prepare('UPDATE events SET googleEventId = ?, meetUrl = COALESCE(?, meetUrl) WHERE id = ?');
         this.stmtGetEventByGoogleId = this.sqlite.prepare('SELECT * FROM events WHERE googleEventId = ?');
+        this.stmtGetEventById = this.sqlite.prepare('SELECT * FROM events WHERE id = ?');
+        this.stmtGetRecentEvent = this.sqlite.prepare('SELECT * FROM events ORDER BY createdAt DESC LIMIT 1');
+        this.stmtUpdateEvent = this.sqlite.prepare(`
+            UPDATE events 
+            SET title = @title, date = @date, startTime = @startTime, endTime = @endTime,
+                location = @location, hasMeet = @hasMeet, meetUrl = @meetUrl, participants = @participants,
+                googleEventId = @googleEventId
+            WHERE id = @id
+        `);
 
         this.stmtInsertTask = this.sqlite.prepare(`
             INSERT INTO tasks (id, title, status, priority, dueDate, completed, createdAt)
@@ -288,6 +297,13 @@ class DbService {
         `);
 
         this.stmtDeleteTask = this.sqlite.prepare('DELETE FROM tasks WHERE id = ?');
+        this.stmtGetTaskById = this.sqlite.prepare('SELECT * FROM tasks WHERE id = ?');
+        this.stmtGetRecentTask = this.sqlite.prepare('SELECT * FROM tasks ORDER BY createdAt DESC LIMIT 1');
+        this.stmtUpdateTask = this.sqlite.prepare(`
+            UPDATE tasks
+            SET title = @title, status = @status, priority = @priority, dueDate = @dueDate, completed = @completed
+            WHERE id = @id
+        `);
 
         this.stmtInsertDebt = this.sqlite.prepare(`
             INSERT INTO debts (id, name, amount, reason, date, status, createdAt)
@@ -685,6 +701,26 @@ class DbService {
                 let target = null;
                 const targetId = action.data?.id;
 
+                // Se a ação a desfazer foi explicitamente um evento ou tarefa recente, desfaz ela
+                if (!targetId && this.lastAction && this.lastAction.type === 'event' && this.lastAction.item) {
+                    target = this.stmtGetEventById.get(this.lastAction.item.id);
+                    if (target) {
+                        this.stmtDeleteEvent.run(target.id);
+                        applied = { deleted: true, ...target };
+                        this.lastAction = null;
+                        break;
+                    }
+                }
+                if (!targetId && this.lastAction && this.lastAction.type === 'task' && this.lastAction.item) {
+                    target = this.stmtGetTaskById.get(this.lastAction.item.id);
+                    if (target) {
+                        this.stmtDeleteTask.run(target.id);
+                        applied = { deleted: true, ...target };
+                        this.lastAction = null;
+                        break;
+                    }
+                }
+
                 if (targetId) {
                     target = this.stmtGetTxById.get(targetId);
                 } else if (this.lastAction && this.lastAction.type === 'transaction' && this.lastAction.item) {
@@ -703,13 +739,82 @@ class DbService {
                     }
                     applied = { deleted: true, ...target };
                     this.lastAction = null;
+                }
+                break;
+            }
+
+            case 'update_event': {
+                const updData = action.data || {};
+                let target = null;
+
+                if (updData.id) {
+                    target = this.stmtGetEventById.get(updData.id);
+                }
+                if (!target && this.lastAction && this.lastAction.type === 'event' && this.lastAction.item) {
+                    target = this.stmtGetEventById.get(this.lastAction.item.id);
+                }
+                if (!target) {
+                    target = this.stmtGetRecentEvent.get();
+                }
+
+                if (target) {
+                    const newTitle = updData.title || target.title;
+                    const newDate = updData.date || target.date;
+                    const newStartTime = updData.startTime || target.startTime;
+                    const newEndTime = updData.endTime || (updData.startTime ? this._calcEndTime(updData.startTime) : target.endTime);
+                    const newLocation = updData.location || target.location;
+                    const newHasMeet = updData.hasMeet !== undefined ? (updData.hasMeet ? 1 : 0) : target.hasMeet;
+                    const newMeetUrl = updData.meetUrl || target.meetUrl;
+                    const newParticipants = updData.participants !== undefined ? updData.participants : target.participants;
+                    const googleEventId = target.googleEventId || updData.googleEventId || null;
+
+                    this.stmtUpdateEvent.run({
+                        id: target.id,
+                        title: newTitle,
+                        date: newDate,
+                        startTime: newStartTime,
+                        endTime: newEndTime,
+                        location: newLocation,
+                        hasMeet: newHasMeet,
+                        meetUrl: newMeetUrl,
+                        participants: newParticipants,
+                        googleEventId: googleEventId
+                    });
+
+                    applied = {
+                        id: target.id,
+                        title: newTitle,
+                        date: newDate,
+                        startTime: newStartTime,
+                        endTime: newEndTime,
+                        location: newLocation,
+                        hasMeet: newHasMeet,
+                        meetUrl: newMeetUrl,
+                        participants: newParticipants,
+                        googleEventId: googleEventId,
+                        createdAt: target.createdAt,
+                        updated: true
+                    };
+                    this.lastAction = { type: 'event', item: applied, timestamp: Date.now() };
+                }
+                break;
+            }
+
+            case 'delete_event': {
+                let target = null;
+                const targetId = action.data?.id;
+
+                if (targetId) {
+                    target = this.stmtGetEventById.get(targetId);
                 } else if (this.lastAction && this.lastAction.type === 'event' && this.lastAction.item) {
-                    this.stmtDeleteEvent.run(this.lastAction.item.id);
-                    applied = { deleted: true, ...this.lastAction.item };
-                    this.lastAction = null;
-                } else if (this.lastAction && this.lastAction.type === 'task' && this.lastAction.item) {
-                    this.stmtDeleteTask.run(this.lastAction.item.id);
-                    applied = { deleted: true, ...this.lastAction.item };
+                    target = this.stmtGetEventById.get(this.lastAction.item.id);
+                } else {
+                    target = this.stmtGetRecentEvent.get();
+                }
+
+                if (target) {
+                    this.stmtDeleteEvent.run(target.id);
+                    applied = { deleted: true, ...target };
                     this.lastAction = null;
                 }
                 break;
@@ -717,12 +822,43 @@ class DbService {
 
             case 'event': {
                 const evData = action.data || {};
+
+                // DEDUPLICAÇÃO & CORREÇÃO INTELIGENTE:
+                // Se a ação anterior (< 15min) foi um evento e o usuário está ajustando ou corrigindo
+                // ou se há evento recente com título similar no mesmo dia/próximo, atualiza em vez de duplicar
+                const recentEv = (this.lastAction && this.lastAction.type === 'event' && this.lastAction.item)
+                    ? this.lastAction.item
+                    : this.stmtGetRecentEvent.get();
+
+                const isRecent = recentEv && (Date.now() - (recentEv.createdAt || 0) < 15 * 60 * 1000);
+                const isCorrectionOrSimilar = isRecent && (
+                    evData.isUpdate ||
+                    !evData.title ||
+                    evData.title === 'Compromisso KIT' ||
+                    (evData.title && recentEv.title && (
+                        evData.title.toLowerCase().includes(recentEv.title.toLowerCase()) ||
+                        recentEv.title.toLowerCase().includes(evData.title.toLowerCase())
+                    ))
+                );
+
+                if (isCorrectionOrSimilar) {
+                    console.log(`[SQLite] 🔄 Ajuste de compromisso detectado para evento "${recentEv.title}" (ID: ${recentEv.id}). Atualizando sem duplicar!`);
+                    return this.applyAction({
+                        type: 'update_event',
+                        data: {
+                            id: recentEv.id,
+                            ...evData,
+                            title: (evData.title && evData.title !== 'Compromisso KIT') ? evData.title : recentEv.title
+                        }
+                    });
+                }
+
                 applied = {
                     id: `ev-${Date.now()}`,
                     title: evData.title || 'Compromisso KIT',
                     date: evData.date || dateStr,
                     startTime: evData.startTime || '10:00',
-                    endTime: evData.endTime || '11:00',
+                    endTime: evData.endTime || (evData.startTime ? this._calcEndTime(evData.startTime) : '11:00'),
                     location: evData.location || (evData.hasMeet ? 'Google Meet' : 'Presencial'),
                     hasMeet: evData.hasMeet ? 1 : 0,
                     meetUrl: evData.hasMeet ? (evData.meetUrl || `https://meet.google.com/kit-${Math.random().toString(36).substring(2, 6)}`) : null,
@@ -732,6 +868,66 @@ class DbService {
                 };
                 this.stmtInsertEvent.run(applied);
                 this.lastAction = { type: 'event', item: applied, timestamp: Date.now() };
+                break;
+            }
+
+            case 'update_task': {
+                const updData = action.data || {};
+                let target = null;
+                if (updData.id) {
+                    target = this.stmtGetTaskById.get(updData.id);
+                } else if (this.lastAction && this.lastAction.type === 'task' && this.lastAction.item) {
+                    target = this.stmtGetTaskById.get(this.lastAction.item.id);
+                } else {
+                    target = this.stmtGetRecentTask.get();
+                }
+
+                if (target) {
+                    const newTitle = updData.title || target.title;
+                    const newStatus = updData.status || target.status;
+                    const newPriority = updData.priority || target.priority;
+                    const newDueDate = updData.dueDate || target.dueDate;
+                    const newCompleted = updData.completed !== undefined ? (updData.completed ? 1 : 0) : target.completed;
+
+                    this.stmtUpdateTask.run({
+                        id: target.id,
+                        title: newTitle,
+                        status: newStatus,
+                        priority: newPriority,
+                        dueDate: newDueDate,
+                        completed: newCompleted
+                    });
+
+                    applied = {
+                        ...target,
+                        title: newTitle,
+                        status: newStatus,
+                        priority: newPriority,
+                        dueDate: newDueDate,
+                        completed: newCompleted,
+                        updated: true
+                    };
+                    this.lastAction = { type: 'task', item: applied, timestamp: Date.now() };
+                }
+                break;
+            }
+
+            case 'delete_task': {
+                let target = null;
+                const targetId = action.data?.id;
+                if (targetId) {
+                    target = this.stmtGetTaskById.get(targetId);
+                } else if (this.lastAction && this.lastAction.type === 'task' && this.lastAction.item) {
+                    target = this.stmtGetTaskById.get(this.lastAction.item.id);
+                } else {
+                    target = this.stmtGetRecentTask.get();
+                }
+
+                if (target) {
+                    this.stmtDeleteTask.run(target.id);
+                    applied = { deleted: true, ...target };
+                    this.lastAction = null;
+                }
                 break;
             }
 
@@ -796,6 +992,15 @@ class DbService {
         }
 
         return applied;
+    }
+
+    _calcEndTime(startTime) {
+        if (!startTime) return '11:00';
+        const parts = startTime.split(':');
+        const h = parseInt(parts[0], 10);
+        const m = parts[1] || '00';
+        const endH = (h + 1) % 24;
+        return `${String(endH).padStart(2, '0')}:${m}`;
     }
 
     getLastAction() {

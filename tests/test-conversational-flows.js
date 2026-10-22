@@ -12,7 +12,8 @@ const whatsappService = require('../js/whatsapp-service');
 const geminiService = require('../js/gemini-service');
 const groqService = require('../js/groq-service');
 const googleCalendarService = require('../js/google-calendar-service');
-const { DbService } = require('../js/db-service');
+const dbService = require('../js/db-service');
+const { DbService } = dbService;
 
 const TEST_DB_PATH = path.join(__dirname, 'test_kit.db');
 
@@ -213,6 +214,45 @@ async function runTests() {
         assert.strictEqual(foundByGoogle.meetUrl, 'https://meet.google.com/real-meet-link');
     });
 
+    test('Corrigir horário do evento via update_event (sem duplicar)', () => {
+        const updateAction = {
+            type: 'update_event',
+            data: {
+                startTime: '16:00',
+                endTime: '17:00'
+            }
+        };
+        const updated = testDb.applyAction(updateAction);
+        assert(updated && updated.startTime === '16:00', 'Horário não foi atualizado');
+
+        const eventsCount = testDb.sqlite.prepare('SELECT count(*) as count FROM events').get().count;
+        assert.strictEqual(eventsCount, 1, 'Não deveria ter duplicado o evento ao corrigir');
+    });
+
+    test('Deduplicação de agendamento: nova ação event recebida logo após atualiza evento recente', () => {
+        const reEventAction = {
+            type: 'event',
+            data: {
+                title: 'Alinhamento Estratégico',
+                startTime: '17:30'
+            }
+        };
+        const updated = testDb.applyAction(reEventAction);
+        assert(updated && updated.startTime === '17:30', 'Horário não foi ajustado via deduplicação');
+
+        const eventsCount = testDb.sqlite.prepare('SELECT count(*) as count FROM events').get().count;
+        assert.strictEqual(eventsCount, 1, 'Deduplicação falhou: gerou dois agendamentos no banco');
+    });
+
+    test('Cancelar/Desmarcar evento via delete_event', () => {
+        const deleteAction = { type: 'delete_event' };
+        const deleted = testDb.applyAction(deleteAction);
+        assert(deleted && deleted.deleted, 'Evento não foi marcado como excluído');
+
+        const eventsCount = testDb.sqlite.prepare('SELECT count(*) as count FROM events').get().count;
+        assert.strictEqual(eventsCount, 0, 'Evento não foi removido do SQLite');
+    });
+
     test('Salvar, recuperar e remover credenciais OAuth2 do Google no SQLite', () => {
         testDb.saveGoogleAuth({
             accessToken: 'mock-access-token-123',
@@ -303,6 +343,23 @@ async function runTests() {
         assert(res.includes('<!--KIT_ACTION:{"type":"create_client","data":{"name":"Mecânica Silva","type":"cliente"}}-->'), 'Tag incorreta');
     });
 
+    test('Fallback Router: Correção de horário de reunião (Clara)', () => {
+        const origLastAction = dbService.lastAction;
+        dbService.lastAction = {
+            type: 'event',
+            item: { id: 'ev-test-fallback', title: 'Reunião com Arquiteto', startTime: '14:00' },
+            timestamp: Date.now()
+        };
+
+        const res = whatsappService.fallbackRouter('corrige o horário para as 16h');
+        assert(res.includes('*Clara* · Secretária Executiva'), 'Deveria rotear para Clara');
+        assert(res.includes('Compromisso reagendado com sucesso'), 'Não detectou intenção de reagendamento');
+        assert(res.includes('update_event'), 'Deveria gerar KIT_ACTION do tipo update_event');
+        assert(res.includes('16:00'), 'Não ajustou para 16:00');
+
+        dbService.lastAction = origLastAction;
+    });
+
     console.log('\n--- 4. TESTES REAIS COM O MOTOR GEMINI PRO (NLP & CONTEXTO) ---');
 
     await asyncTest('Gemini Pro: Registro de despesa com contexto de assessores', async () => {
@@ -345,6 +402,18 @@ async function runTests() {
         console.log(`   🤖 Resposta Gemini: ${reply.split('\n')[0]} ...`);
         assert(reply.includes('KIT_ACTION'), 'Deveria gerar KIT_ACTION');
         assert(reply.includes('"type":"event"') || reply.includes('event'), 'Deveria ser ação do tipo event');
+    });
+
+    await asyncTest('Gemini Pro: Reagendamento / Correção de horário com Clara (sem duplicar)', async () => {
+        const mockContext = {
+            lastActionSummary: 'Último compromisso agendado: "Reunião de Diretoria" em 2026-10-25 às 16:00 - ID: ev-test-123',
+            chatSummary: 'Usuário: "Clara, marca reunião de diretoria amanhã às 16h com o Pedro"\nClara: "Compromisso agendado para às 16:00."'
+        };
+        const userMsg = 'Clara, na verdade corrige o horário para as 17h';
+        const reply = await geminiService.generateAdvisorResponse(userMsg, mockContext);
+        console.log(`   🤖 Resposta Gemini: ${reply.split('\n')[0]} ...`);
+        assert(reply.includes('update_event'), 'O Gemini gerou evento novo em vez de update_event!');
+        assert(!reply.includes('<!--KIT_ACTION:{"type":"event"'), 'Não deve emitir novo evento duplicado!');
     });
 
     await asyncTest('Gemini Pro: Cadastro de novo cliente', async () => {

@@ -44,7 +44,7 @@ class GeminiService {
                             const isTransient = errMsg.includes('high demand') || errMsg.includes('Resource has been exhausted') || parsed.error.code === 503 || parsed.error.code === 429;
 
                             if (isTransient && attempt <= 3) {
-                                const fallbackModel = attempt >= 2 ? 'gemini-2.5-flash' : modelToUse;
+                                const fallbackModel = attempt >= 2 ? 'gemini-3.8-flash' : modelToUse;
                                 console.warn(`[Gemini] ${errMsg} (Tentativa ${attempt}). Tentando novamente com modelo ${fallbackModel}...`);
                                 await new Promise(r => setTimeout(r, 1200 * attempt));
                                 try {
@@ -119,8 +119,8 @@ Diretrizes de resposta no WhatsApp:
   "[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)"
 
 INSTRUÇÃO CRUCIAL PARA CORREÇÕES, AJUSTES OU CANCELAMENTO:
-Se o usuário indicar que você ou o áudio entendeu errado, pedir para corrigir um valor/descrição/categoria, ou pedir para cancelar/apagar/desfazer:
-1. CORREÇÃO DE VALOR / DETALHES (ex: "não foi 500, foi 50", "entendeu errado, era 35 reais", "corrige o valor para 80", "o almoço foi 40"):
+Se o usuário indicar que você ou o áudio entendeu errado, pedir para corrigir um valor/descrição/horário/data, ou pedir para cancelar/apagar/desfazer:
+1. CORREÇÃO DE VALOR / DETALHES DE TRANSAÇÃO (ex: "não foi 500, foi 50", "entendeu errado, era 35 reais", "corrige o valor para 80", "o almoço foi 40"):
    - NUNCA adicione uma nova despesa duplicada!
    - Em vez disso, use OBRIGATORIAMENTE a tag de atualização:
      <!--KIT_ACTION:{"type":"update_transaction","data":{"amount":50.0}}-->
@@ -128,11 +128,26 @@ Se o usuário indicar que você ou o áudio entendeu errado, pedir para corrigir
    - Responda confirmando o ajuste com precisão:
      "✏️ *Lançamento corrigido com sucesso!*"
      "O valor anterior foi ajustado para R$ [novo valor]."
-2. CANCELAMENTO / DESFAZER / APAGAR (ex: "apaga", "cancela", "desfaz", "não registra", "errou tudo apaga"):
-   - Use OBRIGATORIAMENTE a tag de exclusão:
-     <!--KIT_ACTION:{"type":"delete_transaction"}-->
+2. CORREÇÃO DE HORÁRIO OU DATA NA AGENDA / COMPROMISSO (ex: "corrige para as 16h", "não é amanhã, é quinta", "muda o horário da reunião para 17h", "entendeu errado, a reunião é às 15h"):
+   - NUNCA crie uma nova reunião duplicada!
+   - Em vez disso, use OBRIGATORIAMENTE a tag de atualização de evento:
+     <!--KIT_ACTION:{"type":"update_event","data":{"startTime":"16:00","endTime":"17:00"}}-->
+     (Você pode incluir "startTime", "endTime", "date", "title" no objeto data com os dados ajustados).
+   - Responda como a Clara:
+     "*Clara* · Secretária Executiva
+
+✏️ *Compromisso reagendado com sucesso!*
+• Horário ajustado para: [novo horário]
+• Conflitos checados: Nenhum conflito
+• Google Agenda sincronizada"
+3. CORREÇÃO DE TAREFA (ex: "muda a prioridade para urgente", "corrige o título da tarefa"):
+   - Use: <!--KIT_ACTION:{"type":"update_task","data":{"priority":"urgente"}}-->
+4. CANCELAMENTO / DESFAZER / APAGAR (ex: "apaga", "cancela", "desfaz", "não registra", "cancela a reunião", "desmarca o compromisso"):
+   - Se for despesa/receita: use <!--KIT_ACTION:{"type":"delete_transaction"}-->
+   - Se for reunião/agenda: use <!--KIT_ACTION:{"type":"delete_event"}-->
+   - Se for tarefa: use <!--KIT_ACTION:{"type":"delete_task"}-->
    - Responda confirmando:
-     "↩️ *Lançamento cancelado com sucesso!*"
+     "↩️ *Cancelado com sucesso!*"
      "O registro anterior foi desfeito e removido do seu painel."
 
 INSTRUÇÃO CRUCIAL DE SINCRONIZAÇÃO DE DADOS (NOVOS REGISTROS):

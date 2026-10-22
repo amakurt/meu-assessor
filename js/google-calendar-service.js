@@ -286,6 +286,54 @@ class GoogleCalendarService {
     }
 
     /**
+     * Atualiza um evento na Google Agenda quando reagendado ou corrigido no KIT
+     */
+    async updateEventInGoogle(event) {
+        if (!this.isConnected() || !event || !event.googleEventId) return null;
+
+        try {
+            const accessToken = await this.getValidAccessToken();
+            const dateStr = event.date || new Date().toISOString().split('T')[0];
+            const startTime = event.startTime || '10:00';
+            const endTime = event.endTime || '11:00';
+
+            const startIso = `${dateStr}T${startTime}:00`;
+            const endIso = `${dateStr}T${endTime}:00`;
+
+            const requestPayload = {
+                summary: event.title || 'Compromisso KIT OS',
+                start: {
+                    dateTime: startIso,
+                    timeZone: this.timeZone
+                },
+                end: {
+                    dateTime: endIso,
+                    timeZone: this.timeZone
+                },
+                location: event.location || (event.hasMeet ? 'Google Meet' : '')
+            };
+
+            console.log(`[Google Calendar] Reagendando compromisso "${event.title}" no Google Calendar (${dateStr} ${startTime})...`);
+
+            const path = `/calendar/v3/calendars/primary/events/${event.googleEventId}`;
+            const updated = await this._makePostRequest(
+                'www.googleapis.com',
+                path,
+                requestPayload,
+                accessToken,
+                false,
+                'PATCH'
+            );
+
+            console.log(`[Google Calendar] Evento ${event.googleEventId} atualizado com sucesso na Google Agenda!`);
+            return updated;
+        } catch (e) {
+            console.error('[Google Calendar] Falha ao atualizar evento no Google:', e.message);
+        }
+        return null;
+    }
+
+    /**
      * Remove um evento da Google Agenda quando cancelado no KIT
      */
     async deleteEventFromGoogle(googleEventId) {
@@ -314,7 +362,7 @@ class GoogleCalendarService {
         }
     }
 
-    _makePostRequest(hostname, path, data, bearerToken = null, isForm = false) {
+    _makePostRequest(hostname, path, data, bearerToken = null, isForm = false, method = 'POST') {
         return new Promise((resolve, reject) => {
             const isUrlEncoded = isForm || hostname.includes('oauth2.googleapis.com');
             const postBody = isUrlEncoded
@@ -333,7 +381,7 @@ class GoogleCalendarService {
                 hostname,
                 port: 443,
                 path,
-                method: 'POST',
+                method,
                 headers
             }, (res) => {
                 let body = '';
