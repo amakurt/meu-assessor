@@ -254,7 +254,8 @@ class DbService {
         this.stmtUpdateTx = this.sqlite.prepare(`
             UPDATE transactions 
             SET amount = @amount, description = @description, category = @category, type = @type,
-                date = @date, paymentMethod = @paymentMethod, profile = @profile, buyer = @buyer, account = @account
+                date = @date, paymentMethod = @paymentMethod, profile = @profile, buyer = @buyer, account = @account,
+                pluggyId = @pluggyId, status = @status
             WHERE id = @id
         `);
 
@@ -624,6 +625,8 @@ class DbService {
                     const newProfile = updData.profile || target.profile;
                     const newBuyer = updData.buyer !== undefined ? updData.buyer : target.buyer;
                     const newAccount = updData.account !== undefined ? updData.account : target.account;
+                    const newPluggyId = updData.pluggyId !== undefined ? updData.pluggyId : target.pluggyId;
+                    const newStatus = updData.status !== undefined ? updData.status : target.status;
 
                     this.stmtUpdateTx.run({
                         id: target.id,
@@ -635,7 +638,9 @@ class DbService {
                         paymentMethod: newPayment,
                         profile: newProfile,
                         buyer: newBuyer,
-                        account: newAccount
+                        account: newAccount,
+                        pluggyId: newPluggyId,
+                        status: newStatus
                     });
 
                     // Aplica novo valor ao orçamento
@@ -1057,6 +1062,30 @@ class DbService {
             type: 'delete_transaction',
             data: { id }
         });
+    }
+
+    /**
+     * Reconcilia uma transação manual (feita via WhatsApp ou painel)
+     * com o lançamento bancário oficial do Open Finance, evitando duplicação.
+     */
+    reconcileTransaction(manualTxId, pluggyData) {
+        const target = this.stmtGetTxById.get(manualTxId);
+        if (!target) return null;
+
+        const updatedAccount = pluggyData.account || target.account;
+        this.sqlite.prepare(`
+            UPDATE transactions 
+            SET pluggyId = ?, status = 'conciliado', account = ?
+            WHERE id = ?
+        `).run(pluggyData.id, updatedAccount, manualTxId);
+
+        const reconciled = this.stmtGetTxById.get(manualTxId);
+        this.broadcast('data_updated', {
+            type: 'reconciled_transaction',
+            item: reconciled,
+            fullDb: this.getAll()
+        });
+        return reconciled;
     }
 
     // ==========================================

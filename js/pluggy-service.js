@@ -156,25 +156,52 @@ class PluggyService {
                         const isReceita = !isDespesa;
                         const dateStr = t.date ? t.date.split('T')[0] : new Date().toISOString().split('T')[0];
 
-                        // Verifica se já não importou esta transação
-                        const existing = dbService.getAll().transactions.find(existingTx => existingTx.pluggyId === t.id);
-                        if (!existing) {
-                            dbService.applyAction({
-                                type: 'transaction',
-                                data: {
-                                    pluggyId: t.id,
-                                    type: isReceita ? 'receita' : 'despesa',
-                                    description: t.description || t.descriptionRaw || 'Lançamento bancário',
-                                    amount: amount,
-                                    category: t.category || 'Bancário',
-                                    status: 'conciliado',
-                                    profile: 'personal',
-                                    date: dateStr,
-                                    paymentMethod: acc.name || 'Open Finance'
-                                }
+                        // 1. Verifica se esta transação já foi importada anteriormente pelo pluggyId
+                        const allTxs = dbService.getAll().transactions;
+                        const existing = allTxs.find(existingTx => existingTx.pluggyId === t.id);
+                        if (existing) continue;
+
+                        // 2. CONCILIAÇÃO INTELIGENTE (Anti-Duplicação com WhatsApp/Manual):
+                        // Se o usuário já antecipou o lançamento pelo WhatsApp ou manualmente,
+                        // associamos o ID do banco oficial sem duplicar nem alterar o teto de gastos novamente.
+                        const txDate = new Date(dateStr);
+                        const manualMatch = allTxs.find(existingTx => {
+                            if (existingTx.pluggyId) return false; // Já conciliada
+                            if (existingTx.type !== (isReceita ? 'receita' : 'despesa')) return false;
+                            if (Math.abs(existingTx.amount - amount) > 0.01) return false;
+
+                            // Tolerância de até 3 dias entre passar o cartão e o fechamento/compensação bancária
+                            const existingDate = new Date(existingTx.date);
+                            const diffDays = Math.abs((txDate - existingDate) / (1000 * 60 * 60 * 24));
+                            return diffDays <= 3;
+                        });
+
+                        if (manualMatch) {
+                            console.log(`[Pluggy Conciliação] Vinculando transação do WhatsApp "${manualMatch.description}" (R$ ${amount.toFixed(2)}) ao lançamento bancário oficial (${t.description || acc.name})`);
+                            dbService.reconcileTransaction(manualMatch.id, {
+                                id: t.id,
+                                account: acc.name || manualMatch.account
                             });
-                            importedCount++;
+                            continue;
                         }
+
+                        // 3. Caso não seja um gasto já registrado, adiciona como novo lançamento
+                        dbService.applyAction({
+                            type: 'transaction',
+                            data: {
+                                pluggyId: t.id,
+                                type: isReceita ? 'receita' : 'despesa',
+                                description: t.description || t.descriptionRaw || 'Lançamento bancário',
+                                amount: amount,
+                                category: t.category || 'Bancário',
+                                status: 'conciliado',
+                                profile: 'personal',
+                                date: dateStr,
+                                paymentMethod: acc.name || 'Open Finance',
+                                account: acc.name || 'Open Finance'
+                            }
+                        });
+                        importedCount++;
                     }
                 }
             }

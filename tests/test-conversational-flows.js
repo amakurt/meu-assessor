@@ -133,6 +133,42 @@ async function runTests() {
         assert.strictEqual(budget.spent, 0.0, 'Orçamento não foi zerado após exclusão');
     });
 
+    test('Conciliação Inteligente: Lançamento do WhatsApp conciliado com Open Finance sem duplicar', () => {
+        // 1. Usuário envia no WhatsApp: Gastei 50 no Cartão C6
+        const manualTx = testDb.applyAction({
+            type: 'transaction',
+            data: {
+                id: 'tx-manual-whatsapp-50',
+                type: 'despesa',
+                description: 'Gasolina no Cartão C6',
+                amount: 50.0,
+                category: 'Transporte & Viagens',
+                profile: 'personal',
+                date: '2026-10-22',
+                pluggyId: null,
+                account: 'C6 Bank'
+            }
+        });
+        assert(manualTx, 'Falha ao criar transação manual');
+        const countBefore = testDb.sqlite.prepare('SELECT COUNT(*) as total FROM transactions').get().total;
+
+        // 2. Open Finance sincroniza posteriormente com o ID oficial do banco
+        const reconciled = testDb.reconcileTransaction(manualTx.id, {
+            id: 'pluggy-tx-c6-999',
+            account: 'BANDEIRADO (Cartão C6)'
+        });
+        assert(reconciled, 'Falha ao reconciliar');
+        assert.strictEqual(reconciled.pluggyId, 'pluggy-tx-c6-999', 'pluggyId deve ter sido associado');
+        assert.strictEqual(reconciled.status, 'conciliado', 'Status deve ser conciliado');
+
+        // 3. Garante que NÃO houve aumento de transações (Zero Duplicação)
+        const countAfter = testDb.sqlite.prepare('SELECT COUNT(*) as total FROM transactions').get().total;
+        assert.strictEqual(countAfter, countBefore, 'Houve duplicação indevida na conciliação!');
+
+        // Limpa a transação de teste
+        testDb.sqlite.prepare('DELETE FROM transactions WHERE id = ?').run(manualTx.id);
+    });
+
     test('Criar evento na agenda via applyAction', () => {
         const eventAction = {
             type: 'event',

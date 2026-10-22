@@ -278,17 +278,12 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
   - Adicionado fallback dinâmico para o modelo `gemini-2.5-flash` se houver pico persistente na nuvem, garantindo disponibilidade 24/7 sem mensagens perdidas no WhatsApp.
 - **Validação de Transcrição Ultrarrápida Groq Whisper LPU (`js/groq-service.js`):**
   - Testado envio e transcrição de áudio real via chips LPU com resposta em **454ms**.
+- **Motor de Conciliação Inteligente Anti-Duplicação (`js/pluggy-service.js` & `js/db-service.js`):**
+  - Implementado algoritmo de de-duplicação e conciliação bancária automática: quando o usuário registra uma compra no WhatsApp no calor do momento e o Open Finance sincroniza horas/dias depois, o sistema localiza a transação manual (por valor, tipo e janela de até 3 dias) e vincula o `pluggyId` oficial com status `conciliado`, **sem duplicar o lançamento e sem re-deduzir o orçamento**.
+  - Método `reconcileTransaction` implementado no SQLite com notificação reativa no SSE/WebSocket.
 - **Bateria de Testes Automatizada (`tests/test-conversational-flows.js` & `package.json`):**
-  - Criada suíte completa com **20 testes automatizados** cobrindo:
-    1. Status e métodos de prontidão do WhatsApp, Gemini e Groq.
-    2. Inserção, atualização sem duplicata e exclusão de transações no SQLite.
-    3. Agendamento com link Google Meet, criação de tarefas e cadastro de clientes/fornecedores.
-    4. Entrada de novos membros via código de convite da Conta Compartilhada.
-    5. Fallback router resiliente quando o provedor de IA estiver temporariamente offline.
-    6. Chamadas reais ao Gemini Pro com injeção de contexto e detecção de tags `<!--KIT_ACTION:...-->`.
-    7. Transcrição real no Groq Whisper em sub-segundo.
-  - Scripts `npm test` e `npm run test:flows` integrados ao `package.json`.
-  - **Taxa de Sucesso:** 100% de aprovação (20 testes passaram, 0 falharam).
+  - Criada suíte completa com **21 testes automatizados** cobrindo prontidão, transações, conciliação inteligente sem duplicata, correções, cancelamentos, agenda, tarefas, clientes, convites, fallback offline, Gemini Pro e Groq Whisper.
+  - **Taxa de Sucesso:** 100% de aprovação (21 testes passaram, 0 falharam).
 
 ---
 
