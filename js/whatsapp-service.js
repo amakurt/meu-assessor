@@ -40,6 +40,10 @@ class WhatsAppService {
         };
     }
 
+    isReady() {
+        return this.status === 'connected' && !!this.sock;
+    }
+
     async init() {
         if (this.isInitializing || this.status === 'connected') {
             return this.getStatus();

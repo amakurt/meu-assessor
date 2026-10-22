@@ -6,7 +6,9 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node tests/test-conversational-flows.js",
+    "test:flows": "node tests/test-conversational-flows.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^7.0.0-rc14",

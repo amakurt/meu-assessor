@@ -20,11 +20,13 @@ class GeminiService {
     }
 
     /**
-     * Executa chamada HTTPS para a API do Google Gemini
+     * Executa chamada HTTPS para a API do Google Gemini com retry inteligente e fallback de modelo
      */
-    _executeGeminiRequest(requestBody) {
+    _executeGeminiRequest(requestBody, attempt = 1, currentModel = null) {
+        const modelToUse = currentModel || this.model;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${this.apiKey}`;
+
         return new Promise((resolve, reject) => {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
             const req = https.request(url, {
                 method: 'POST',
                 headers: {
@@ -34,11 +36,25 @@ class GeminiService {
             }, (res) => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
-                res.on('end', () => {
+                res.on('end', async () => {
                     try {
                         const parsed = JSON.parse(data);
                         if (parsed.error) {
-                            return reject(new Error(parsed.error.message || 'Erro na API Gemini'));
+                            const errMsg = parsed.error.message || 'Erro na API Gemini';
+                            const isTransient = errMsg.includes('high demand') || errMsg.includes('Resource has been exhausted') || parsed.error.code === 503 || parsed.error.code === 429;
+
+                            if (isTransient && attempt <= 3) {
+                                const fallbackModel = attempt >= 2 ? 'gemini-2.5-flash' : modelToUse;
+                                console.warn(`[Gemini] ${errMsg} (Tentativa ${attempt}). Tentando novamente com modelo ${fallbackModel}...`);
+                                await new Promise(r => setTimeout(r, 1200 * attempt));
+                                try {
+                                    const retryResult = await this._executeGeminiRequest(requestBody, attempt + 1, fallbackModel);
+                                    return resolve(retryResult);
+                                } catch (retryErr) {
+                                    return reject(retryErr);
+                                }
+                            }
+                            return reject(new Error(errMsg));
                         }
                         const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (text) {
@@ -52,7 +68,18 @@ class GeminiService {
                 });
             });
 
-            req.on('error', err => reject(err));
+            req.on('error', async (err) => {
+                if (attempt <= 2) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    try {
+                        const res = await this._executeGeminiRequest(requestBody, attempt + 1, modelToUse);
+                        return resolve(res);
+                    } catch (e) {
+                        return reject(e);
+                    }
+                }
+                reject(err);
+            });
             req.write(requestBody);
             req.end();
         });

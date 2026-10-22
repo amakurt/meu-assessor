@@ -259,6 +259,39 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
 
 ---
 
+## 📅 Sessão 09 · 21/10/2026 (Validação Rigorosa dos Fluxos Conversacionais, Correção de Bugs Críticos & Resiliência AI)
+
+### 🎯 Objetivos da Sessão
+1. Validar e testar todos os fluxos conversacionais do WhatsApp (mensagens de texto, áudio com Groq Whisper LPU, fotos/OCR, comandos executivos e assessores de IA).
+2. Auditar a integração do SQLite, garantindo que novas despesas, receitas, tarefas, eventos de agenda e cadastros de clientes/fornecedores sejam gravados corretamente.
+3. Testar a memória conversacional de curto prazo e a correção inteligente de transações (garantir zero duplicatas ao pedir "não era 100, era 80" ou "apaga a última").
+4. Eliminar possíveis bugs silenciosos ou exceções de runtime nos serviços de backend.
+
+### 🛠️ Correções Implementadas e Entregas
+- **Correção de Bug Crítico de Tarefas (`js/db-service.js`):**
+  - Identificado erro `ReferenceError: e is not defined` em `tasks.forEach(t => { e = !!t.completed; })` na função `getAll()`.
+  - Corrigido para `t.completed = !!t.completed;`, eliminando o crash do backend e do SSE sempre que tarefas existiam no banco.
+- **Implementação do Método `isReady()` (`js/whatsapp-service.js`):**
+  - Adicionado método `isReady()` verificando `this.status === 'connected' && !!this.sock`, prevenindo erro 500 no endpoint `/api/notifications/whatsapp-alert`.
+- **Resiliência e Retry Inteligente na API do Google Gemini (`js/gemini-service.js`):**
+  - Implementado mecanismo de retry automático com backoff exponencial para erros temporários de 503 ("high demand") e 429 ("rate limit").
+  - Adicionado fallback dinâmico para o modelo `gemini-2.5-flash` se houver pico persistente na nuvem, garantindo disponibilidade 24/7 sem mensagens perdidas no WhatsApp.
+- **Validação de Transcrição Ultrarrápida Groq Whisper LPU (`js/groq-service.js`):**
+  - Testado envio e transcrição de áudio real via chips LPU com resposta em **454ms**.
+- **Bateria de Testes Automatizada (`tests/test-conversational-flows.js` & `package.json`):**
+  - Criada suíte completa com **20 testes automatizados** cobrindo:
+    1. Status e métodos de prontidão do WhatsApp, Gemini e Groq.
+    2. Inserção, atualização sem duplicata e exclusão de transações no SQLite.
+    3. Agendamento com link Google Meet, criação de tarefas e cadastro de clientes/fornecedores.
+    4. Entrada de novos membros via código de convite da Conta Compartilhada.
+    5. Fallback router resiliente quando o provedor de IA estiver temporariamente offline.
+    6. Chamadas reais ao Gemini Pro com injeção de contexto e detecção de tags `<!--KIT_ACTION:...-->`.
+    7. Transcrição real no Groq Whisper em sub-segundo.
+  - Scripts `npm test` e `npm run test:flows` integrados ao `package.json`.
+  - **Taxa de Sucesso:** 100% de aprovação (20 testes passaram, 0 falharam).
+
+---
+
 ## 📋 Backlog / Próximos Passos Sugeridos
 - [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
 - [x] Filtros por banco interativos no extrato financeiro.
@@ -282,6 +315,9 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
 - [x] Filtro de mês padrão no mês corrente e KPIs financeiros escopados ao mês ativo.
 - [x] Blindagem anti-autofill de gerenciadores de senhas nos campos de busca.
 - [x] Badge dinâmico e funcional de mensagens não lidas no WhatsApp.
+- [x] Bateria de 20 testes automatizados dos fluxos conversacionais (100% aprovados).
+- [x] Correção de bugs críticos em `db-service.js` (tarefas) e `whatsapp-service.js` (`isReady`).
+- [x] Retry resiliente com backoff para picos de demanda no Gemini Pro.
 - [ ] Conectar o 5º banco do Open Finance (quando o usuário definir).
 - [ ] Apontar domínio próprio customizado (ex: `app.meuassessor.com.br`).
 

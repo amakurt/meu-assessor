@@ -20,13 +20,14 @@ const INITIAL_BUDGETS = [
 ];
 
 class DbService {
-    constructor() {
+    constructor(dbFilePath = null) {
         if (!fs.existsSync(DB_DIR)) {
             fs.mkdirSync(DB_DIR, { recursive: true });
         }
 
+        const targetFile = dbFilePath || DB_FILE;
         // Inicializa o banco de dados SQLite
-        this.sqlite = new Database(DB_FILE);
+        this.sqlite = new Database(targetFile);
 
         // Ativa o WAL Mode (Write-Ahead Logging) para alta concorrência e velocidade extrema
         this.sqlite.pragma('journal_mode = WAL');
@@ -484,7 +485,7 @@ class DbService {
 
         // Mapeia booleans
         events.forEach(e => { e.hasMeet = !!e.hasMeet; });
-        tasks.forEach(t => { e = !!t.completed; });
+        tasks.forEach(t => { t.completed = !!t.completed; });
         chatMessages.forEach(m => { m.isAudio = !!m.isAudio; });
 
         return {
@@ -1222,5 +1223,7 @@ class DbService {
     }
 }
 
-module.exports = new DbService();
+const defaultDbInstance = new DbService();
+defaultDbInstance.DbService = DbService;
+module.exports = defaultDbInstance;
 
