@@ -18,6 +18,7 @@ const fs = require('fs');
 const geminiService = require('./gemini-service');
 const groqService = require('./groq-service');
 const dbService = require('./db-service');
+const googleCalendarService = require('./google-calendar-service');
 
 class WhatsAppService {
     constructor() {
@@ -334,7 +335,12 @@ class WhatsAppService {
         if (match && match[1]) {
             try {
                 const action = JSON.parse(match[1].trim());
-                dbService.applyAction(action);
+                const applied = dbService.applyAction(action);
+                if (action.type === 'event' && applied && googleCalendarService.isConnected()) {
+                    googleCalendarService.pushEventToGoogle(applied).catch(e => {
+                        console.warn('[WhatsApp] Erro ao sincronizar evento com Google Calendar:', e.message);
+                    });
+                }
             } catch (e) {
                 console.error('[WhatsApp] Erro ao processar KIT_ACTION:', e.message);
             }

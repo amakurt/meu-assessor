@@ -11,6 +11,7 @@ const assert = require('assert');
 const whatsappService = require('../js/whatsapp-service');
 const geminiService = require('../js/gemini-service');
 const groqService = require('../js/groq-service');
+const googleCalendarService = require('../js/google-calendar-service');
 const { DbService } = require('../js/db-service');
 
 const TEST_DB_PATH = path.join(__dirname, 'test_kit.db');
@@ -66,6 +67,24 @@ async function runTests() {
 
     test('groqService.isConfigured() deve estar configurado com chave válida', () => {
         assert.strictEqual(groqService.isConfigured(), true, 'Groq deve estar configurado no .env');
+    });
+
+    test('googleCalendarService.getStatus() deve retornar formato padronizado', () => {
+        const status = googleCalendarService.getStatus();
+        assert(typeof status === 'object', 'Status deve ser um objeto');
+        assert('configured' in status, 'Campo configured ausente');
+        assert('connected' in status, 'Campo connected ausente');
+    });
+
+    test('googleCalendarService.getAuthUrl() deve validar credenciais', () => {
+        if (!googleCalendarService.isConfigured()) {
+            assert.throws(() => {
+                googleCalendarService.getAuthUrl('http://localhost:3000/callback');
+            }, /não configuradas/);
+        } else {
+            const url = googleCalendarService.getAuthUrl('http://localhost:3000/callback');
+            assert(url.includes('accounts.google.com'), 'URL de auth inválida');
+        }
     });
 
     console.log('\n--- 2. TESTES DE AÇÕES NO SQLITE (TRANSAÇÕES, CORREÇÕES, AGENDA, TAREFAS, CLIENTES) ---');
@@ -186,6 +205,31 @@ async function runTests() {
 
         const ev = testDb.sqlite.prepare('SELECT * FROM events WHERE id = ?').get(applied.id);
         assert(ev, 'Evento não encontrado no SQLite');
+
+        // Teste de vinculação com Google Event ID
+        testDb.updateEventGoogleId(applied.id, 'g-event-test-456', 'https://meet.google.com/real-meet-link');
+        const foundByGoogle = testDb.findEventByGoogleId('g-event-test-456');
+        assert(foundByGoogle, 'Evento não localizado pelo googleEventId');
+        assert.strictEqual(foundByGoogle.meetUrl, 'https://meet.google.com/real-meet-link');
+    });
+
+    test('Salvar, recuperar e remover credenciais OAuth2 do Google no SQLite', () => {
+        testDb.saveGoogleAuth({
+            accessToken: 'mock-access-token-123',
+            refreshToken: 'mock-refresh-token-456',
+            expiresAt: Date.now() + 3600000,
+            userEmail: 'teste@gmail.com',
+            scope: 'calendar.events'
+        });
+
+        const auth = testDb.getGoogleAuth();
+        assert(auth, 'Auth do Google não foi salva');
+        assert.strictEqual(auth.userEmail, 'teste@gmail.com');
+        assert.strictEqual(auth.accessToken, 'mock-access-token-123');
+
+        testDb.deleteGoogleAuth();
+        const deletedAuth = testDb.getGoogleAuth();
+        assert.strictEqual(deletedAuth, undefined, 'Auth do Google deveria ter sido removida');
     });
 
     test('Criar tarefa via applyAction', () => {

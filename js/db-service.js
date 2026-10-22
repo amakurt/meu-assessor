@@ -195,8 +195,15 @@ class DbService {
                 createdAt INTEGER NOT NULL
             );
 
-            CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
-            CREATE INDEX IF NOT EXISTS idx_notifications_createdAt ON notifications(createdAt);
+            CREATE TABLE IF NOT EXISTS google_auth (
+                id TEXT PRIMARY KEY,
+                accessToken TEXT NOT NULL,
+                refreshToken TEXT,
+                expiresAt INTEGER NOT NULL,
+                userEmail TEXT,
+                scope TEXT,
+                updatedAt INTEGER NOT NULL
+            );
         `);
 
         // Assegura colunas buyer e account na tabela transactions caso ela já existisse
@@ -205,6 +212,9 @@ class DbService {
         } catch (e) {}
         try {
             this.sqlite.exec(`ALTER TABLE transactions ADD COLUMN account TEXT;`);
+        } catch (e) {}
+        try {
+            this.sqlite.exec(`ALTER TABLE events ADD COLUMN googleEventId TEXT;`);
         } catch (e) {}
 
         // Garante que orçamentos padrão existam
@@ -264,11 +274,13 @@ class DbService {
         this.stmtGetRecentManualTx = this.sqlite.prepare('SELECT * FROM transactions WHERE pluggyId IS NULL ORDER BY createdAt DESC LIMIT 1');
 
         this.stmtInsertEvent = this.sqlite.prepare(`
-            INSERT INTO events (id, title, date, startTime, endTime, location, hasMeet, meetUrl, participants, createdAt)
-            VALUES (@id, @title, @date, @startTime, @endTime, @location, @hasMeet, @meetUrl, @participants, @createdAt)
+            INSERT INTO events (id, title, date, startTime, endTime, location, hasMeet, meetUrl, participants, googleEventId, createdAt)
+            VALUES (@id, @title, @date, @startTime, @endTime, @location, @hasMeet, @meetUrl, @participants, @googleEventId, @createdAt)
         `);
 
         this.stmtDeleteEvent = this.sqlite.prepare('DELETE FROM events WHERE id = ?');
+        this.stmtUpdateEventGoogleId = this.sqlite.prepare('UPDATE events SET googleEventId = ?, meetUrl = COALESCE(?, meetUrl) WHERE id = ?');
+        this.stmtGetEventByGoogleId = this.sqlite.prepare('SELECT * FROM events WHERE googleEventId = ?');
 
         this.stmtInsertTask = this.sqlite.prepare(`
             INSERT INTO tasks (id, title, status, priority, dueDate, completed, createdAt)
@@ -713,8 +725,9 @@ class DbService {
                     endTime: evData.endTime || '11:00',
                     location: evData.location || (evData.hasMeet ? 'Google Meet' : 'Presencial'),
                     hasMeet: evData.hasMeet ? 1 : 0,
-                    meetUrl: evData.hasMeet ? `https://meet.google.com/kit-${Math.random().toString(36).substring(2, 6)}` : null,
+                    meetUrl: evData.hasMeet ? (evData.meetUrl || `https://meet.google.com/kit-${Math.random().toString(36).substring(2, 6)}`) : null,
                     participants: evData.participants || '',
+                    googleEventId: evData.googleEventId || null,
                     createdAt: Date.now()
                 };
                 this.stmtInsertEvent.run(applied);
@@ -1086,6 +1099,33 @@ class DbService {
             fullDb: this.getAll()
         });
         return reconciled;
+    }
+
+    // ==========================================
+    // GOOGLE CALENDAR AUTH & SYNC
+    // ==========================================
+
+    saveGoogleAuth(auth) {
+        this.sqlite.prepare(`
+            INSERT OR REPLACE INTO google_auth (id, accessToken, refreshToken, expiresAt, userEmail, scope, updatedAt)
+            VALUES ('primary', ?, ?, ?, ?, ?, ?)
+        `).run(auth.accessToken, auth.refreshToken || null, auth.expiresAt, auth.userEmail || null, auth.scope || null, Date.now());
+    }
+
+    getGoogleAuth() {
+        return this.sqlite.prepare('SELECT * FROM google_auth WHERE id = ?').get('primary');
+    }
+
+    deleteGoogleAuth() {
+        this.sqlite.prepare('DELETE FROM google_auth WHERE id = ?').run('primary');
+    }
+
+    findEventByGoogleId(googleEventId) {
+        return this.stmtGetEventByGoogleId.get(googleEventId);
+    }
+
+    updateEventGoogleId(id, googleEventId, meetUrl = null) {
+        this.stmtUpdateEventGoogleId.run(googleEventId, meetUrl, id);
     }
 
     // ==========================================

@@ -14,6 +14,7 @@ const geminiService = require('./js/gemini-service');
 const groqService = require('./js/groq-service');
 const dbService = require('./js/db-service');
 const pluggyService = require('./js/pluggy-service');
+const googleCalendarService = require('./js/google-calendar-service');
 const crypto = require('crypto');
 
 const app = express();
@@ -90,6 +91,11 @@ app.get('/api/data', (req, res) => {
 
 app.post('/api/action', (req, res) => {
     const applied = dbService.applyAction(req.body);
+    if (req.body?.type === 'event' && applied && googleCalendarService.isConnected()) {
+        googleCalendarService.pushEventToGoogle(applied).catch(e => {
+            console.warn('[Google Calendar] Erro ao sincronizar evento criado:', e.message);
+        });
+    }
     res.json({ success: true, item: applied });
 });
 
@@ -281,9 +287,84 @@ app.post('/api/open-finance/webhook', handlePluggyWebhook);
 app.post('/api/pluggy/webhook', handlePluggyWebhook);
 
 
-// 5. REST API: Agenda & Calendar
+// 5. REST API: Agenda & Google Calendar
 app.get('/api/agenda', (req, res) => {
     res.json({ success: true, data: dbService.getAll().events });
+});
+
+app.get('/api/google/status', (req, res) => {
+    res.json(googleCalendarService.getStatus());
+});
+
+app.post('/api/google/configure', (req, res) => {
+    const { clientId, clientSecret } = req.body;
+    if (clientId && clientSecret) {
+        googleCalendarService.setCredentials(clientId, clientSecret);
+        try {
+            const envPath = path.join(__dirname, '.env');
+            let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+            if (envContent.includes('GOOGLE_CLIENT_ID=')) {
+                envContent = envContent.replace(/GOOGLE_CLIENT_ID=.*/, `GOOGLE_CLIENT_ID=${clientId}`);
+            } else {
+                envContent += `\nGOOGLE_CLIENT_ID=${clientId}\n`;
+            }
+            if (envContent.includes('GOOGLE_CLIENT_SECRET=')) {
+                envContent = envContent.replace(/GOOGLE_CLIENT_SECRET=.*/, `GOOGLE_CLIENT_SECRET=${clientSecret}`);
+            } else {
+                envContent += `\nGOOGLE_CLIENT_SECRET=${clientSecret}\n`;
+            }
+            fs.writeFileSync(envPath, envContent);
+        } catch (e) {
+            console.error('[Google Calendar] Erro ao salvar .env:', e.message);
+        }
+    }
+    res.json({ success: true, configured: googleCalendarService.isConfigured() });
+});
+
+app.get('/api/google/auth-url', (req, res) => {
+    try {
+        const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+        const host = req.get('host');
+        const redirectUri = `${proto}://${host}/api/google/callback`;
+        const url = googleCalendarService.getAuthUrl(redirectUri);
+        res.json({ success: true, url, redirectUri });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+app.get('/api/google/callback', async (req, res) => {
+    const { code, error } = req.query;
+    if (error) {
+        return res.redirect('/?tab=agenda&google_error=' + encodeURIComponent(error));
+    }
+    if (!code) {
+        return res.status(400).send('Código de autorização ausente');
+    }
+    try {
+        const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+        const host = req.get('host');
+        const redirectUri = `${proto}://${host}/api/google/callback`;
+        await googleCalendarService.handleCallback(code, redirectUri);
+        res.redirect('/?tab=agenda&google_connected=true');
+    } catch (e) {
+        console.error('[Google Callback] Erro:', e.message);
+        res.redirect('/?tab=agenda&google_error=' + encodeURIComponent(e.message));
+    }
+});
+
+app.post('/api/google/sync', async (req, res) => {
+    try {
+        const result = await googleCalendarService.syncFromGoogle();
+        res.json({ success: true, result });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+app.post('/api/google/disconnect', (req, res) => {
+    dbService.deleteGoogleAuth();
+    res.json({ success: true, disconnected: true });
 });
 
 // 6. REST API: Tasks

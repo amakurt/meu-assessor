@@ -287,7 +287,53 @@ O usuário registrou um gasto via WhatsApp ("Coloquei R$ 50,00 de gasolina") e r
 
 ---
 
+## 📅 Sessão 05 · 22/10/2026
+
+### 🎯 Objetivos da Sessão
+1. Explicar e validar o funcionamento da sincronização bancária de cartões de crédito (Open Finance via Pluggy / C6 Bank) e a conciliação inteligente anti-duplicação.
+2. Implementar **Integração Total Bidirecional com a Google Calendar API v3 (OAuth 2.0)** para a Assessora Clara (WhatsApp e Painel Web).
+3. Desenvolver cliente nativo e de alta performance em Node.js (`js/google-calendar-service.js`) sem dependências pesadas externas, economizando RAM na Oracle Cloud VM.
+4. Persistir tokens OAuth2 e `googleEventId` no SQLite com renovação automática de token (`refresh_token`).
+5. Criar endpoints REST no backend (`server.js`) para autorização, callback, sincronização e desconexão.
+6. Construir interface executiva moderna no painel (`index.html`, `styles/main.css` e `js/modules/agenda.js`) com badge dinâmico de status e modal completo de sincronização e configuração de credenciais.
+7. Unificar e padronizar o branding de secretária executiva para **Clara** em todos os formulários e mensagens residuais.
+8. Expandir a bateria de testes automatizados (`tests/test-conversational-flows.js`), alcançando 24/24 testes aprovados (100%).
+
+### 🛠️ Entregas e Módulos Implementados
+- **Serviço Nativo Google Calendar (`js/google-calendar-service.js`):**
+  - Integração direta com os endpoints da Google API v3 (`calendar.events` e `userinfo.email`).
+  - Geração de URLs de consentimento OAuth 2.0 com `access_type=offline`.
+  - Troca de authorization code por tokens com suporte estrito a `application/x-www-form-urlencoded`.
+  - Renovação automática de `access_token` usando `refresh_token` sem deslogar o usuário.
+  - Sincronização descendente (`syncFromGoogle`): importa novos compromissos da Google Agenda para a base SQLite do KIT OS sem duplicar.
+  - Sincronização ascendente (`pushEventToGoogle`): cria compromissos agendados no WhatsApp/Painel direto na Google Agenda com geração automática de links oficiais do **Google Meet** (`hangoutsMeet`).
+  - Exclusão sincronizada (`deleteEventFromGoogle`): remove reuniões canceladas no KIT diretamente da agenda Google.
+- **Camada de Banco de Dados (`js/db-service.js`):**
+  - Criação da tabela `google_auth` (`id`, `accessToken`, `refreshToken`, `expiresAt`, `userEmail`, `scope`, `updatedAt`).
+  - Migração não-destrutiva da tabela `events`: adição da coluna `googleEventId TEXT`.
+  - Métodos implementados: `saveGoogleAuth`, `getGoogleAuth`, `deleteGoogleAuth`, `findEventByGoogleId`, `updateEventGoogleId`.
+- **Rotas de API no Backend (`server.js`):**
+  - `GET /api/google/status`: retorna estado de configuração e conta conectada.
+  - `POST /api/google/configure`: salva ou atualiza credenciais no `.env` e em memória.
+  - `GET /api/google/auth-url`: gera o link seguro de login da Google com redirect URI dinâmico.
+  - `GET /api/google/callback`: processa o retorno do consentimento Google e redireciona de volta para a aba Agenda.
+  - `POST /api/google/sync`: dispara sincronização manual sob demanda.
+  - `POST /api/google/disconnect`: revoga sessão e limpa credenciais salvas.
+- **Sincronização Automática via WhatsApp (`js/whatsapp-service.js`):**
+  - Quando a Clara registra uma reunião pelo WhatsApp, dispara automaticamente o push para a Google Agenda em segundo plano.
+- **Interface e Experiência do Usuário (`index.html`, `styles/main.css`, `js/modules/agenda.js`):**
+  - Badge interativo com estados coloridos (`is-connected` verde esmeralda, `is-disconnected` âmbar).
+  - Modal `#modalGoogleCalendar` responsivo com cards de explicação, botões de ação e sanfona para preenchimento de Client ID / Secret.
+  - Rebrand completo de menções residuais da antiga assessora "Sofi" para **Clara**.
+- **Validação Automatizada (`tests/test-conversational-flows.js`):**
+  - 24 testes automatizados executados e aprovados com 100% de sucesso.
+
+---
+
 ## 📋 Backlog / Próximos Passos Sugeridos
+- [x] Integração Total Bidirecional com Google Calendar API (OAuth 2.0).
+- [x] Sincronização automática de links Google Meet ao agendar reuniões com a Clara.
+- [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
 - [x] Conexão de 4 bancos reais no Open Finance (Nubank, Mercado Pago, Itaú, C6 Bank).
 - [x] Filtros por banco interativos no extrato financeiro.
 - [x] Correção inteligente e cancelamento de despesas via áudio/texto no WhatsApp.
