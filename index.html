@@ -2,10 +2,18 @@
 <html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KIT OS · Seu Assessor Executivo de IA no WhatsApp</title>
     <meta name="description" content="KIT OS: Plataforma executiva de inteligência artificial no WhatsApp para finanças, agenda, tarefas, projetos, pesquisas e gestão completa.">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0e111a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KIT OS">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,6 +70,9 @@
 
     <div class="app-layout" id="appLayout">
         
+        <!-- SIDEBAR BACKDROP (MOBILE TAP TO CLOSE) -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -211,9 +222,18 @@
                 <div class="top-bar-right">
                     <!-- Profile Filter (Todos / CPF Pessoal / CNPJ Empresa) -->
                     <div class="profile-toggle-group" role="group" aria-label="Filtro de Perfil">
-                        <button class="profile-toggle-pill active" data-profile="all">Todos</button>
-                        <button class="profile-toggle-pill" data-profile="cpf">CPF (Pessoal)</button>
-                        <button class="profile-toggle-pill" data-profile="cnpj">CNPJ (Empresa)</button>
+                        <button class="profile-toggle-pill active" data-profile="all">
+                            <span class="pill-full">Todos</span>
+                            <span class="pill-short">Todos</span>
+                        </button>
+                        <button class="profile-toggle-pill" data-profile="cpf">
+                            <span class="pill-full">CPF (Pessoal)</span>
+                            <span class="pill-short">CPF</span>
+                        </button>
+                        <button class="profile-toggle-pill" data-profile="cnpj">
+                            <span class="pill-full">CNPJ (Empresa)</span>
+                            <span class="pill-short">CNPJ</span>
+                        </button>
                     </div>
 
                     <!-- Global Search -->
@@ -222,18 +242,18 @@
                         <input type="search" id="globalSearchInput" placeholder="Buscar lançamentos, reuniões, tarefas..." aria-label="Busca global" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_global" data-lpignore="true">
                     </div>
 
-                    <!-- Report Export Buttons -->
-                    <button class="btn btn-outline btn-sm" id="btnExportReportExcel" title="Exportar Planilha Excel (.csv)">
+                    <!-- Report Export Buttons (Desktop Only) -->
+                    <button class="btn btn-outline btn-sm desktop-only-btn" id="btnExportReportExcel" title="Exportar Planilha Excel (.csv)">
                         <span>📊 Excel</span>
                     </button>
-                    <button class="btn btn-outline btn-sm" id="btnExportReportPdf" title="Exportar Relatório PDF Executivo">
+                    <button class="btn btn-outline btn-sm desktop-only-btn" id="btnExportReportPdf" title="Exportar Relatório PDF Executivo">
                         <span>📄 PDF</span>
                     </button>
 
                     <!-- Quick Action Trigger -->
-                    <button class="btn btn-primary btn-sm" id="btnQuickAction">
+                    <button class="btn btn-primary btn-sm topbar-action-btn" id="btnQuickAction" title="Nova Ação Rápida">
                         <span class="btn-icon">⚡</span>
-                        <span>Ação Rápida</span>
+                        <span class="btn-text">Ação Rápida</span>
                     </button>
 
                     <!-- Central de Notificações & Alertas -->
@@ -1495,6 +1515,31 @@
             </section>
 
         </main>
+
+        <!-- NATIVE MOBILE BOTTOM NAVIGATION BAR (FIXED FOR THUMB NAVIGATION) -->
+        <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navegação Rápida Mobile">
+            <button class="mobile-nav-btn active" data-tab="overview" aria-label="Visão Geral">
+                <span class="m-nav-icon">⚡</span>
+                <span class="m-nav-label">Início</span>
+            </button>
+            <button class="mobile-nav-btn" data-tab="chat" aria-label="WhatsApp">
+                <span class="m-nav-icon">💬</span>
+                <span class="m-nav-label">WhatsApp</span>
+                <span class="m-nav-badge" id="mBadgeUnread" style="display: none;">0</span>
+            </button>
+            <button class="mobile-nav-btn" data-tab="financas" aria-label="Finanças">
+                <span class="m-nav-icon">💰</span>
+                <span class="m-nav-label">Finanças</span>
+            </button>
+            <button class="mobile-nav-btn" data-tab="agenda" aria-label="Agenda">
+                <span class="m-nav-icon">📅</span>
+                <span class="m-nav-label">Agenda</span>
+            </button>
+            <button class="mobile-nav-btn" id="mobileNavMenuBtn" aria-label="Mais Opções">
+                <span class="m-nav-icon">☰</span>
+                <span class="m-nav-label">Mais</span>
+            </button>
+        </nav>
     </div>
 
     <!-- MODAL: NOVO LANÇAMENTO (FINANCEIRO) -->

@@ -400,6 +400,45 @@ O usuário relatou: *"testei ontem pedindo pra agendar uma coisa, e depois pedi 
   - Bateria expandida para **29 testes automatizados** cobrindo criação, correção, deduplicação em memória e cancelamento de eventos.
   - **Resultado:** 29 PASSARAM | 0 FALHARAM (100% de aprovação).
 
+---
+
+## 📅 Sessão 11 · 23/10/2026 (Design Mobile-First Nativo & Transformação PWA Gratuito para iOS/Android)
+
+### 🎯 Objetivos da Sessão
+1. Resolver queixas de layout no navegador do celular (botões e menus esmagados na topbar em telas pequenas).
+2. Esclarecer viabilidade e custos de publicação nas lojas de aplicativos (Apple App Store vs Google Play vs PWA).
+3. Implementar arquitetura de PWA (Progressive Web App) gratuita com custo zero (R$ 0,00) para instalação como app no iOS e Android.
+4. Construir Barra de Navegação Inferior (Bottom Tab Bar) nativa para uso confortável com o polegar.
+5. Adicionar Backdrop Drawer com fechamento ao toque fora da sidebar.
+6. Adaptar a tela do WhatsApp para experiência de tela cheia sem o mockup de moldura de celular quando acessado em dispositivos móveis reais.
+
+### 🛠️ Entregas e Módulos Criados/Expandidos
+- **PWA Standalone (`manifest.json` + `sw.js`):**
+  - Criado `manifest.json` com nome *"KIT OS · Meu Assessor Executivo"*, tema `#0e111a`, orientação `portrait` e modo `standalone`.
+  - Gerados ícones de alta resolução: `images/icon-192.png`, `images/icon-512.png` e `images/apple-touch-icon.png`.
+  - Criado `sw.js` com estratégia de cache offline para shell estático e *Network-First* para rotas de `/api/` e banco SQLite.
+- **Top Bar Responsiva e Limpa (`index.html` + `styles/main.css`):**
+  - Título compacto com `text-overflow: ellipsis` e remoção do breadcrumb no celular para liberar espaço visual.
+  - Seletor de perfil adaptativo com pills encurtadas (`Todos`, `CPF`, `CNPJ`).
+  - Botões de exportação (Excel e PDF) ocultos na topbar mobile (`.desktop-only-btn`), mantendo foco nas ações imediatas.
+  - Dropdown da Central de Notificações adaptado para largura total da tela no mobile (`width: auto`, margens fluidas).
+- **Mobile Bottom Navigation Bar (`#mobileBottomNav`):**
+  - Barra de navegação inferior fixa com 5 atalhos para polegar: **Início (⚡)**, **WhatsApp (💬)**, **Finanças (💰)**, **Agenda (📅)** e **Mais (☰)**.
+  - Suporte a `env(safe-area-inset-bottom)` para iPhones com barra gestual (Home Indicator).
+  - Sincronização automática com `window.switchTab()` e persistência no `localStorage`.
+- **Gaveta Lateral e Backdrop Inteligente (`#sidebarBackdrop`):**
+  - Adicionado overlay escurecido com blur que fecha a gaveta lateral ao tocar em qualquer área externa.
+  - Botão de fechar e atalhos com áreas de toque ampliadas (48px) conforme as diretrizes do `mobile-design`.
+- **Simulador WhatsApp Full-Bleed no Celular:**
+  - Em telas menores que 768px, a moldura simulada de smartphone é desativada, permitindo que a conversa ocupe 100% da viewport real do celular do usuário.
+- **Sincronização de Badges (`js/app.js`):**
+  - O contador de mensagens não lidas agora é refletido simultaneamente no menu lateral do desktop e no botão de WhatsApp da barra inferior mobile (`#mBadgeUnread`).
+
+### 🧪 Testes e Validação
+- Sintaxe JavaScript de todos os arquivos modificados testada com sucesso via Node.js (`node -c`).
+- Bateria de 29 testes conversacionais e de banco executada com **100% de aprovação (29 passaram | 0 falharam)**.
+
+
 
 
 

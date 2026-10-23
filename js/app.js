@@ -59,9 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
         if (sidebar && window.innerWidth <= 768) {
             sidebar.classList.remove('open');
+            sidebarBackdrop?.classList.remove('active');
         }
+
+        // Atualiza a barra de navegação inferior mobile (Bottom Nav)
+        const mobileNavBtns = document.querySelectorAll('.mobile-nav-btn[data-tab]');
+        mobileNavBtns.forEach(btn => btn.classList.remove('active'));
+        const activeMobileNav = document.querySelector(`.mobile-nav-btn[data-tab="${tabKey}"]`);
+        if (activeMobileNav) activeMobileNav.classList.add('active');
 
         // Persiste a aba para nunca mais perder a tela em um refresh!
         try {
@@ -83,9 +91,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabKey === 'chat') {
             localStorage.setItem('kit_last_read_chat_time', Date.now().toString());
             const badge = document.getElementById('badgeUnread');
+            const mBadge = document.getElementById('mBadgeUnread');
             if (badge) {
                 badge.style.display = 'none';
                 badge.textContent = '0';
+            }
+            if (mBadge) {
+                mBadge.style.display = 'none';
+                mBadge.textContent = '0';
             }
         } else {
             window.updateChatBadge?.();
@@ -126,22 +139,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Mobile Sidebar Drawer
+    // Mobile Sidebar Drawer & Native Backdrop
     const mobileMenuTrigger = document.getElementById('mobileMenuTrigger');
+    const mobileNavMenuBtn = document.getElementById('mobileNavMenuBtn');
     const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     const sidebar = document.getElementById('sidebar');
 
-    if (mobileMenuTrigger && sidebar) {
-        mobileMenuTrigger.addEventListener('click', () => {
-            sidebar.classList.add('open');
-        });
-    }
+    const openSidebar = () => {
+        if (sidebar) sidebar.classList.add('open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+    };
 
-    if (sidebarCloseBtn && sidebar) {
-        sidebarCloseBtn.addEventListener('click', () => {
-            sidebar.classList.remove('open');
+    const closeSidebar = () => {
+        if (sidebar) sidebar.classList.remove('open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+    };
+
+    if (mobileMenuTrigger) mobileMenuTrigger.addEventListener('click', openSidebar);
+    if (mobileNavMenuBtn) mobileNavMenuBtn.addEventListener('click', openSidebar);
+    if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+    if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeSidebar);
+
+    // Mobile Bottom Navigation Bar Tabs
+    const mobileBottomBtns = document.querySelectorAll('.mobile-nav-btn[data-tab]');
+    mobileBottomBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabKey = btn.getAttribute('data-tab');
+            window.switchTab(tabKey);
         });
-    }
+    });
 
     // Theme Toggle
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -345,12 +372,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     window.updateChatBadge = function () {
         const badge = document.getElementById('badgeUnread');
-        if (!badge) return;
+        const mBadge = document.getElementById('mBadgeUnread');
+        if (!badge && !mBadge) return;
 
         const activeTab = localStorage.getItem('kit_active_tab') || 'overview';
         if (activeTab === 'chat') {
-            badge.style.display = 'none';
-            badge.textContent = '0';
+            if (badge) { badge.style.display = 'none'; badge.textContent = '0'; }
+            if (mBadge) { mBadge.style.display = 'none'; mBadge.textContent = '0'; }
             localStorage.setItem('kit_last_read_chat_time', Date.now().toString());
             return;
         }
@@ -361,8 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Na primeira execução, marca as mensagens históricas como vistas para não prender em 3
         if (!lastReadTime) {
             localStorage.setItem('kit_last_read_chat_time', Date.now().toString());
-            badge.style.display = 'none';
-            badge.textContent = '0';
+            if (badge) { badge.style.display = 'none'; badge.textContent = '0'; }
+            if (mBadge) { mBadge.style.display = 'none'; mBadge.textContent = '0'; }
             return;
         }
 
@@ -371,12 +399,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return m.sender !== 'user' && time > lastReadTime;
         }).length;
 
+        const badgeText = unreadCount > 99 ? '99+' : unreadCount.toString();
         if (unreadCount > 0) {
-            badge.textContent = unreadCount > 99 ? '99+' : unreadCount.toString();
-            badge.style.display = 'inline-block';
+            if (badge) { badge.textContent = badgeText; badge.style.display = 'inline-block'; }
+            if (mBadge) { mBadge.textContent = badgeText; mBadge.style.display = 'inline-block'; }
         } else {
-            badge.style.display = 'none';
-            badge.textContent = '0';
+            if (badge) { badge.style.display = 'none'; badge.textContent = '0'; }
+            if (mBadge) { mBadge.style.display = 'none'; mBadge.textContent = '0'; }
         }
     };
 
@@ -389,4 +418,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicializa verificação de segurança
     checkAuth();
+
+    // ==========================================================================
+    // PWA SERVICE WORKER REGISTRATION (OFFLINE & STANDALONE APP INSTALL)
+    // ==========================================================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then((reg) => {
+                console.log('[PWA] Service Worker registrado com sucesso no escopo:', reg.scope);
+            }).catch((err) => {
+                console.warn('[PWA] Falha ao registrar Service Worker:', err);
+            });
+        });
+    }
 });

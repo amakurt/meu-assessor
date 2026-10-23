@@ -1,0 +1,33 @@
+{
+  "name": "KIT OS · Meu Assessor Executivo",
+  "short_name": "KIT OS",
+  "description": "Plataforma executiva de inteligência artificial no WhatsApp para finanças, agenda, tarefas e gestão com 6 assessores de elite.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07090e",
+  "theme_color": "#0e111a",
+  "lang": "pt-BR",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
