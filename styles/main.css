@@ -2592,16 +2592,194 @@ html, body {
         padding: 8px 12px;
     }
 
-    /* General Layouts & Grids on Mobile */
-    .kanban-board {
-        grid-template-columns: 1fr;
+    /* General Layouts & Cards on Mobile */
+    .card {
+        padding: 14px 12px !important;
+        border-radius: 14px !important;
+        margin-bottom: 12px;
     }
-    .connection-grid {
-        grid-template-columns: 1fr;
+
+    .card.p-4 {
+        padding: 14px 12px !important;
     }
+
+    .card-header-clean {
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+
+    .card-title {
+        font-size: 14px;
+        line-height: 1.25;
+    }
+
     .kpi-grid, .overview-kpi-grid {
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
+        gap: 8px !important;
+        margin-bottom: 14px;
+    }
+
+    .kpi-card {
+        padding: 12px 10px !important;
+        gap: 6px;
+        border-radius: 12px !important;
+    }
+
+    .kpi-value {
+        font-size: 17px !important;
+    }
+
+    .kpi-label {
+        font-size: 11px;
+    }
+
+    .kpi-icon-pill {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    /* Kanban & Tasks Mobile Compact */
+    .kanban-board {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .kanban-column {
+        min-height: auto !important;
+        padding: 12px 10px !important;
+        gap: 8px;
+        border-radius: 14px !important;
+    }
+
+    .kanban-cards-box {
+        min-height: auto !important;
+        gap: 8px;
+    }
+
+    .task-card {
+        padding: 10px 12px !important;
+        border-radius: 10px !important;
+    }
+
+    /* Priority Pyramid Mobile */
+    .pyramid-wrapper {
+        gap: 6px;
+        padding: 6px 0;
+    }
+
+    .pyramid-tier {
+        padding: 8px 12px !important;
+        font-size: 12px;
+        border-radius: 8px;
+    }
+
+    /* Finanças: 30 Dias no Azul Mobile */
+    .dias-azul-grid {
+        gap: 4px;
+    }
+
+    .dia-azul-quadradinho {
+        height: 26px !important;
+        font-size: 10px;
+        border-radius: 5px;
+    }
+
+    /* Agenda: Heatmap 28 Dias Mobile */
+    .heatmap-28-grid {
+        gap: 4px;
+    }
+
+    .heatmap-day-cell {
+        height: 30px !important;
+        font-size: 10.5px;
+        border-radius: 5px;
+    }
+
+    /* Cobranças: Debt Cards Mobile */
+    .debt-card {
+        padding: 10px 12px !important;
+        margin-bottom: 8px;
+        border-radius: 10px !important;
+        gap: 8px;
+    }
+
+    .debt-person-name {
+        font-size: 13px;
+    }
+
+    .debt-desc {
+        font-size: 11px;
+    }
+
+    .debt-amount {
+        font-size: 14px;
+    }
+
+    /* Pesquisas: Research Cards Mobile */
+    .research-card {
+        padding: 12px 14px !important;
+        border-radius: 14px !important;
+        margin-bottom: 10px;
+    }
+
+    .research-query-title {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .research-summary-text {
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
+
+    /* Ideias & Listas Mobile */
+    .idea-card {
+        padding: 12px !important;
+        margin-bottom: 10px;
+        border-radius: 12px !important;
+    }
+
+    .idea-title {
+        font-size: 13.5px;
+        margin-bottom: 2px;
+    }
+
+    .idea-desc {
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    /* Overview Split & Quick Lists */
+    .overview-split-grid {
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .overview-agenda-list, .overview-task-list {
+        gap: 8px;
+    }
+
+    .overview-agenda-item, .overview-task-item {
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+    }
+
+    .connection-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .connection-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
     }
     /* Mobile Calendar (Agenda) Optimization */
     .calendar-card {

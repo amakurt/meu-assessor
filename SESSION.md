@@ -561,3 +561,26 @@ Implementar e homologar as 5 melhorias funcionais estratégicas solicitadas pelo
   - Comparação dinâmica de `isToday` com a data atual do sistema.
   - Listener de clique nos cartões do dia para seleção visual (`.is-selected`) e feedback amigável via Toast.
 - Deploy automático na VPS Oracle Cloud via PM2 e validação completa.
+
+---
+
+## 📅 Sessão 23/10/2026 - Compactação Global dos Cartões em Todas as Telas Mobile
+
+### 🎯 Objetivos da Sessão
+1. Harmonizar e redimensionar todos os cartões do sistema em dispositivos móveis (`max-width: 768px`), eliminando cartões desnecessariamente compridos, vazios ou com alturas mínimas exageradas.
+2. Compactar colunas do Kanban de Tarefas (`.kanban-column` / `.kanban-cards-box`) que forçavam `min-height: 480px` e `200px` na vertical.
+3. Equilibrar KPIs, cartões de métricas financeiras, cartões de pesquisa, listas, ideias, conexões e quadros de prioridade com espaçamentos otimizados para smartphones.
+
+### 🛠️ Entregas e Módulos Atualizados
+- `styles/main.css`:
+  - **Cartões Gerais (`.card`, `.card.p-4`)**: Padding ajustado para `14px 12px` e cantos arredondados em `14px` com margem inferior reduzida para `12px`.
+  - **Métricas & KPIs (`.kpi-card`, `.kpi-grid`)**: Padding reduzido para `12px 10px`, gap de `8px`, ícones redimensionados para `28x28px` e valores destacados em `17px`.
+  - **Tarefas & Kanban (`.kanban-column`, `.kanban-cards-box`, `.task-card`)**: Removidas alturas mínimas fixas de 480px e 200px (`min-height: auto !important`), com padding ajustado para `12px 10px` e gap de `8px`.
+  - **Pirâmide de Prioridade (`.pyramid-wrapper`, `.pyramid-tier`)**: Níveis compactos de `8px 12px` de padding e cantos harmoniosos.
+  - **Calendário 30 Dias no Azul (`.dias-azul-grid`, `.dia-azul-quadradinho`)**: Altura dos quadradinhos compactada para `26px` com gap de `4px`.
+  - **Mapa de Calor 28 Dias (`.heatmap-28-grid`, `.heatmap-day-cell`)**: Altura compactada para `30px` e gap de `4px`.
+  - **Cobranças & Recebíveis (`.debt-card`)**: Padding de `10px 12px`, tipografia refinada e sem estiramentos.
+  - **Pesquisas (`.research-card`)**: Padding de `12px 14px`, sumários com entrelinha equilibrada de `1.5`.
+  - **Ideias, Listas e Conexões (`.idea-card`, `.connection-card`, `.overview-split-grid`)**: Espaçamentos enxutos e visual executivo nativo.
+- **Validação de Testes:** 35 testes automatizados aprovados (0 falhas).
+- **Deploy:** Enviado para a VPS Oracle Cloud e reiniciado no PM2.
