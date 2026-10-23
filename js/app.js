@@ -178,14 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================================================
-    // NATIVE MOBILE SWIPE GESTURES (NAVEGAÇÃO POR DESLIZE DO DEDO ENTRE ABAS)
+    // NATIVE MOBILE SWIPE GESTURES (NAVEGAÇÃO POR DESLIZE INTENCIONAL E FIRME)
     // ==========================================================================
     const primaryMobileTabs = ['overview', 'chat', 'financas', 'agenda'];
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
     let isSwipeCandidate = false;
-    let currentDraggingPanel = null;
 
     const mainContentEl = document.getElementById('mainContent') || document.body;
 
@@ -193,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.touches.length !== 1) return;
         const touch = e.touches[0];
         
-        // Ignora toques em campos de texto, tabelas com rolagem própria ou controles
+        // Ignora toques em campos de texto, tabelas ou controles internos
         const target = e.target;
         if (target.closest('.table-responsive, input, textarea, select, .booking-slots-grid, .segmented-control, .kanban-board')) {
             isSwipeCandidate = false;
@@ -204,44 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
         touchStartY = touch.clientY;
         touchStartTime = Date.now();
         isSwipeCandidate = true;
-        currentDraggingPanel = document.querySelector('.tab-panel.active');
-    }, { passive: true });
-
-    mainContentEl.addEventListener('touchmove', (e) => {
-        if (!isSwipeCandidate || !currentDraggingPanel || e.touches.length !== 1) return;
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-
-        // Se estiver rolando na vertical, cancela o gesto horizontal para manter rolagem da página 100% fluida
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) {
-            isSwipeCandidate = false;
-            currentDraggingPanel.style.transform = '';
-            currentDraggingPanel.style.transition = '';
-            return;
-        }
-
-        // Arrastar suave em tempo real com resistência elástica nas pontas
-        if (Math.abs(deltaX) > 8) {
-            const currentTab = localStorage.getItem('kit_active_tab') || 'overview';
-            const currentIndex = primaryMobileTabs.indexOf(currentTab);
-            
-            let factor = 0.35;
-            if ((currentIndex === 0 && deltaX > 0) || (currentIndex === primaryMobileTabs.length - 1 && deltaX < 0)) {
-                factor = 0.12; // Resistência nas bordas extremas
-            }
-
-            currentDraggingPanel.style.transition = 'none';
-            currentDraggingPanel.style.transform = `translateX(${deltaX * factor}px)`;
-        }
     }, { passive: true });
 
     mainContentEl.addEventListener('touchend', (e) => {
         if (!isSwipeCandidate || !e.changedTouches || e.changedTouches.length === 0) {
-            if (currentDraggingPanel) {
-                currentDraggingPanel.style.transform = '';
-                currentDraggingPanel.style.transition = '';
-            }
+            isSwipeCandidate = false;
             return;
         }
         isSwipeCandidate = false;
@@ -251,32 +217,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaY = touch.clientY - touchStartY;
         const deltaTime = Date.now() - touchStartTime;
 
-        const panelToReset = currentDraggingPanel;
-        currentDraggingPanel = null;
-
-        // Limpa a transformação de arrasto manual
-        if (panelToReset) {
-            panelToReset.style.transform = '';
-            panelToReset.style.transition = '';
-        }
-
-        // Valida se o gesto foi rápido e predominantemente horizontal
-        if (deltaTime > 650) return;
-        if (Math.abs(deltaX) < 45) return;
-        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.3) return;
+        // Validação rigorosa: gesto deve ser rápido (< 500ms), intencional (> 60px) e estritamente horizontal
+        if (deltaTime > 500) return;
+        if (Math.abs(deltaX) < 60) return;
+        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.6) return;
 
         const currentTab = localStorage.getItem('kit_active_tab') || 'overview';
         const currentIndex = primaryMobileTabs.indexOf(currentTab);
 
         if (deltaX < 0) {
-            // DESLIZOU PARA A ESQUERDA ➔ AVANÇA PARA A PRÓXIMA ABA
+            // DESLIZOU FIRME PARA A ESQUERDA ➔ AVANÇA PARA A PRÓXIMA ABA
             if (currentIndex >= 0 && currentIndex < primaryMobileTabs.length - 1) {
                 const nextTab = primaryMobileTabs[currentIndex + 1];
                 try { navigator.vibrate?.(12); } catch(err) {}
                 window.switchTab(nextTab, 'left');
             }
         } else {
-            // DESLIZOU PARA A DIREITA ➔ RETORNA PARA A ABA ANTERIOR
+            // DESLIZOU FIRME PARA A DIREITA ➔ RETORNA PARA A ABA ANTERIOR
             if (currentIndex > 0) {
                 const prevTab = primaryMobileTabs[currentIndex - 1];
                 try { navigator.vibrate?.(12); } catch(err) {}

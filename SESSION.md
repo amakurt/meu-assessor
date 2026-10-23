@@ -440,8 +440,8 @@ O usuário relatou: *"testei ontem pedindo pra agendar uma coisa, e depois pedi 
   - Implementado detector de gestos horizontal nativo: arrastar o dedo para os lados avança e retrocede instantaneamente entre as 4 abas principais (**Início ➔ WhatsApp ➔ Finanças ➔ Agenda**).
   - Removido o botão redundante "Mais (☰)" da barra inferior, deixando os 4 botões limpos, espaçosos e balanceados (o menu completo é aberto exclusivamente pelo botão ☰ no topo).
   - Removido o acionamento inesperado do menu lateral ao arrastar no final das abas (agora o carrossel respeita estritamente o limite das 4 abas com resistência elástica nas pontas).
-  - Efeito interativo de arrasto em tempo real (`touchmove` suave) acompanhando o polegar antes de soltar.
-  - Animação cinematográfica aprimorada com keyframes `tabSlideInFromRight` e `tabSlideInFromLeft` (65px de deslocamento com aceleração GPU).
+  - **Ancoragem Firme da Interface (Zero Wobble/Dançar):** Eliminada a deformação em tempo real no `touchmove` que causava a sensação de "elementos soltos dançando". A interface agora permanece 100% firme e estável como uma rocha durante toques e rolagens, disparando a transição suave de aba exclusivamente ao soltar um swipe intencional.
+  - Animação cinematográfica de troca com keyframes `tabSlideInFromRight` e `tabSlideInFromLeft` (65px de deslocamento acelerado por GPU).
   - **Supressão Global de Scrollbars:** Removida a barra de rolagem cinza do navegador em todo o sistema (`scrollbar-width: none`, `::-webkit-scrollbar: none`), proporcionando visual 100% de aplicativo nativo.
   - **Service Worker Network-First (`v1.2`):** Atualizada a estratégia de cache para priorizar rede em HTML/CSS/JS, garantindo que novas versões apareçam no iPhone imediatamente sem precisar excluir e reinstalar o PWA da tela inicial.
 
