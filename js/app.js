@@ -39,18 +39,25 @@ document.addEventListener('DOMContentLoaded', () => {
         conexao: { title: 'Conexão Gateway WhatsApp', sub: 'Meta Cloud API Oficial & Webhook' }
     };
 
-    window.switchTab = function (tabKey) {
+    window.switchTab = function (tabKey, direction = null) {
         if (!tabPanels[tabKey]) tabKey = 'chat';
         navItems.forEach(i => i.classList.remove('active'));
         const activeNav = document.querySelector(`.nav-item[data-tab="${tabKey}"]`);
         if (activeNav) activeNav.classList.add('active');
 
         Object.values(tabPanels).forEach(panel => {
-            if (panel) panel.classList.remove('active');
+            if (panel) {
+                panel.classList.remove('active', 'slide-left', 'slide-right');
+            }
         });
 
         if (tabPanels[tabKey]) {
             tabPanels[tabKey].classList.add('active');
+            if (direction === 'left') {
+                tabPanels[tabKey].classList.add('slide-left');
+            } else if (direction === 'right') {
+                tabPanels[tabKey].classList.add('slide-right');
+            }
         }
 
         if (tabTitles[tabKey] && pageMainTitle && pageBreadcrumb) {
@@ -169,6 +176,97 @@ document.addEventListener('DOMContentLoaded', () => {
             window.switchTab(tabKey);
         });
     });
+
+    // ==========================================================================
+    // NATIVE MOBILE SWIPE GESTURES (NAVEGAÇÃO POR DESLIZE DO DEDO ENTRE ABAS)
+    // ==========================================================================
+    const primaryMobileTabs = ['overview', 'chat', 'financas', 'agenda'];
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isSwipeCandidate = false;
+
+    const mainContentEl = document.getElementById('mainContent') || document.body;
+
+    mainContentEl.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        
+        // Ignora toques em campos de texto, tabelas com rolagem própria ou controles
+        const target = e.target;
+        if (target.closest('.table-responsive, input, textarea, select, .booking-slots-grid, .segmented-control, .kanban-board')) {
+            isSwipeCandidate = false;
+            return;
+        }
+
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartTime = Date.now();
+        isSwipeCandidate = true;
+    }, { passive: true });
+
+    mainContentEl.addEventListener('touchend', (e) => {
+        if (!isSwipeCandidate || !e.changedTouches || e.changedTouches.length === 0) return;
+        isSwipeCandidate = false;
+
+        const touch = e.changedTouches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        const deltaTime = Date.now() - touchStartTime;
+
+        // Valida se o gesto foi rápido e predominantemente horizontal
+        if (deltaTime > 650) return;
+        if (Math.abs(deltaX) < 55) return;
+        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.4) return;
+
+        const currentTab = localStorage.getItem('kit_active_tab') || 'overview';
+        const currentIndex = primaryMobileTabs.indexOf(currentTab);
+
+        if (deltaX < 0) {
+            // DESLIZOU PARA A ESQUERDA ➔ AVANÇA PARA A PRÓXIMA ABA
+            if (currentIndex >= 0 && currentIndex < primaryMobileTabs.length - 1) {
+                const nextTab = primaryMobileTabs[currentIndex + 1];
+                try { navigator.vibrate?.(12); } catch(err) {}
+                window.switchTab(nextTab, 'left');
+            } else if (currentIndex === primaryMobileTabs.length - 1) {
+                // Na última aba (Agenda), deslizar para esquerda abre a gaveta com as demais ferramentas
+                try { navigator.vibrate?.(12); } catch(err) {}
+                openSidebar();
+            }
+        } else {
+            // DESLIZOU PARA A DIREITA ➔ RETORNA PARA A ABA ANTERIOR
+            if (currentIndex > 0) {
+                const prevTab = primaryMobileTabs[currentIndex - 1];
+                try { navigator.vibrate?.(12); } catch(err) {}
+                window.switchTab(prevTab, 'right');
+            } else if (currentIndex === 0) {
+                // Na primeira aba (Início), deslizar da borda esquerda para direita abre o menu
+                if (touchStartX < 75) {
+                    try { navigator.vibrate?.(12); } catch(err) {}
+                    openSidebar();
+                }
+            }
+        }
+    }, { passive: true });
+
+    // Permite fechar a gaveta lateral deslizando para a esquerda dentro do menu
+    let sidebarTouchStartX = 0;
+    if (sidebar) {
+        sidebar.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                sidebarTouchStartX = e.touches[0].clientX;
+            }
+        }, { passive: true });
+
+        sidebar.addEventListener('touchend', (e) => {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                const deltaX = e.changedTouches[0].clientX - sidebarTouchStartX;
+                if (deltaX < -50) {
+                    closeSidebar();
+                }
+            }
+        }, { passive: true });
+    }
 
     // Theme Toggle
     const themeToggleBtn = document.getElementById('themeToggleBtn');

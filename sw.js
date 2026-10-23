@@ -3,7 +3,7 @@
  * Provides offline shell support, caching of static assets and fast native-like launching.
  */
 
-const CACHE_NAME = 'kit-os-cache-v1.0';
+const CACHE_NAME = 'kit-os-cache-v1.1';
 
 const STATIC_ASSETS = [
     '/',

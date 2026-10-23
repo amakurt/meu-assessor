@@ -436,6 +436,12 @@ O usuário relatou: *"testei ontem pedindo pra agendar uma coisa, e depois pedi 
 
 - **Blindagem Safe Area no iPhone (Notch & Dynamic Island):**
   - Adicionado suporte completo à diretiva `env(safe-area-inset-top)` no topo da barra executiva (`.top-bar`) e na gaveta lateral (`.sidebar`), garantindo que o relógio, bateria e notch do iPhone 12 Pro e similares não fiquem sobrepostos aos títulos e botões.
+- **Navegação por Gestos Touch (Swipe / Deslizar de Abas):**
+  - Implementado detector de gestos horizontal nativo: arrastar o dedo para os lados avança e retrocede instantaneamente entre as abas principais (**Início ➔ WhatsApp ➔ Finanças ➔ Agenda**).
+  - Animação cinematográfica de transição fluida com keyframes `.slide-left` e `.slide-right` em curva Bézier cúbica nativa.
+  - Arrastar na última aba (Agenda) abre a gaveta de ferramentas, e arrastar na gaveta aberta fecha o menu.
+  - Filtro anti-conflito inteligente: ignora toques em campos de texto, tabelas ou listas com rolagem horizontal interna.
+  - Atualizado Service Worker (`kit-os-cache-v1.1`) e scripts `?v=3.1` para atualização instantânea sem necessidade de reinstalar o PWA.
 
 ### 🧪 Testes e Validação
 - Sintaxe JavaScript de todos os arquivos modificados testada com sucesso via Node.js (`node -c`).
