@@ -434,6 +434,9 @@ O usuário relatou: *"testei ontem pedindo pra agendar uma coisa, e depois pedi 
 - **Sincronização de Badges (`js/app.js`):**
   - O contador de mensagens não lidas agora é refletido simultaneamente no menu lateral do desktop e no botão de WhatsApp da barra inferior mobile (`#mBadgeUnread`).
 
+- **Blindagem Safe Area no iPhone (Notch & Dynamic Island):**
+  - Adicionado suporte completo à diretiva `env(safe-area-inset-top)` no topo da barra executiva (`.top-bar`) e na gaveta lateral (`.sidebar`), garantindo que o relógio, bateria e notch do iPhone 12 Pro e similares não fiquem sobrepostos aos títulos e botões.
+
 ### 🧪 Testes e Validação
 - Sintaxe JavaScript de todos os arquivos modificados testada com sucesso via Node.js (`node -c`).
 - Bateria de 29 testes conversacionais e de banco executada com **100% de aprovação (29 passaram | 0 falharam)**.
