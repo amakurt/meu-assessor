@@ -170,6 +170,7 @@ class AgendaModule {
             this.elements.calendarDaysGrid.appendChild(emptyCell);
         }
 
+        const now = new Date();
         const events = this.store.state.events || [];
 
         for (let d = 1; d <= totalDays; d++) {
@@ -178,8 +179,12 @@ class AgendaModule {
             const monthStr = (month + 1).toString().padStart(2, '0');
             const dateIso = `${year}-${monthStr}-${dayStr}`;
 
-            const isToday = (d === 19 && month === 9 && year === 2026);
+            const isToday = (
+                (d === now.getDate() && month === now.getMonth() && year === now.getFullYear()) ||
+                (d === 19 && month === 9 && year === 2026)
+            );
             cell.className = `calendar-day-cell ${isToday ? 'is-today' : ''}`;
+            cell.setAttribute('data-date', dateIso);
 
             const num = document.createElement('span');
             num.className = 'day-cell-num';
@@ -187,12 +192,44 @@ class AgendaModule {
             cell.appendChild(num);
 
             const dayEvents = events.filter(e => e.date === dateIso);
+
+            // Container for mobile compact indicator dots
+            if (dayEvents.length > 0) {
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'day-event-dots';
+                dayEvents.slice(0, 3).forEach(ev => {
+                    const dot = document.createElement('span');
+                    dot.className = 'day-event-dot';
+                    dot.title = `${ev.startTime} · ${ev.title}`;
+                    dotsContainer.appendChild(dot);
+                });
+                if (dayEvents.length > 3) {
+                    const plusDot = document.createElement('span');
+                    plusDot.className = 'day-event-dot-more';
+                    plusDot.textContent = `+${dayEvents.length - 3}`;
+                    dotsContainer.appendChild(plusDot);
+                }
+                cell.appendChild(dotsContainer);
+            }
+
+            // Tags for desktop view
             dayEvents.forEach(ev => {
                 const tag = document.createElement('span');
                 tag.className = 'day-event-tag';
                 tag.title = `${ev.startTime} · ${ev.title}`;
                 tag.textContent = `${ev.startTime} ${ev.title}`;
                 cell.appendChild(tag);
+            });
+
+            // Quick click to view or schedule on this day
+            cell.addEventListener('click', () => {
+                document.querySelectorAll('.calendar-day-cell.is-selected').forEach(c => c.classList.remove('is-selected'));
+                cell.classList.add('is-selected');
+                const dateInput = document.getElementById('eventDate');
+                if (dateInput) dateInput.value = dateIso;
+                if (dayEvents.length > 0) {
+                    window.showToast?.(`Dia ${dayStr}/${monthStr}: ${dayEvents.length} compromisso(s)`);
+                }
             });
 
             this.elements.calendarDaysGrid.appendChild(cell);

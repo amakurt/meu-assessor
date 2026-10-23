@@ -535,3 +535,29 @@ Implementar e homologar as 5 melhorias funcionais estratégicas solicitadas pelo
 ### 🧪 Testes e Validação
 - **Bateria Completa de Testes:** 35 testes automatizados executados via `npm test` com **100% de sucesso (35 passaram | 0 falharam)**.
 - Integridade de todos os ícones, vetores e design tokens verificada.
+
+---
+
+## 📅 Sessão 23/10/2026 - Otimização Responsiva do Calendário da Agenda Mobile
+
+### 🎯 Objetivos da Sessão
+1. Resolver o overflow horizontal e desajuste de proporção do calendário da aba **Agenda** em dispositivos móveis (especialmente telas de 375px a 430px como iPhones).
+2. Corrigir os cartões dos dias (`.calendar-day-cell`) que estavam com altura desproporcional e esticando para cima devido ao `min-height: 80px` e às etiquetas de texto dos eventos.
+3. Compactar a visualização dos dias no celular utilizando indicadores circulares (`.day-event-dots` / `.day-event-dot`) em ciano elétrico, preservando as etiquetas de texto apenas para desktop.
+4. Adicionar suporte a toque interativo nos dias para selecionar e exibir compromissos com destaque visual.
+
+### 🛠️ Entregas e Módulos Atualizados
+- `styles/main.css`:
+  - Adicionado media query de alta precisão para mobile (`@media (max-width: 768px)`):
+    - `.calendar-card`: `padding: 12px 8px !important; border-radius: 14px !important;` evitando qualquer transbordo lateral.
+    - `.calendar-header-toolbar`: Reorganizado em pilha flexível compacta com alinhamento otimizado para telas pequenas.
+    - `.calendar-month-title`: Reduzido para `15px` com largura flexível e centralizada.
+    - `.calendar-days-grid`: Gap reduzido para `3px` perfeitamente equilibrado para 7 colunas.
+    - `.calendar-day-cell`: Altura compactada para `min-height: 44px; max-height: 52px;` com alinhamento centralizado dos números do dia (`.day-cell-num`).
+    - `.day-event-tag`: Ocultado no celular (`display: none !important;`) para prevenir distorção vertical.
+    - `.day-event-dots` & `.day-event-dot`: Exibidos exclusivamente no celular com mini badges esmeralda/ciano.
+- `js/modules/agenda.js`:
+  - Injeção dinâmica do container `.day-event-dots` com suporte a contador `+N` para múltiplos compromissos no mesmo dia.
+  - Comparação dinâmica de `isToday` com a data atual do sistema.
+  - Listener de clique nos cartões do dia para seleção visual (`.is-selected`) e feedback amigável via Toast.
+- Deploy automático na VPS Oracle Cloud via PM2 e validação completa.
