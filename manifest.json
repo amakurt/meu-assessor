@@ -1,7 +1,7 @@
 {
-  "name": "KIT OS · Meu Assessor Executivo",
+  "name": "KIT OS · Seu Assessor",
   "short_name": "KIT OS",
-  "description": "Plataforma executiva de inteligência artificial no WhatsApp para finanças, agenda, tarefas e gestão com 6 assessores de elite.",
+  "description": "KIT OS: Seu Assessor Executivo de inteligência artificial no WhatsApp para finanças, agenda, tarefas e gestão completa.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

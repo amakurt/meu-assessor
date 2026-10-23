@@ -1,4 +1,4 @@
-# Meu Assessor OS · Plataforma de Assessoria com IA no WhatsApp
+# KIT OS · Seu Assessor Executivo no WhatsApp
 
 Plataforma completa de assessoria pessoal e executiva por Inteligência Artificial integrada ao WhatsApp, com painel web executivo para controle total de finanças, agenda, tarefas, projetos, cofre de documentos e equipe.
 

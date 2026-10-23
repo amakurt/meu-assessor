@@ -71,7 +71,7 @@ class ReportsModule {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Relatório Executivo Mensal · Meu Assessor OS</title>
+                <title>Relatório Executivo Mensal · KIT OS</title>
                 <style>
                     body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #1e293b; }
                     .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00a884; padding-bottom: 20px; }
@@ -85,8 +85,8 @@ class ReportsModule {
             <body>
                 <div class="header">
                     <div>
-                        <h2>MEU ASSESSOR OS · RELATÓRIO EXECUTIVO</h2>
-                        <p>Gestão Financeira & Conciliação Bancária Open Finance (114 Instituições)</p>
+                        <h2>KIT OS · RELATÓRIO EXECUTIVO</h2>
+                        <p>Seu Assessor · Gestão Financeira & Conciliação Bancária Open Finance (114 Instituições)</p>
                     </div>
                     <div>
                         <p><strong>Titular:</strong> ${this.store.state.user.name}</p>
