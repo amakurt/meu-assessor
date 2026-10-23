@@ -3,7 +3,7 @@
  * Provides offline shell support, caching of static assets and fast native-like launching.
  */
 
-const CACHE_NAME = 'kit-os-cache-v1.1';
+const CACHE_NAME = 'kit-os-cache-v1.2';
 
 const STATIC_ASSETS = [
     '/',
@@ -41,7 +41,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Dynamic API calls or WebSocket/Auth endpoints: Always Network First
+    // API calls: Always Network First
     if (url.pathname.startsWith('/api/') || event.request.method !== 'GET') {
         event.respondWith(
             fetch(event.request).catch(() => {
@@ -53,20 +53,28 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static assets & Shell: Stale-While-Revalidate
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
-                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+    // HTML, JS & CSS: Network-First with Cache-Fallback (guarantees instant updates without reinstalling PWA on iPhone)
+    if (url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+        event.respondWith(
+            fetch(event.request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseToCache);
                     });
                 }
                 return networkResponse;
-            }).catch(() => cachedResponse);
+            }).catch(() => {
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
 
-            return cachedResponse || fetchPromise;
+    // Media & Static icons: Cache-First with Network Revalidation
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || fetch(event.request);
         })
     );
 });

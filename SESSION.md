@@ -437,11 +437,13 @@ O usuário relatou: *"testei ontem pedindo pra agendar uma coisa, e depois pedi 
 - **Blindagem Safe Area no iPhone (Notch & Dynamic Island):**
   - Adicionado suporte completo à diretiva `env(safe-area-inset-top)` no topo da barra executiva (`.top-bar`) e na gaveta lateral (`.sidebar`), garantindo que o relógio, bateria e notch do iPhone 12 Pro e similares não fiquem sobrepostos aos títulos e botões.
 - **Navegação por Gestos Touch (Swipe / Deslizar de Abas):**
-  - Implementado detector de gestos horizontal nativo: arrastar o dedo para os lados avança e retrocede instantaneamente entre as abas principais (**Início ➔ WhatsApp ➔ Finanças ➔ Agenda**).
-  - Animação cinematográfica de transição fluida com keyframes `.slide-left` e `.slide-right` em curva Bézier cúbica nativa.
-  - Arrastar na última aba (Agenda) abre a gaveta de ferramentas, e arrastar na gaveta aberta fecha o menu.
-  - Filtro anti-conflito inteligente: ignora toques em campos de texto, tabelas ou listas com rolagem horizontal interna.
-  - Atualizado Service Worker (`kit-os-cache-v1.1`) e scripts `?v=3.1` para atualização instantânea sem necessidade de reinstalar o PWA.
+  - Implementado detector de gestos horizontal nativo: arrastar o dedo para os lados avança e retrocede instantaneamente entre as 4 abas principais (**Início ➔ WhatsApp ➔ Finanças ➔ Agenda**).
+  - Removido o botão redundante "Mais (☰)" da barra inferior, deixando os 4 botões limpos, espaçosos e balanceados (o menu completo é aberto exclusivamente pelo botão ☰ no topo).
+  - Removido o acionamento inesperado do menu lateral ao arrastar no final das abas (agora o carrossel respeita estritamente o limite das 4 abas com resistência elástica nas pontas).
+  - Efeito interativo de arrasto em tempo real (`touchmove` suave) acompanhando o polegar antes de soltar.
+  - Animação cinematográfica aprimorada com keyframes `tabSlideInFromRight` e `tabSlideInFromLeft` (65px de deslocamento com aceleração GPU).
+  - **Supressão Global de Scrollbars:** Removida a barra de rolagem cinza do navegador em todo o sistema (`scrollbar-width: none`, `::-webkit-scrollbar: none`), proporcionando visual 100% de aplicativo nativo.
+  - **Service Worker Network-First (`v1.2`):** Atualizada a estratégia de cache para priorizar rede em HTML/CSS/JS, garantindo que novas versões apareçam no iPhone imediatamente sem precisar excluir e reinstalar o PWA da tela inicial.
 
 ### 🧪 Testes e Validação
 - Sintaxe JavaScript de todos os arquivos modificados testada com sucesso via Node.js (`node -c`).

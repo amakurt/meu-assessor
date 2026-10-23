@@ -3,6 +3,20 @@
    Luxury Executive Dark Mode, Glassmorphism, Micro-Animations & Responsive UI
    ========================================================================== */
 
+/* ==========================================================================
+   GLOBAL NATIVE APP SCROLLBAR SUPPRESSION (REMOVE ALL BROWSER SCROLLBARS)
+   ========================================================================== */
+* {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+*::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
 :root {
     /* Color Palette */
     --bg-main: #07090e;
@@ -529,34 +543,35 @@ html, body {
     display: none;
     padding: 24px;
     flex: 1;
+    will-change: transform, opacity;
 }
 
 .tab-panel.active {
     display: block;
-    animation: fadeIn 0.25s ease-out;
+    animation: tabFadeIn 0.22s ease-out;
 }
 
 .tab-panel.active.slide-left {
-    animation: slideInFromRight 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tabSlideInFromRight 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .tab-panel.active.slide-right {
-    animation: slideInFromLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tabSlideInFromLeft 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes tabFadeIn {
+    from { opacity: 0.3; transform: scale(0.99); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes slideInFromRight {
-    from { opacity: 0.5; transform: translateX(35px); }
-    to { opacity: 1; transform: translateX(0); }
+@keyframes tabSlideInFromRight {
+    0% { opacity: 0.2; transform: translateX(65px); }
+    100% { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes slideInFromLeft {
-    from { opacity: 0.5; transform: translateX(-35px); }
-    to { opacity: 1; transform: translateX(0); }
+@keyframes tabSlideInFromLeft {
+    0% { opacity: 0.2; transform: translateX(-65px); }
+    100% { opacity: 1; transform: translateX(0); }
 }
 
 /* ==========================================================================

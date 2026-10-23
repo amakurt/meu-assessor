@@ -185,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchStartY = 0;
     let touchStartTime = 0;
     let isSwipeCandidate = false;
+    let currentDraggingPanel = null;
 
     const mainContentEl = document.getElementById('mainContent') || document.body;
 
@@ -203,10 +204,46 @@ document.addEventListener('DOMContentLoaded', () => {
         touchStartY = touch.clientY;
         touchStartTime = Date.now();
         isSwipeCandidate = true;
+        currentDraggingPanel = document.querySelector('.tab-panel.active');
+    }, { passive: true });
+
+    mainContentEl.addEventListener('touchmove', (e) => {
+        if (!isSwipeCandidate || !currentDraggingPanel || e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        // Se estiver rolando na vertical, cancela o gesto horizontal para manter rolagem da página 100% fluida
+        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) {
+            isSwipeCandidate = false;
+            currentDraggingPanel.style.transform = '';
+            currentDraggingPanel.style.transition = '';
+            return;
+        }
+
+        // Arrastar suave em tempo real com resistência elástica nas pontas
+        if (Math.abs(deltaX) > 8) {
+            const currentTab = localStorage.getItem('kit_active_tab') || 'overview';
+            const currentIndex = primaryMobileTabs.indexOf(currentTab);
+            
+            let factor = 0.35;
+            if ((currentIndex === 0 && deltaX > 0) || (currentIndex === primaryMobileTabs.length - 1 && deltaX < 0)) {
+                factor = 0.12; // Resistência nas bordas extremas
+            }
+
+            currentDraggingPanel.style.transition = 'none';
+            currentDraggingPanel.style.transform = `translateX(${deltaX * factor}px)`;
+        }
     }, { passive: true });
 
     mainContentEl.addEventListener('touchend', (e) => {
-        if (!isSwipeCandidate || !e.changedTouches || e.changedTouches.length === 0) return;
+        if (!isSwipeCandidate || !e.changedTouches || e.changedTouches.length === 0) {
+            if (currentDraggingPanel) {
+                currentDraggingPanel.style.transform = '';
+                currentDraggingPanel.style.transition = '';
+            }
+            return;
+        }
         isSwipeCandidate = false;
 
         const touch = e.changedTouches[0];
@@ -214,10 +251,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaY = touch.clientY - touchStartY;
         const deltaTime = Date.now() - touchStartTime;
 
+        const panelToReset = currentDraggingPanel;
+        currentDraggingPanel = null;
+
+        // Limpa a transformação de arrasto manual
+        if (panelToReset) {
+            panelToReset.style.transform = '';
+            panelToReset.style.transition = '';
+        }
+
         // Valida se o gesto foi rápido e predominantemente horizontal
         if (deltaTime > 650) return;
-        if (Math.abs(deltaX) < 55) return;
-        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.4) return;
+        if (Math.abs(deltaX) < 45) return;
+        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.3) return;
 
         const currentTab = localStorage.getItem('kit_active_tab') || 'overview';
         const currentIndex = primaryMobileTabs.indexOf(currentTab);
@@ -228,10 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nextTab = primaryMobileTabs[currentIndex + 1];
                 try { navigator.vibrate?.(12); } catch(err) {}
                 window.switchTab(nextTab, 'left');
-            } else if (currentIndex === primaryMobileTabs.length - 1) {
-                // Na última aba (Agenda), deslizar para esquerda abre a gaveta com as demais ferramentas
-                try { navigator.vibrate?.(12); } catch(err) {}
-                openSidebar();
             }
         } else {
             // DESLIZOU PARA A DIREITA ➔ RETORNA PARA A ABA ANTERIOR
@@ -239,12 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const prevTab = primaryMobileTabs[currentIndex - 1];
                 try { navigator.vibrate?.(12); } catch(err) {}
                 window.switchTab(prevTab, 'right');
-            } else if (currentIndex === 0) {
-                // Na primeira aba (Início), deslizar da borda esquerda para direita abre o menu
-                if (touchStartX < 75) {
-                    try { navigator.vibrate?.(12); } catch(err) {}
-                    openSidebar();
-                }
             }
         }
     }, { passive: true });
