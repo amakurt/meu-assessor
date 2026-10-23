@@ -309,7 +309,7 @@ class AgendaModule {
     renderBookingLink() {
         const input = document.getElementById('bookingLinkInput');
         if (input) {
-            input.value = this.store.state.bookingSchedule.url;
+            input.value = `${window.location.origin}/book`;
         }
     }
 

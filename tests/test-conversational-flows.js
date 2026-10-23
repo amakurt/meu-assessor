@@ -14,6 +14,7 @@ const groqService = require('../js/groq-service');
 const googleCalendarService = require('../js/google-calendar-service');
 const dbService = require('../js/db-service');
 const { DbService } = dbService;
+const cronService = require('../js/cron-service');
 
 const TEST_DB_PATH = path.join(__dirname, 'test_kit.db');
 
@@ -450,6 +451,108 @@ async function runTests() {
         console.log(`   ⚡ Transcrição Groq concluída em ${result.durationMs}ms: "${result.text}"`);
         assert(typeof result.durationMs === 'number', 'Duração deve ser um número');
         assert(result.durationMs < 3000, 'Transcrição demorou mais que 3s');
+    });
+
+    console.log('\n--- 6. TESTES DAS 5 NOVAS FUNÇÕES EXECUTIVAS REFINADAS ---');
+
+    test('1. Briefing Automático: Geração de texto matinal e noturno via Arthur & Clara', () => {
+        const morningText = cronService.generateBriefingText('morning');
+        assert(morningText.includes('Arthur'), 'Briefing matinal deve ser assinado por Arthur');
+        assert(morningText.includes('Briefing Matinal'), 'Deve conter título de Briefing Matinal');
+        assert(morningText.includes('Clara') || morningText.includes('Agenda'), 'Deve conter seção de agenda');
+
+        const eveningText = cronService.generateBriefingText('evening');
+        assert(eveningText.includes('Arthur'), 'Briefing noturno deve ser assinado por Arthur');
+        assert(eveningText.includes('Fechamento do Dia'), 'Deve conter título de Fechamento do Dia');
+        assert(eveningText.includes('Bernardo') || eveningText.includes('Balanço'), 'Deve conter balanço financeiro');
+    });
+
+    test('2. Multi-Intenção: _extractAndApplyAction executando múltiplas tags de ação na mesma resposta', () => {
+        const u = Date.now();
+        const txId = 'tx-multi-' + u;
+        const evId = 'ev-multi-' + u;
+        const multiTagResponse = `*KIT* · Seu Assessor Pessoal\n\nPronto! Lancei seu almoço e agendei a reunião.\n\n<!--KIT_ACTION:{"type":"transaction","data":{"id":"${txId}","type":"despesa","description":"Almoço Rápido","amount":42.50,"category":"Alimentação"}}-->\n<!--KIT_ACTION:{"type":"event","data":{"id":"${evId}","title":"Reunião Multi ${u}","date":"2026-10-24","startTime":"15:00","endTime":"16:00"}}-->`;
+
+        const cleaned = whatsappService._extractAndApplyAction(multiTagResponse);
+        assert(!cleaned.includes('<!--KIT_ACTION'), 'Tags ocultas devem ser removidas da resposta visível');
+        assert(cleaned.includes('Pronto! Lancei seu almoço'), 'Mensagem limpa deve ser preservada');
+
+        const allData = dbService.getAll();
+        const txFound = (allData.transactions || []).find(t => t.id === txId);
+        assert(txFound, 'Transação multi-tag deve ter sido salva no SQLite');
+        assert.strictEqual(txFound.amount, 42.5);
+
+        const evFound = (allData.events || []).find(e => e.id === evId);
+        assert(evFound, 'Evento multi-tag deve ter sido salvo no SQLite');
+        assert.strictEqual(evFound.title, `Reunião Multi ${u}`);
+    });
+
+    test('3. 1-Click Liquidação: dbService.settleDebt dá baixa e lança receita correspondente no caixa', () => {
+        const u = Date.now();
+        const debtId = 'debt-test-liq-' + u;
+        // Cria dívida pendente
+        dbService.applyAction({
+            type: 'create_debt',
+            data: {
+                id: debtId,
+                name: 'Dr. Roberto',
+                amount: 450.0,
+                reason: 'Honorários de Consultoria',
+                status: 'pendente'
+            }
+        });
+
+        // 1-Click Liquidação
+        const result = dbService.settleDebt(debtId, 'Pix');
+        assert(result, 'Liquidação deve retornar resultado');
+        assert.strictEqual(result.status, 'pago');
+
+        // Verifica que dívida está paga no SQLite
+        const debtInDb = dbService.sqlite.prepare('SELECT * FROM debts WHERE id = ?').get(debtId);
+        assert.strictEqual(debtInDb.status, 'pago');
+
+        // Verifica que a receita foi lançada no fluxo de caixa
+        const revenueTx = dbService.sqlite.prepare(`SELECT * FROM transactions WHERE id = 'tx-settle-${debtId}-${result.settledAt}'`).get()
+            || dbService.sqlite.prepare("SELECT * FROM transactions WHERE description LIKE '%Liquidação de Cobrança: Dr. Roberto%' ORDER BY createdAt DESC").get();
+        assert(revenueTx, 'Receita correspondente deve ter sido lançada automaticamente no caixa');
+        assert.strictEqual(revenueTx.amount, 450.0);
+        assert.strictEqual(revenueTx.type, 'receita');
+    });
+
+    test('4. Gerador de Mensagem de Cobrança com Chave Pix (Bernardo)', () => {
+        const u = Date.now();
+        const debtId = 'debt-test-pix-' + u;
+        dbService.applyAction({
+            type: 'create_debt',
+            data: {
+                id: debtId,
+                name: 'Camila Torres',
+                amount: 280.0,
+                reason: 'Projeto de Design',
+                pixKey: 'pix.camila@meuassessor.com'
+            }
+        });
+
+        const msg = dbService.generateDebtMessage(debtId);
+        assert(msg.includes('Bernardo'), 'Mensagem deve ser do Bernardo');
+        assert(msg.includes('Camila Torres'), 'Deve conter nome do devedor');
+        assert(msg.includes('280,00'), 'Deve conter valor formatado');
+        assert(msg.includes('pix.camila@meuassessor.com') || msg.includes('Chave Pix'), 'Deve conter Chave Pix');
+    });
+
+    test('5. OCR & Fallback Router: Linha digitável de Boleto reconhecida pela Elisa', () => {
+        const boletoLine = '34191.79001 01043.510047 91020.150008 8 9100000018450';
+        const reply = whatsappService.fallbackRouter(`Segue o boleto para pagar: ${boletoLine}`);
+        assert(reply.includes('Elisa'), 'Elisa deve processar o boleto');
+        assert(reply.includes('Boleto Bancário Identificado'), 'Deve acusar identificação do boleto');
+        assert(reply.includes('Contas & Boletos'), 'Deve conter tag de despesa em Contas & Boletos');
+    });
+
+    test('6. Fallback Router: Liquidação de cobrança via texto conversacional', () => {
+        const reply = whatsappService.fallbackRouter('o Dr. Roberto pagou a cobrança de 450 reais');
+        assert(reply.includes('Bernardo'), 'Bernardo deve responder');
+        assert(reply.includes('Baixa de cobrança confirmada'), 'Deve confirmar a baixa');
+        assert(reply.includes('settle_debt'), 'Deve conter ação settle_debt');
     });
 
     // Limpeza final do banco de teste

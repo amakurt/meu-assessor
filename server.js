@@ -15,6 +15,7 @@ const groqService = require('./js/groq-service');
 const dbService = require('./js/db-service');
 const pluggyService = require('./js/pluggy-service');
 const googleCalendarService = require('./js/google-calendar-service');
+const cronService = require('./js/cron-service');
 const crypto = require('crypto');
 
 const app = express();
@@ -90,13 +91,23 @@ app.get('/api/data', (req, res) => {
 });
 
 app.post('/api/action', (req, res) => {
-    const applied = dbService.applyAction(req.body);
-    if (req.body?.type === 'event' && applied && googleCalendarService.isConnected()) {
-        googleCalendarService.pushEventToGoogle(applied).catch(e => {
-            console.warn('[Google Calendar] Erro ao sincronizar evento criado:', e.message);
-        });
+    const actions = Array.isArray(req.body) ? req.body : [req.body];
+    const appliedItems = [];
+    for (const action of actions) {
+        if (!action) continue;
+        const applied = dbService.applyAction(action);
+        if (action?.type === 'event' && applied && googleCalendarService.isConnected()) {
+            googleCalendarService.pushEventToGoogle(applied).catch(e => {
+                console.warn('[Google Calendar] Erro ao sincronizar evento criado:', e.message);
+            });
+        }
+        if (applied) appliedItems.push(applied);
     }
-    res.json({ success: true, item: applied });
+    res.json({
+        success: true,
+        item: Array.isArray(req.body) ? appliedItems : (appliedItems[0] || null),
+        items: appliedItems
+    });
 });
 
 // 1. Health & Status Endpoint
@@ -544,6 +555,145 @@ app.post('/api/chat', async (req, res) => {
     });
 });
 
+// ==========================================
+// 16. LINK PÚBLICO DE AGENDAMENTO (CLARA)
+// ==========================================
+app.get(['/book', '/agendar', '/agenda/:slug'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'book.html'));
+});
+
+app.get('/api/booking/slots', (req, res) => {
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const allData = dbService.getAll();
+    const dayEvents = (allData.events || []).filter(e => e.date === date);
+
+    const baseSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+    const availableSlots = baseSlots.filter(slot => {
+        const hasConflict = dayEvents.some(ev => ev.startTime === slot);
+        return !hasConflict;
+    });
+
+    res.json({ success: true, date, availableSlots });
+});
+
+app.post('/api/booking/confirm', async (req, res) => {
+    const { date, time, name, email, phone, subject, duration } = req.body;
+    if (!date || !time || !name || !email) {
+        return res.status(400).json({ success: false, error: 'Campos obrigatórios ausentes.' });
+    }
+
+    const meetSlug = crypto.randomBytes(3).toString('hex');
+    const meetUrl = `https://meet.google.com/kit-${meetSlug}`;
+
+    const calcEndTime = (startTime, dur = 45) => {
+        const [h, m] = startTime.split(':').map(Number);
+        const totalMinutes = h * 60 + m + dur;
+        const endH = Math.floor(totalMinutes / 60) % 24;
+        const endM = totalMinutes % 60;
+        return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+    };
+
+    const eventPayload = {
+        title: `Reunião: ${name} (${subject || 'Alinhamento'})`,
+        date,
+        startTime: time,
+        endTime: calcEndTime(time, duration || 45),
+        location: 'Google Meet',
+        hasMeet: 1,
+        meetUrl,
+        participants: `${name} <${email}> ${phone ? `(${phone})` : ''}`
+    };
+
+    const applied = dbService.applyAction({
+        type: 'event',
+        data: eventPayload
+    });
+
+    // Sincroniza com Google Calendar se conectado
+    if (applied && googleCalendarService.isConnected()) {
+        googleCalendarService.pushEventToGoogle(applied).catch(e => {
+            console.warn('[Google Calendar] Erro ao sincronizar agendamento público:', e.message);
+        });
+    }
+
+    // Alerta executivo no WhatsApp para o usuário
+    const whatsappAlert = `*Clara* · Secretária Executiva\n\n📅 *Novo Agendamento Confirmado via Link Público!*\n• Convidado: *${name}*\n• Contato: ${phone || 'Não informado'} (${email})\n• Data: *${date.split('-').reverse().join('/')} às ${time}*\n• Assunto: ${subject || 'Alinhamento'}\n• Google Meet: ${meetUrl}`;
+
+    if (whatsappService.isReady && whatsappService.isReady()) {
+        try {
+            const selfJid = whatsappService.sock?.user?.id?.split(':')[0] + '@s.whatsapp.net';
+            if (selfJid) {
+                await whatsappService.sock.sendMessage(selfJid, { text: whatsappAlert });
+            }
+        } catch (err) {
+            console.warn('[WhatsApp] Falha ao enviar alerta de agendamento:', err.message);
+        }
+    }
+
+    dbService.addNotification({
+        title: '📅 Novo Agendamento Recebido!',
+        message: `${name} agendou para ${date} às ${time} (Meet: ${meetUrl})`,
+        type: 'agenda',
+        priority: 'alta',
+        linkTab: 'agenda'
+    });
+
+    res.json({
+        success: true,
+        event: applied,
+        meetUrl
+    });
+});
+
+// ==========================================
+// 17. COBRANÇAS, PIX & 1-CLICK LIQUIDAÇÃO (BERNARDO)
+// ==========================================
+app.post('/api/cobrancas', (req, res) => {
+    const debt = dbService.applyAction({
+        type: 'create_debt',
+        data: req.body
+    });
+    res.json({ success: true, debt });
+});
+
+app.post('/api/cobrancas/:id/liquidar', (req, res) => {
+    const result = dbService.settleDebt(req.params.id, req.body?.paymentMethod || 'Pix');
+    if (!result) {
+        return res.status(404).json({ success: false, error: 'Cobrança não encontrada.' });
+    }
+    res.json({ success: true, result });
+});
+
+app.get('/api/cobrancas/:id/message', (req, res) => {
+    const message = dbService.generateDebtMessage(req.params.id, req.query.pixKey);
+    if (!message) {
+        return res.status(404).json({ success: false, error: 'Cobrança não encontrada.' });
+    }
+    res.json({ success: true, message });
+});
+
+// ==========================================
+// 18. BRIEFINGS MATINAIS E NOTURNOS AUTOMÁTICOS (ARTHUR)
+// ==========================================
+app.get('/api/automation/briefing/status', (req, res) => {
+    res.json({
+        success: true,
+        morningSchedule: '08:00',
+        eveningSchedule: '20:00',
+        active: true
+    });
+});
+
+app.post('/api/automation/briefing/trigger', async (req, res) => {
+    const type = req.body?.type || 'morning';
+    try {
+        const result = await cronService.dispatchBriefing(type);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.listen(PORT, async () => {
     console.log(`=======================================================`);
     console.log(`🚀 KIT OS · SEU ASSESSOR EXECUTIVO RODANDO COM SUCESSO!`);
@@ -552,8 +702,9 @@ app.listen(PORT, async () => {
     console.log(`👉 Gemini Pro Ativo:    ${geminiService.isConfigured() ? 'SIM (Google Gemini Pro/Flash)' : 'NÃO'}`);
     console.log(`=======================================================`);
 
-    console.log(`👉 Gemini Pro Ativo:    ${geminiService.isConfigured() ? 'SIM (Google Gemini Pro/Flash)' : 'NÃO'}`);
-    console.log(`=======================================================`);
+    // Inicia o serviço de briefings automáticos conectado ao WhatsApp
+    cronService.setWhatsAppService(whatsappService);
+    cronService.start();
 
     // Auto connect WhatsApp se houver sessão anterior salva
     const authDir = path.join(__dirname, 'auth_info_baileys');

@@ -235,6 +235,24 @@ class WhatsAppService {
                             replyText = `*KIT* · Seu Assessor Pessoal\n\n⚠️ Não consegui fazer a leitura nítida desta imagem. Poderia reenviar uma foto mais clara do comprovante?`;
                         }
                     }
+                    // 2.1 MENSAGEM DE DOCUMENTO (PDF / BOLETO / NOTA FISCAL)
+                    else if (msg.message?.documentMessage) {
+                        console.log(`[WhatsApp] Documento (PDF/Boleto) recebido no auto-chat.`);
+                        try {
+                            const docBuffer = await downloadMediaMessage(msg, 'buffer', {});
+                            const mimeType = msg.message.documentMessage.mimetype || 'application/pdf';
+                            const fileName = msg.message.documentMessage.fileName || 'documento.pdf';
+                            const caption = msg.message.documentMessage.caption || fileName;
+                            if (geminiService.isConfigured()) {
+                                replyText = await geminiService.generateAdvisorImageResponse(docBuffer, mimeType, caption);
+                            } else {
+                                replyText = `*Elisa* · Assistente Fiscal\n\n📄 Documento (${fileName}) recebido! Ative a chave Gemini Pro para leitura completa de boletos e NFs.\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+                            }
+                        } catch (docErr) {
+                            console.error('[WhatsApp] Erro ao processar documento PDF:', docErr.message);
+                            replyText = `*Elisa* · Assistente Fiscal\n\n⚠️ Tive dificuldade em processar o arquivo enviado. Poderia reenviar em formato PDF legível?`;
+                        }
+                    }
                     // 3. MENSAGEM DE TEXTO
                     else {
                         const textMessage = msg.message?.conversation ||
@@ -331,32 +349,38 @@ class WhatsAppService {
 
     _extractAndApplyAction(text) {
         if (!text) return text;
-        const match = text.match(/<!--KIT_ACTION:(.*?)-->/s);
-        if (match && match[1]) {
-            try {
-                const action = JSON.parse(match[1].trim());
-                const applied = dbService.applyAction(action);
-                if (action.type === 'event' && applied && googleCalendarService.isConnected()) {
-                    if (applied.updated && applied.googleEventId) {
-                        googleCalendarService.updateEventInGoogle(applied).catch(e => {
-                            console.warn('[WhatsApp] Erro ao atualizar evento no Google Calendar:', e.message);
-                        });
-                    } else if (!applied.updated) {
-                        googleCalendarService.pushEventToGoogle(applied).catch(e => {
-                            console.warn('[WhatsApp] Erro ao sincronizar evento com Google Calendar:', e.message);
-                        });
+        const matches = [...text.matchAll(/<!--KIT_ACTION:(.*?)-->/gs)];
+        for (const match of matches) {
+            if (match && match[1]) {
+                try {
+                    const parsed = JSON.parse(match[1].trim());
+                    const actions = Array.isArray(parsed) ? parsed : [parsed];
+                    for (const action of actions) {
+                        if (!action || !action.type) continue;
+                        const applied = dbService.applyAction(action);
+                        if (action.type === 'event' && applied && googleCalendarService.isConnected()) {
+                            if (applied.updated && applied.googleEventId) {
+                                googleCalendarService.updateEventInGoogle(applied).catch(e => {
+                                    console.warn('[WhatsApp] Erro ao atualizar evento no Google Calendar:', e.message);
+                                });
+                            } else if (!applied.updated) {
+                                googleCalendarService.pushEventToGoogle(applied).catch(e => {
+                                    console.warn('[WhatsApp] Erro ao sincronizar evento com Google Calendar:', e.message);
+                                });
+                            }
+                        } else if (action.type === 'update_event' && applied && applied.googleEventId && googleCalendarService.isConnected()) {
+                            googleCalendarService.updateEventInGoogle(applied).catch(e => {
+                                console.warn('[WhatsApp] Erro ao atualizar evento no Google Calendar:', e.message);
+                            });
+                        } else if ((action.type === 'delete_event' || applied?.deleted) && applied?.googleEventId && googleCalendarService.isConnected()) {
+                            googleCalendarService.deleteEventFromGoogle(applied.googleEventId).catch(e => {
+                                console.warn('[WhatsApp] Erro ao remover evento do Google Calendar:', e.message);
+                            });
+                        }
                     }
-                } else if (action.type === 'update_event' && applied && applied.googleEventId && googleCalendarService.isConnected()) {
-                    googleCalendarService.updateEventInGoogle(applied).catch(e => {
-                        console.warn('[WhatsApp] Erro ao atualizar evento no Google Calendar:', e.message);
-                    });
-                } else if ((action.type === 'delete_event' || applied?.deleted) && applied?.googleEventId && googleCalendarService.isConnected()) {
-                    googleCalendarService.deleteEventFromGoogle(applied.googleEventId).catch(e => {
-                        console.warn('[WhatsApp] Erro ao remover evento do Google Calendar:', e.message);
-                    });
+                } catch (e) {
+                    console.error('[WhatsApp] Erro ao processar KIT_ACTION:', e.message);
                 }
-            } catch (e) {
-                console.error('[WhatsApp] Erro ao processar KIT_ACTION:', e.message);
             }
         }
         return text.replace(/<!--KIT_ACTION:.*?-->/gs, '').trim();
@@ -368,6 +392,39 @@ class WhatsAppService {
         let body = 'Compreendido! O KIT registrou sua demanda e está organizando tudo para você.';
         let actionTag = '';
         const lastAction = dbService.getLastAction();
+
+        // 1. Detecção de Código de Barras / Linha Digitável de Boleto (44 a 48 dígitos ou menção a boleto com dígitos)
+        const digitSeqMatch = text.match(/\d[\d.\s-]{30,65}\d/);
+        const cleanDigits = digitSeqMatch ? digitSeqMatch[0].replace(/\D/g, '') : '';
+        const isBoleto = (cleanDigits.length >= 44 && cleanDigits.length <= 48) || (lower.includes('boleto') && cleanDigits.length >= 20);
+
+        if (isBoleto) {
+            const cleanBarcode = cleanDigits;
+            advisor = '*Elisa* · Assistente Fiscal';
+            body = `📄 *Boleto Bancário Identificado*\n• Linha Digitável: \`${cleanBarcode}\`\n• Status: Agendado para pagamento no Contas a Pagar\n• Conciliação: Monitorando liquidação bancária`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Boleto Bancário ${cleanBarcode.substring(0, 5)}","amount":0.0,"category":"Contas & Boletos","status":"pendente","paymentMethod":"Boleto Bancário"}}-->`;
+            return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)${actionTag}`;
+        }
+
+        // 2. Liquidação de Cobrança / Baixa de Dívida
+        if ((lower.includes('pagou') || lower.includes('quitou') || lower.includes('deu baixa') || lower.includes('liquidou') || lower.includes('recebi de')) && (lower.includes('cobrança') || lower.includes('acerto') || lower.includes('dívida') || lower.includes('reais') || lower.includes('r$'))) {
+            advisor = '*Bernardo* · Gestor Financeiro';
+            const nameMatch = text.match(/(?:o|a)?\s*([A-ZÀ-Úa-zà-ú]+)\s+(?:pagou|quitou|acertou|liquidou)/i) || text.match(/baixa\s+(?:n[ao]\s+)?(?:cobrança\s+d[eao]\s+)?([A-ZÀ-Úa-zà-ú]+)/i);
+            const personName = nameMatch ? nameMatch[1].trim() : 'Cliente';
+            body = `💰 *Baixa de cobrança confirmada!*\n• Pagador: ${personName}\n• Status: Quitado com sucesso\n• O valor foi automaticamente lançado como receita no seu fluxo de caixa.`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"settle_debt","data":{"name":"${personName}"}}-->`;
+            return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)${actionTag}`;
+        }
+
+        // 3. Comandos Compostos (ex: Despesa + Agendamento no mesmo texto)
+        if ((lower.includes('gastei') || lower.includes('paguei')) && (lower.includes('reunião') || lower.includes('agenda') || lower.includes('marca') || lower.includes('meet'))) {
+            const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+            const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 50;
+            advisor = '*KIT* · Seu Assessor Pessoal';
+            body = `Comandos processados com sucesso!\n\n1. 💳 *Despesa Registrada (Bernardo):*\n• Valor: R$ ${val.toFixed(2)}\n• Status: Conciliado no Open Finance\n\n2. 📅 *Agenda Atualizada (Clara):*\n• Reunião agendada com link Google Meet incluído.`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Despesa registrada","amount":${val},"category":"Alimentação"}}-->\n<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião agendada via áudio/texto","hasMeet":true}}-->`;
+            return `${advisor}\n\n${body}\n\n[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)${actionTag}`;
+        }
 
         if (lower.startsWith('salva ') && (lower.includes(' como cliente') || lower.includes(' como fornecedor'))) {
             const isFornecedor = lower.includes(' como fornecedor');

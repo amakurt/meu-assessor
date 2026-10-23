@@ -216,6 +216,12 @@ class DbService {
         try {
             this.sqlite.exec(`ALTER TABLE events ADD COLUMN googleEventId TEXT;`);
         } catch (e) {}
+        try {
+            this.sqlite.exec(`ALTER TABLE debts ADD COLUMN phone TEXT;`);
+        } catch (e) {}
+        try {
+            this.sqlite.exec(`ALTER TABLE debts ADD COLUMN pixKey TEXT;`);
+        } catch (e) {}
 
         // Garante que orçamentos padrão existam
         const countBudgets = this.sqlite.prepare('SELECT COUNT(*) as count FROM budgets').get().count;
@@ -854,7 +860,7 @@ class DbService {
                 }
 
                 applied = {
-                    id: `ev-${Date.now()}`,
+                    id: evData.id || `ev-${Date.now()}`,
                     title: evData.title || 'Compromisso KIT',
                     date: evData.date || dateStr,
                     startTime: evData.startTime || '10:00',
@@ -947,19 +953,44 @@ class DbService {
                 break;
             }
 
-            case 'debt': {
+            case 'debt':
+            case 'create_debt': {
                 const dbData = action.data || {};
                 applied = {
-                    id: `debt-${Date.now()}`,
-                    name: dbData.name || 'Contato',
+                    id: dbData.id || `debt-${Date.now()}`,
+                    name: dbData.name || dbData.person || 'Contato',
                     amount: parseFloat(dbData.amount) || 0,
-                    reason: dbData.reason || 'Cobrança',
-                    date: dateStr,
-                    status: 'pendente',
+                    reason: dbData.reason || dbData.description || 'Cobrança',
+                    date: dbData.date || dbData.dueDate || dateStr,
+                    status: dbData.status || 'pendente',
+                    phone: dbData.phone || null,
+                    pixKey: dbData.pixKey || null,
                     createdAt: Date.now()
                 };
-                this.stmtInsertDebt.run(applied);
+                this.sqlite.prepare(`
+                    INSERT OR REPLACE INTO debts (id, name, amount, reason, date, status, phone, pixKey, createdAt)
+                    VALUES (@id, @name, @amount, @reason, @date, @status, @phone, @pixKey, @createdAt)
+                `).run(applied);
                 this.lastAction = { type: 'debt', item: applied, timestamp: Date.now() };
+                break;
+            }
+
+            case 'settle_debt': {
+                const sData = action.data || {};
+                let targetDebt = null;
+                if (sData.id || sData.debtId) {
+                    targetDebt = this.sqlite.prepare('SELECT * FROM debts WHERE id = ?').get(sData.id || sData.debtId);
+                } else if (sData.name || sData.person) {
+                    const searchName = sData.name || sData.person;
+                    targetDebt = this.sqlite.prepare("SELECT * FROM debts WHERE LOWER(name) LIKE LOWER(?) AND status = 'pendente' ORDER BY createdAt DESC").get(`%${searchName}%`);
+                } else {
+                    targetDebt = this.sqlite.prepare("SELECT * FROM debts WHERE status = 'pendente' ORDER BY createdAt DESC").get();
+                }
+
+                if (targetDebt) {
+                    applied = this.settleDebt(targetDebt.id, sData.paymentMethod || 'Pix');
+                    this.lastAction = { type: 'settle_debt', item: applied, timestamp: Date.now() };
+                }
                 break;
             }
 
@@ -1255,6 +1286,72 @@ class DbService {
             paymentsCount,
             totalPaid
         };
+    }
+
+    // ==========================================
+    // COBRANÇAS, PIX & 1-CLICK LIQUIDAÇÃO (BERNARDO)
+    // ==========================================
+
+    settleDebt(debtId, paymentMethod = 'Pix') {
+        if (!debtId) return null;
+        const debt = this.sqlite.prepare('SELECT * FROM debts WHERE id = ?').get(debtId);
+        if (!debt) return null;
+
+        // Atualiza status da cobrança para 'pago'
+        this.sqlite.prepare("UPDATE debts SET status = 'pago' WHERE id = ?").run(debtId);
+
+        // Lança receita automaticamente no caixa
+        const appliedTx = this.applyAction({
+            type: 'transaction',
+            data: {
+                id: `tx-settle-${debt.id}-${Date.now()}`,
+                type: 'receita',
+                description: `Liquidação de Cobrança: ${debt.name} (${debt.reason || 'Acerto de contas'})`,
+                amount: parseFloat(debt.amount) || 0,
+                category: 'Cobranças & Recebíveis',
+                status: 'conciliado',
+                paymentMethod: paymentMethod || 'Pix',
+                registeredBy: 'Bernardo (1-Click Liquidação)',
+                account: 'Carteira'
+            }
+        });
+
+        // Notificação de liquidação
+        this.addNotification({
+            title: '💰 Cobrança Liquidada!',
+            message: `${debt.name} quitou R$ ${(parseFloat(debt.amount) || 0).toFixed(2)}. Receita lançada no fluxo de caixa.`,
+            type: 'financeiro',
+            priority: 'normal',
+            linkTab: 'financas'
+        });
+
+        const result = {
+            id: debt.id,
+            name: debt.name,
+            amount: debt.amount,
+            status: 'pago',
+            settledAt: Date.now(),
+            transaction: appliedTx
+        };
+
+        this.broadcast('data_updated', {
+            type: 'debt_settled',
+            item: result,
+            fullDb: this.getAll()
+        });
+
+        return result;
+    }
+
+    generateDebtMessage(debtId, customPixKey = null) {
+        if (!debtId) return null;
+        const debt = this.sqlite.prepare('SELECT * FROM debts WHERE id = ?').get(debtId);
+        if (!debt) return null;
+
+        const pixKey = customPixKey || debt.pixKey || process.env.PIX_KEY || 'financeiro@meuassessor.com';
+        const formattedAmount = Number(debt.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        return `*Bernardo* · Gestor Financeiro\n\nOlá, ${debt.name}! Tudo bem?\nPassando apenas para lembrar com carinho sobre o acerto referente a:\n• *${debt.reason || 'Serviços prestados'}*\n• *Valor:* R$ ${formattedAmount}\n• *Vencimento:* ${debt.date || 'Hoje'}\n\nPara facilitar, você pode transferir via Pix:\n🔑 *Chave Pix:* \`${pixKey}\`\n\nAssim que fizer o pagamento, nos avise por aqui para darmos a baixa imediata. Muito obrigado!`;
     }
 
     // ==========================================

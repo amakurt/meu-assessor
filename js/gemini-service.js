@@ -150,9 +150,30 @@ Se o usuário indicar que você ou o áudio entendeu errado, pedir para corrigir
      "↩️ *Cancelado com sucesso!*"
      "O registro anterior foi desfeito e removido do seu painel."
 
+5. LIQUIDAÇÃO DE COBRANÇA OU BAIXA DE DÍVIDA (ex: "o João pagou os 300", "dá baixa na cobrança do Marcos", "o cliente quitou a dívida"):
+   - Use OBRIGATORIAMENTE:
+     <!--KIT_ACTION:{"type":"settle_debt","data":{"name":"Nome do Pagador"}}-->
+   - Responda como o Bernardo:
+     "*Bernardo* · Gestor Financeiro
+
+💰 *Baixa de cobrança confirmada!*
+• Pagador: [Nome do Pagador]
+• Status: Quitado com sucesso
+• O valor foi automaticamente lançado como receita no seu fluxo de caixa."
+
+6. NOVA COBRANÇA OU DÍVIDA A RECEBER/PAGAR (ex: "o Lucas me deve 400 reais", "anota uma cobrança de 250 pro Pedro"):
+   - Use: <!--KIT_ACTION:{"type":"create_debt","data":{"name":"Lucas","amount":400.0,"reason":"Cobrança","status":"pendente"}}-->
+
 INSTRUÇÃO CRUCIAL DE SINCRONIZAÇÃO DE DADOS (NOVOS REGISTROS):
 Se a mensagem envolver uma NOVA ação executiva concreta para salvar no painel (despesa/receita, compromisso de agenda, tarefa ou cliente), adicione OBRIGATORIAMENTE no FINAL ABSOLUTO da resposta uma linha oculta no formato:
-<!--KIT_ACTION:{"type":"transaction|event|task|create_client","data":{...}}-->
+<!--KIT_ACTION:{"type":"transaction|event|task|create_client|create_debt|settle_debt","data":{...}}-->
+
+COMANDOS COMPOSTOS OU MÚLTIPLAS DEMANDAS NA MESMA MENSAGEM:
+Se o usuário solicitar duas ou mais ações simultâneas (ex: registrar uma despesa E agendar uma reunião, ou cadastrar uma tarefa E anotar um gasto, etc.):
+1. Responda a todas as demandas de forma clara e executiva no corpo do texto.
+2. Emita TODAS as tags de ação correspondentes no final absoluto, uma por linha ou em array:
+<!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Almoço","amount":50.0,"category":"Alimentação"}}-->
+<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com João","date":"2026-10-24","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
 
 Modelos de dados JSON:
 1. Nova Despesa ou Receita:
@@ -163,6 +184,10 @@ Modelos de dados JSON:
 <!--KIT_ACTION:{"type":"task","data":{"title":"Título da tarefa","priority":"alta","dueDate":"2026-10-21"}}-->
 4. Cadastro de Cliente ou Fornecedor:
 <!--KIT_ACTION:{"type":"create_client","data":{"name":"Ótica Vieira","type":"cliente"}}-->
+5. Nova Cobrança / Dívida:
+<!--KIT_ACTION:{"type":"create_debt","data":{"name":"Marcos","amount":350.0,"reason":"Consultoria"}}-->
+6. Baixa em Cobrança:
+<!--KIT_ACTION:{"type":"settle_debt","data":{"name":"Marcos"}}-->
 
 Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, não inclua a tag <!--KIT_ACTION:...-->.`;
     }
@@ -211,6 +236,7 @@ Se a mensagem for apenas conversa ou dúvida teórica sem alteração de dados, 
 INSTRUÇÃO ESPECIAL PARA MENSAGEM DE VOZ:
 O usuário enviou uma mensagem de áudio.
 Ouça com precisão, transcreva a essência do que ele falou e execute a demanda.
+Se houver comandos compostos (múltiplas ações no mesmo áudio), processe todas e emita as tags de ação correspondentes.
 ATENÇÃO: Se no áudio o usuário estiver corrigindo um valor anterior (ex: "KIT, você entendeu errado, o almoço foi 50 e não 500", ou "corrige aí pra mim", ou "apaga a última"), APLIQUE A CORREÇÃO OU EXCLUSÃO (update_transaction ou delete_transaction) e NUNCA DUPLIQUE O REGISTRO!
 Logo no início da sua resposta, adicione:
 "🎙️ *Áudio compreendido:* \"[Transcrição resumida do que o usuário falou]\""
@@ -240,7 +266,7 @@ Em seguida, apresente a confirmação ou recibo da ação.`;
     }
 
     /**
-     * Processa FOTOS de notas fiscais, cupons e recibos via OCR
+     * Processa FOTOS e DOCUMENTOS de notas fiscais, cupons, boletos e recibos via OCR
      */
     async generateAdvisorImageResponse(imageBuffer, mimeType = 'image/jpeg', caption = '') {
         if (!this.isConfigured()) {
@@ -250,11 +276,29 @@ Em seguida, apresente a confirmação ou recibo da ação.`;
         const cleanMimeType = mimeType.split(';')[0];
         const base64Image = imageBuffer.toString('base64');
 
-        const systemPrompt = `Você é o KIT, assessor executivo do usuário.
-O usuário enviou uma FOTO de comprovante ou nota fiscal no WhatsApp.
-Faça a leitura OCR dos dados: identifique estabelecimento, valor total (R$), data e categoria.
-Responda no formato:
-*KIT* · Seu Assessor Pessoal
+        const systemPrompt = `Você é o KIT, assessor executivo do usuário, atuando com Elisa (Assistente Fiscal) e Bernardo (Gestor Financeiro).
+O usuário enviou uma FOTO ou DOCUMENTO (boleto bancário, comprovante Pix/bancário ou cupom fiscal) no WhatsApp.
+
+Realize a leitura OCR completa:
+1. SE FOR UM BOLETO BANCÁRIO (contém código de barras ou linha digitável de 47 ou 48 dígitos):
+   - Extraia: Beneficiário/Cedente, Valor (R$), Data de Vencimento e Linha Digitável completa.
+   - Responda como a Elisa:
+     "*Elisa* · Assistente Fiscal
+
+📄 *Boleto Bancário Processado via OCR*
+• Beneficiário: [Nome do Beneficiário/Empresa]
+• Valor: R$ [Valor formatado, ex: 184,50]
+• Vencimento: [Data no formato DD/MM/AAAA]
+• Linha Digitável: \`[Linha Digitável de 47/48 dígitos]\`
+• Status: Agendado para pagamento no painel
+
+[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)
+<!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Boleto [Beneficiário]","amount":[valor numérico],"category":"Contas & Boletos","date":"[AAAA-MM-DD]","status":"pendente","paymentMethod":"Boleto Bancário"}}-->"
+
+2. SE FOR COMPROVANTE DE PAGAMENTO OU NOTA FISCAL:
+   - Extraia: Estabelecimento, Valor total (R$), Data e Categoria.
+   - Responda como o Bernardo ou Elisa:
+     "*KIT* · Seu Assessor Pessoal
 
 🧾 *Comprovante Fiscal Processado via OCR*
 • Estabelecimento: [Nome identificado]
@@ -263,14 +307,15 @@ Responda no formato:
 • Categoria: [Categoria detectada]
 • Status: Lançamento conciliado no Open Finance
 
-[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)`;
+[✏️ Editar]  [↩️ Desfazer] (ativo por 24h)
+<!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"[Nome Estabelecimento]","amount":[valor numérico],"category":"[Categoria]","status":"conciliado"}}-->"`;
 
         const requestBody = JSON.stringify({
             contents: [
                 {
                     parts: [
                         { text: systemPrompt },
-                        { text: caption ? `Legenda enviada: "${caption}"` : 'Imagem de documento fiscal.' },
+                        { text: caption ? `Legenda enviada: "${caption}"` : 'Imagem de documento fiscal ou boleto.' },
                         {
                             inlineData: {
                                 mimeType: cleanMimeType,
@@ -281,7 +326,7 @@ Responda no formato:
                 }
             ],
             generationConfig: {
-                temperature: 0.4,
+                temperature: 0.2,
                 maxOutputTokens: 1000
             }
         });

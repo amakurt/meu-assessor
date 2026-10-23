@@ -189,8 +189,8 @@ class CobrancasModule {
                         ${d.type === 'receber' ? 'A Receber' : 'A Pagar'}
                     </span>
                     <div>
-                        <h4 class="debt-person-name" style="margin: 0; font-size: 14px;">${d.person}</h4>
-                        <p class="debt-desc" style="margin: 2px 0 0; font-size: 12px; color: var(--text-muted);">${d.description} · Vence: <strong>${d.dueDate}</strong></p>
+                        <h4 class="debt-person-name" style="margin: 0; font-size: 14px;">${d.name || d.person}</h4>
+                        <p class="debt-desc" style="margin: 2px 0 0; font-size: 12px; color: var(--text-muted);">${d.reason || d.description} · Vence: <strong>${d.date || d.dueDate}</strong></p>
                     </div>
                 </div>
                 <div class="debt-card-right" style="display: flex; align-items: center; gap: 8px;">
@@ -198,11 +198,14 @@ class CobrancasModule {
                         ${d.type === 'receber' ? '+' : '-'} R$ ${(parseFloat(d.amount) || 0).toFixed(2)}
                     </span>
                     ${d.status === 'pendente' ? `
-                        <button class="btn btn-outline btn-xs btn-settle-debt" data-id="${d.id}" title="Marcar como Pago">
+                        <button class="btn btn-primary btn-xs btn-copy-debt-msg" data-id="${d.id}" title="Copiar Mensagem WhatsApp com Chave Pix">
+                            💬 Cobrar Pix
+                        </button>
+                        <button class="btn btn-outline btn-xs btn-settle-debt" data-id="${d.id}" title="Marcar como Pago e Lançar no Caixa">
                             ✓ Dar Baixa
                         </button>
                     ` : `
-                        <span class="settled-tag" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">✓ Baixado</span>
+                        <span class="settled-tag" style="font-size: 11px; color: var(--emerald, #10b981); font-weight: 700;">✓ Baixado</span>
                     `}
                     <button class="btn-action-icon btn-edit-debt" data-id="${d.id}" title="Editar Cobrança" style="background: none; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 12px;">✏️</button>
                     <button class="btn-action-icon btn-del-debt" data-id="${d.id}" title="Excluir Cobrança" style="background: none; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 12px; color: #ef4444;">🗑️</button>
@@ -210,11 +213,48 @@ class CobrancasModule {
             </div>
         `).join('');
 
-        container.querySelectorAll('.btn-settle-debt').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        container.querySelectorAll('.btn-copy-debt-msg').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
-                this.store.settleDebt(id);
-                window.showToast?.('Baixa confirmada! Saldo atualizado com os assessores.');
+                try {
+                    const res = await fetch(`/api/cobrancas/${id}/message`);
+                    const data = await res.json();
+                    if (data.success && data.message) {
+                        await navigator.clipboard.writeText(data.message);
+                        window.showToast?.('📋 Mensagem de cobrança com Chave Pix copiada para o WhatsApp!');
+                    } else {
+                        // Fallback local
+                        const d = (this.store.state.debts || []).find(item => item.id === id);
+                        if (d) {
+                            const fallbackMsg = `Olá, ${d.name || d.person}! Tudo bem?\nPassando para lembrar do acerto de R$ ${Number(d.amount).toFixed(2)} referente a ${d.reason || d.description}.\nChave Pix: financeiro@meuassessor.com`;
+                            await navigator.clipboard.writeText(fallbackMsg);
+                            window.showToast?.('📋 Mensagem copiada!');
+                        }
+                    }
+                } catch (err) {
+                    window.showToast?.('Erro ao copiar mensagem de cobrança.');
+                }
+            });
+        });
+
+        container.querySelectorAll('.btn-settle-debt').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                btn.disabled = true;
+                try {
+                    const res = await fetch(`/api/cobrancas/${id}/liquidar`, { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        window.showToast?.('💰 Cobrança liquidada! Receita lançada no fluxo de caixa.');
+                        this.store.settleDebt(id);
+                    } else {
+                        this.store.settleDebt(id);
+                        window.showToast?.('Baixa confirmada localmente.');
+                    }
+                } catch (err) {
+                    this.store.settleDebt(id);
+                    window.showToast?.('Baixa confirmada!');
+                }
             });
         });
 
