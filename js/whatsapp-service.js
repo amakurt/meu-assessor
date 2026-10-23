@@ -482,12 +482,23 @@ class WhatsAppService {
                     body = `Compreendido! Qual é o valor ou descrição correto para eu atualizar?`;
                 }
             }
-        } else if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix')) {
+        } else if (lower.includes('gastei') || lower.includes('paguei') || lower.includes('recebi') || lower.includes('pix') || lower.includes('coloquei') || lower.includes('abasteci') || lower.includes('gasolina') || lower.includes('comprei') || lower.includes('almocei') || lower.includes('jantei') || lower.includes('emprestei')) {
             const numMatch = text.match(/(\d+(?:[.,]\d+)?)/);
             const val = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 50;
-            const isReceita = lower.includes('recebi');
-            body = `Lançamento registrado com sucesso!\n\n🧾 *Recibo Executivo*\n• Tipo: ${isReceita ? 'Receita' : 'Despesa'}\n• Valor: R$ ${val.toFixed(2)}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
-            actionTag = `\n<!--KIT_ACTION:{"type":"transaction","data":{"type":"${isReceita ? 'receita' : 'despesa'}","description":"${text.replace(/"/g, '')}","amount":${val},"category":"Alimentação"}}-->`;
+            const isReceita = lower.includes('recebi') || lower.includes('entrou');
+
+            let category = 'Alimentação';
+            if (lower.includes('gasolina') || lower.includes('combustível') || lower.includes('abasteci') || lower.includes('posto') || lower.includes('uber')) {
+                category = 'Transporte & Viagens';
+            } else if (lower.includes('farmácia') || lower.includes('remédio')) {
+                category = 'Saúde & Farmácia';
+            } else if (lower.includes('emprest') || lower.includes('emprestei')) {
+                category = 'Empréstimos / Transferências';
+            }
+
+            advisor = '*KIT* · Seu Assessor Pessoal';
+            body = `Lançamento registrado com sucesso!\n\n🧾 *Recibo Executivo*\n• Tipo: ${isReceita ? 'Receita' : 'Despesa'}\n• Valor: R$ ${val.toFixed(2)}\n• Categoria: ${category}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"transaction","data":{"type":"${isReceita ? 'receita' : 'despesa'}","description":"${text.replace(/"/g, '')}","amount":${val},"category":"${category}"}}-->`;
         } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('meet')) {
             body = `Compromisso agendado na sua agenda com sucesso!\n• Tempo de deslocamento reservado\n• Link do Google Meet gerado`;
             actionTag = `\n<!--KIT_ACTION:{"type":"event","data":{"title":"${text.replace(/"/g, '')}","hasMeet":true}}-->`;
