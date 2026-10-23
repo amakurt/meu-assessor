@@ -18,29 +18,38 @@
 }
 
 :root {
-    /* Color Palette */
-    --bg-main: #07090e;
-    --bg-surface: #0e111a;
-    --bg-card: #131722;
-    --bg-card-hover: #191e2c;
-    --bg-input: #171c2b;
-    --border-subtle: rgba(255, 255, 255, 0.07);
-    --border-card: rgba(255, 255, 255, 0.1);
-    --border-focus: #3b82f6;
+    /* Color Palette (KIT OS Deep Obsidian & Glassmorphism) */
+    --bg-main: #070a12;
+    --bg-surface: #0c121e;
+    --bg-card: #111827;
+    --bg-card-hover: #162235;
+    --bg-input: #0e1726;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-card: rgba(255, 255, 255, 0.12);
+    --border-focus: #06b6d4;
 
-    /* Accent & Brand Colors */
-    --wa-green: #00a884;
-    --wa-green-light: #25d366;
-    --wa-bubble-me: #005c4b;
-    --wa-bubble-advisor: #202c33;
-    --wa-check: #53bdeb;
-
-    --brand-purple: #8b5cf6;
-    --brand-indigo: #6366f1;
-    --brand-blue: #3b82f6;
+    /* Accent & Brand Colors (KIT OS Signature Emerald & Cyan Palette) */
+    --brand-primary: #10b981;
+    --brand-primary-light: #34d399;
+    --brand-cyan: #06b6d4;
+    --brand-cyan-light: #22d3ee;
     --brand-emerald: #10b981;
+    --brand-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    --brand-gradient-subtle: linear-gradient(90deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.08));
+
+    /* Remapped Semantic Tokens */
+    --brand-purple: #10b981;
+    --brand-indigo: #06b6d4;
+    --brand-blue: #0284c7;
     --brand-rose: #f43f5e;
     --brand-amber: #f59e0b;
+
+    /* WhatsApp UI Colors */
+    --wa-green: #10b981;
+    --wa-green-light: #34d399;
+    --wa-bubble-me: #064e3b;
+    --wa-bubble-advisor: #111c2e;
+    --wa-check: #22d3ee;
 
     /* Text Colors */
     --text-primary: #f8fafc;
@@ -59,10 +68,12 @@
     --radius-xl: 24px;
     --radius-full: 9999px;
 
-    --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.35);
-    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-    --shadow-glow-purple: 0 0 25px rgba(139, 92, 246, 0.25);
-    --shadow-glow-green: 0 0 25px rgba(0, 168, 132, 0.25);
+    --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.45);
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.65);
+    --shadow-glow-purple: 0 0 25px rgba(16, 185, 129, 0.3);
+    --shadow-glow-green: 0 0 25px rgba(16, 185, 129, 0.3);
+    --shadow-glow-cyan: 0 0 25px rgba(6, 182, 212, 0.3);
+    --shadow-glow-primary: 0 0 25px rgba(16, 185, 129, 0.35);
 
     /* Transitions */
     --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
@@ -266,9 +277,9 @@ html, body {
 }
 
 .nav-item.active {
-    background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.08));
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.08));
     color: #fff;
-    border-left: 3px solid var(--brand-purple);
+    border-left: 3px solid var(--brand-primary);
 }
 
 .nav-icon {
@@ -283,8 +294,8 @@ html, body {
     font-size: 10px;
     padding: 1px 6px;
     border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--brand-purple);
+    background: rgba(6, 182, 212, 0.12);
+    color: var(--brand-cyan-light);
     font-weight: 600;
 }
 
@@ -1002,8 +1013,8 @@ html, body {
 .chip-advisor {
     font-size: 11px;
     font-weight: 700;
-    color: var(--brand-purple);
-    background: rgba(139, 92, 246, 0.12);
+    color: var(--brand-cyan);
+    background: rgba(6, 182, 212, 0.14);
     padding: 3px 8px;
     border-radius: var(--radius-sm);
     min-width: 54px;
@@ -1164,8 +1175,8 @@ html, body {
 }
 
 .badge-subtle {
-    background: rgba(139, 92, 246, 0.15);
-    color: var(--brand-purple);
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--brand-emerald);
 }
 
 .status-badge-live {
@@ -1223,7 +1234,7 @@ html, body {
 .bg-blue { background: rgba(59, 130, 246, 0.12); color: var(--brand-blue); }
 .bg-rose { background: rgba(244, 63, 94, 0.12); color: var(--brand-rose); }
 .bg-amber { background: rgba(245, 158, 11, 0.12); color: var(--brand-amber); }
-.bg-purple { background: rgba(139, 92, 246, 0.12); color: var(--brand-purple); }
+.bg-purple { background: rgba(6, 182, 212, 0.14); color: var(--brand-cyan); }
 
 .kpi-value {
     font-family: var(--font-heading);
@@ -1277,15 +1288,15 @@ html, body {
 }
 
 .bank-pill:hover {
-    border-color: var(--brand-purple);
+    border-color: var(--brand-cyan);
     transform: translateY(-1px);
-    background: rgba(139, 92, 246, 0.08);
+    background: rgba(6, 182, 212, 0.08);
 }
 
 .bank-pill.selected {
-    border-color: var(--brand-purple);
-    background: rgba(139, 92, 246, 0.18);
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+    border-color: var(--brand-primary);
+    background: rgba(16, 185, 129, 0.16);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .bank-icon {
@@ -1353,11 +1364,11 @@ html, body {
 }
 
 .bank-chip.active {
-    background: rgba(139, 92, 246, 0.18);
-    border-color: var(--brand-purple);
+    background: rgba(16, 185, 129, 0.16);
+    border-color: var(--brand-primary);
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 0 8px rgba(139, 92, 246, 0.25);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
 }
 
 .bank-chip .chip-icon {
@@ -1376,7 +1387,7 @@ html, body {
 }
 
 .bank-chip.active .bank-chip-badge {
-    background: var(--brand-purple);
+    background: var(--brand-primary);
     color: #fff;
 }
 
@@ -1385,7 +1396,7 @@ html, body {
     border: 1px dashed var(--border-card);
     border-radius: var(--radius-md);
     padding: 8px 14px;
-    color: var(--brand-purple);
+    color: var(--brand-cyan);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -1393,8 +1404,8 @@ html, body {
 }
 
 .bank-pill-add:hover {
-    background: rgba(139, 92, 246, 0.1);
-    border-color: var(--brand-purple);
+    background: rgba(6, 182, 212, 0.1);
+    border-color: var(--brand-cyan);
 }
 
 /* Transactions Table */
@@ -1579,12 +1590,12 @@ html, body {
 
 .calendar-day-cell:hover {
     background: var(--bg-card-hover);
-    border-color: var(--brand-purple);
+    border-color: var(--brand-cyan);
 }
 
 .calendar-day-cell.is-today {
-    border-color: var(--brand-purple);
-    background: rgba(139, 92, 246, 0.08);
+    border-color: var(--brand-cyan);
+    background: rgba(6, 182, 212, 0.08);
 }
 
 .day-cell-num {
@@ -1595,7 +1606,7 @@ html, body {
 }
 
 .calendar-day-cell.is-today .day-cell-num {
-    color: var(--brand-purple);
+    color: var(--brand-cyan-light);
     font-weight: 700;
 }
 
@@ -1613,8 +1624,8 @@ html, body {
 
 /* Advisor Tip Alert Box (Sofi) */
 .advisor-alert-box {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(59, 130, 246, 0.08));
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08));
+    border: 1px solid rgba(16, 185, 129, 0.3);
     border-radius: var(--radius-lg);
     padding: 16px;
 }
@@ -1874,8 +1885,8 @@ html, body {
 }
 
 .vault-chip.active, .vault-chip:hover {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.1));
-    border-color: var(--brand-purple);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.1));
+    border-color: var(--brand-primary);
     color: #fff;
 }
 
@@ -1897,7 +1908,7 @@ html, body {
 }
 
 .vault-item-card:hover {
-    border-color: var(--brand-purple);
+    border-color: var(--brand-cyan);
     transform: translateY(-2px);
 }
 
@@ -1911,7 +1922,8 @@ html, body {
     width: 40px;
     height: 40px;
     border-radius: var(--radius-md);
-    background: rgba(139, 92, 246, 0.12);
+    background: rgba(6, 182, 212, 0.12);
+    color: var(--brand-cyan);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1980,8 +1992,8 @@ html, body {
 .reminder-time-badge {
     font-size: 12px;
     font-weight: 700;
-    color: var(--brand-purple);
-    background: rgba(139, 92, 246, 0.12);
+    color: var(--brand-cyan);
+    background: rgba(6, 182, 212, 0.12);
     padding: 3px 8px;
     border-radius: var(--radius-sm);
 }
@@ -2012,7 +2024,7 @@ html, body {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--brand-purple), var(--brand-blue));
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-cyan));
     color: #fff;
     font-weight: 700;
     display: flex;
@@ -2593,8 +2605,8 @@ html, body {
 .receipt-badge {
     font-size: 10px;
     font-weight: 600;
-    color: var(--brand-purple);
-    background: rgba(139, 92, 246, 0.15);
+    color: var(--brand-emerald);
+    background: rgba(16, 185, 129, 0.15);
     padding: 2px 8px;
     border-radius: 12px;
 }
@@ -2653,9 +2665,9 @@ html, body {
 }
 
 .profile-toggle-pill.active {
-    background: var(--brand-purple);
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-cyan));
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
 }
 
 /* 2-Columns Row */
@@ -2875,10 +2887,10 @@ html, body {
 }
 
 .heatmap-day-cell.lvl-3 {
-    background: rgba(139, 92, 246, 0.75);
-    border: 1px solid rgba(139, 92, 246, 0.9);
+    background: rgba(6, 182, 212, 0.75);
+    border: 1px solid rgba(6, 182, 212, 0.9);
     color: #ffffff;
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.45);
 }
 
 /* Conflict Clean State */
@@ -3284,7 +3296,7 @@ html, body {
 .idea-title { font-size: 15px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
 .idea-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; }
 .idea-tags { display: flex; gap: 6px; }
-.idea-tag { font-size: 10.5px; background: rgba(139, 92, 246, 0.15); color: #c4b5fd; padding: 2px 8px; border-radius: 6px; }
+.idea-tag { font-size: 10.5px; background: rgba(6, 182, 212, 0.15); color: #67e8f9; padding: 2px 8px; border-radius: 6px; }
 
 /* Public Booking Modal */
 .booking-preview-container {
@@ -3307,7 +3319,7 @@ html, body {
     font-size: 11px;
     cursor: pointer;
 }
-.duration-pill.active { background: var(--brand-purple); color: #ffffff; }
+.duration-pill.active { background: linear-gradient(135deg, var(--brand-primary), var(--brand-cyan)); color: #ffffff; }
 
 .b-detail-item { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
 
@@ -3362,9 +3374,10 @@ html, body {
 }
 
 .kit-login-card {
-    background: rgba(26, 28, 45, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.15);
+    background: rgba(12, 18, 30, 0.88);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(16, 185, 129, 0.2);
     border-radius: 22px;
     padding: 38px 32px;
     width: 100%;
@@ -3400,20 +3413,20 @@ html, body {
     font-size: 2rem;
     font-weight: 800;
     letter-spacing: -0.04em;
-    background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+    background: linear-gradient(135deg, #ffffff 30%, #22d3ee 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .kit-logo-os {
-    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    background: linear-gradient(135deg, #10b981, #06b6d4);
     color: #fff;
     font-weight: 700;
     font-size: 0.75rem;
     padding: 3px 10px;
     border-radius: 9999px;
     letter-spacing: 0.05em;
-    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
 }
 
 .kit-login-title {
@@ -3454,7 +3467,7 @@ html, body {
 
 .input-icon-wrap .form-control {
     padding-left: 38px;
-    background: rgba(14, 16, 26, 0.85);
+    background: rgba(14, 22, 38, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #fff;
     height: 44px;
@@ -3464,9 +3477,9 @@ html, body {
 }
 
 .input-icon-wrap .form-control:focus {
-    background: rgba(18, 20, 32, 0.95);
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+    background: rgba(17, 27, 46, 0.95);
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25);
     outline: none;
 }
 

@@ -18,7 +18,7 @@ const DEFAULT_STATE = {
         useEmojis: true
     },
     advisors: {
-        arthur: { name: 'Arthur', role: 'Diretor de Operações', avatar: 'images/theo.jpg', color: '#8b5cf6', badge: 'Operações' },
+        arthur: { name: 'Arthur', role: 'Diretor de Operações', avatar: 'images/theo.jpg', color: '#06b6d4', badge: 'Operações' },
         bernardo: { name: 'Bernardo', role: 'Gerente Financeiro', avatar: 'images/martin.jpg', color: '#10b981', badge: 'Finanças' },
         clara: { name: 'Clara', role: 'Secretária Executiva', avatar: 'images/sofi.jpg', color: '#3b82f6', badge: 'Agenda' },
         sara: { name: 'Sara', role: 'Organização & Docs', avatar: 'images/luna.jpg', color: '#f59e0b', badge: 'Docs & Tarefas' },

@@ -525,7 +525,13 @@ Implementar e homologar as 5 melhorias funcionais estratégicas solicitadas pelo
    - `js/modules/reports.js`: Cabeçalhos dos relatórios impressos e exportados atualizados para `KIT OS · RELATÓRIO EXECUTIVO` e `Seu Assessor`.
    - `README.md`: Documentação e títulos de topo rebatizados para `KIT OS · Seu Assessor Executivo no WhatsApp`.
 
+3. **Adoção Integral das Cores do Ícone na Interface (`styles/main.css`, `index.html`, `js/store.js`):**
+   - **Paleta de Base:** Canvas em obsidiana profundo (`--bg-main: #070a12`), superfícies em ardósia noturna (`--bg-surface: #0c121e`, `--bg-card: #111827`, `--bg-card-hover: #162235`).
+   - **Assinatura Visual:** Gradiente executivo esmeralda e ciano (`linear-gradient(135deg, #10b981 0%, #06b6d4 100%)`) nos botões de ação primária, badge de marca, pílulas de filtro de perfil (Todos / CPF / CNPJ) e modais.
+   - **Navegação & Destaques:** Aba ativa da barra lateral com gradiente suave esmeralda/ciano (`linear-gradient(90deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.08))`) e barra indicadora em esmeralda sólida.
+   - **Foco e Brilho:** Bordas de foco em ciano elétrico (`--border-focus: #06b6d4`), glow em 25px e tags de ideia em ciano.
+   - **Total Eliminação de Violeta:** Remoção de 100% dos resquícios de `#8b5cf6` e `rgba(139, 92, 246, ...)`, em conformidade total com o `GEMINI.md: Purple Ban`.
+
 ### 🧪 Testes e Validação
 - **Bateria Completa de Testes:** 35 testes automatizados executados via `npm test` com **100% de sucesso (35 passaram | 0 falharam)**.
-- Integridade de todos os ícones e vetores verificada.
-
+- Integridade de todos os ícones, vetores e design tokens verificada.

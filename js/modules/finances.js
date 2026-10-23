@@ -472,9 +472,9 @@ class FinancesModule {
             .sort((a, b) => b[1] - a[1]);
 
         const colors = [
-            '#10b981', '#06b6d4', '#3b82f6', '#6366f1',
-            '#f59e0b', '#f43f5e', '#ec4899', '#8b5cf6',
-            '#14b8a6', '#64748b'
+            '#10b981', '#06b6d4', '#3b82f6', '#0ea5e9',
+            '#f59e0b', '#f43f5e', '#ec4899', '#14b8a6',
+            '#34d399', '#64748b'
         ];
 
         // Roda o cálculo do Donut SVG
