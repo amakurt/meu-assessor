@@ -584,3 +584,23 @@ Implementar e homologar as 5 melhorias funcionais estratégicas solicitadas pelo
   - **Ideias, Listas e Conexões (`.idea-card`, `.connection-card`, `.overview-split-grid`)**: Espaçamentos enxutos e visual executivo nativo.
 - **Validação de Testes:** 35 testes automatizados aprovados (0 falhas).
 - **Deploy:** Enviado para a VPS Oracle Cloud e reiniciado no PM2.
+
+---
+
+## 📅 Sessão 23/10/2026 - Otimização dos Gestos de Swipe (Navegação por Deslize Lateral Mobile)
+
+### 🎯 Objetivos da Sessão
+1. Resolver o bloqueio de navegação por swipe (arrastar o dedo para esquerda/direita) quando o usuário se encontra na aba **Finanças**.
+2. Garantir que o gesto funcione perfeitamente tanto no corpo da página quanto na barra de navegação inferior (`.mobile-bottom-nav`), permitindo avançar para **Agenda** ou voltar para **WhatsApp / Início**.
+3. Ajustar os limiares de sensibilidade do gesto (`deltaX: 45px`, `deltaTime: 650ms`) e verificar a aba ativa atual diretamente pelo estado ativo da barra inferior (`.mobile-nav-btn.active`).
+
+### 🛠️ Entregas e Módulos Atualizados
+- `js/app.js`:
+  - Aprimorados os listeners de toque `touchstart` e `touchend`, agora vinculados tanto ao container principal quanto ao `.mobile-bottom-nav`.
+  - Tolerância de tempo expandida para 650ms e deslocamento mínimo ajustado para 45px.
+  - Apenas tabelas com overflow horizontal ativo ignoram o gesto, permitindo que qualquer outra área da tela de Finanças (cards, extrato inicial, projeção, gráficos, rodapé) responda prontamente ao swipe.
+  - Resolução dinâmica da aba atual com fallback para o botão ativo na barra inferior.
+- `index.html`:
+  - Cache-busting atualizado para `v=3.2`.
+- **Validação:** 35 testes automatizados aprovados (0 falhas).
+- **Deploy:** Commit, push e reinício no PM2 na VPS.

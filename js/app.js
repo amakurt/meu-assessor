@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================================================
-    // NATIVE MOBILE SWIPE GESTURES (NAVEGAÇÃO POR DESLIZE INTENCIONAL E FIRME)
+    // NATIVE MOBILE SWIPE GESTURES (NAVEGAÇÃO POR DESLIZE FLUIDO ENTRE ABAS)
     // ==========================================================================
     const primaryMobileTabs = ['overview', 'chat', 'financas', 'agenda'];
     let touchStartX = 0;
@@ -186,15 +186,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchStartTime = 0;
     let isSwipeCandidate = false;
 
-    const mainContentEl = document.getElementById('mainContent') || document.body;
-
-    mainContentEl.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1) return;
+    const onTouchStart = (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
         const touch = e.touches[0];
-        
-        // Ignora toques em campos de texto, tabelas ou controles internos
         const target = e.target;
-        if (target.closest('.table-responsive, input, textarea, select, .booking-slots-grid, .segmented-control, .kanban-board')) {
+
+        // Ignora toques em inputs interativos, selects, textareas e sliders
+        if (target.closest('input, textarea, select, .booking-slots-grid, .segmented-control')) {
+            isSwipeCandidate = false;
+            return;
+        }
+
+        // Se o toque iniciou dentro de uma tabela com scroll horizontal ativo, ignora para permitir scroll na tabela
+        const tableResponsive = target.closest('.table-responsive');
+        if (tableResponsive && tableResponsive.scrollWidth > tableResponsive.clientWidth) {
             isSwipeCandidate = false;
             return;
         }
@@ -203,9 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
         touchStartY = touch.clientY;
         touchStartTime = Date.now();
         isSwipeCandidate = true;
-    }, { passive: true });
+    };
 
-    mainContentEl.addEventListener('touchend', (e) => {
+    const onTouchEnd = (e) => {
         if (!isSwipeCandidate || !e.changedTouches || e.changedTouches.length === 0) {
             isSwipeCandidate = false;
             return;
@@ -217,30 +222,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaY = touch.clientY - touchStartY;
         const deltaTime = Date.now() - touchStartTime;
 
-        // Validação rigorosa: gesto deve ser rápido (< 500ms), intencional (> 60px) e estritamente horizontal
-        if (deltaTime > 500) return;
-        if (Math.abs(deltaX) < 60) return;
-        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.6) return;
+        // Gesto natural e confortável: tempo até 650ms, deslocamento horizontal mínimo de 45px e mais horizontal que vertical
+        if (deltaTime > 650) return;
+        if (Math.abs(deltaX) < 45) return;
+        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
 
-        const currentTab = localStorage.getItem('kit_active_tab') || 'overview';
+        // Detecta a aba ativa atual
+        const currentActiveBtn = document.querySelector('.mobile-nav-btn.active');
+        const currentTab = (currentActiveBtn ? currentActiveBtn.getAttribute('data-tab') : null) || localStorage.getItem('kit_active_tab') || 'overview';
         const currentIndex = primaryMobileTabs.indexOf(currentTab);
 
         if (deltaX < 0) {
-            // DESLIZOU FIRME PARA A ESQUERDA ➔ AVANÇA PARA A PRÓXIMA ABA
+            // DESLIZOU PARA A ESQUERDA ➔ AVANÇA PARA A PRÓXIMA ABA
             if (currentIndex >= 0 && currentIndex < primaryMobileTabs.length - 1) {
                 const nextTab = primaryMobileTabs[currentIndex + 1];
                 try { navigator.vibrate?.(12); } catch(err) {}
                 window.switchTab(nextTab, 'left');
             }
         } else {
-            // DESLIZOU FIRME PARA A DIREITA ➔ RETORNA PARA A ABA ANTERIOR
+            // DESLIZOU PARA A DIREITA ➔ RETORNA PARA A ABA ANTERIOR
             if (currentIndex > 0) {
                 const prevTab = primaryMobileTabs[currentIndex - 1];
                 try { navigator.vibrate?.(12); } catch(err) {}
                 window.switchTab(prevTab, 'right');
             }
         }
-    }, { passive: true });
+    };
+
+    // Escuta tanto no container principal quanto na barra inferior de navegação
+    const mainContentEl = document.getElementById('mainContent') || document.body;
+    mainContentEl.addEventListener('touchstart', onTouchStart, { passive: true });
+    mainContentEl.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    const mobileBottomNavEl = document.getElementById('mobileBottomNav');
+    if (mobileBottomNavEl) {
+        mobileBottomNavEl.addEventListener('touchstart', onTouchStart, { passive: true });
+        mobileBottomNavEl.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
 
     // Permite fechar a gaveta lateral deslizando para a esquerda dentro do menu
     let sidebarTouchStartX = 0;
