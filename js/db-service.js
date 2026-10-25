@@ -36,6 +36,7 @@ class DbService {
 
         this.sseClients = new Set();
         this.lastAction = null;
+        this.pushService = null;
 
         this._createTables();
         this._migrateFromLegacyJson();
@@ -204,6 +205,21 @@ class DbService {
                 scope TEXT,
                 updatedAt INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS push_subscriptions (
+                id TEXT PRIMARY KEY,
+                endpoint TEXT UNIQUE NOT NULL,
+                p256dh TEXT NOT NULL,
+                auth TEXT NOT NULL,
+                userAgent TEXT,
+                createdAt INTEGER NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS system_config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                updatedAt INTEGER NOT NULL
+            );
         `);
 
         // Assegura colunas buyer e account na tabela transactions caso ela já existisse
@@ -348,6 +364,19 @@ class DbService {
         this.stmtInsertNotification = this.sqlite.prepare(`
             INSERT INTO notifications (id, title, message, type, read, priority, linkTab, createdAt)
             VALUES (@id, @title, @message, @type, @read, @priority, @linkTab, @createdAt)
+        `);
+
+        // Statements para Web Push e Configurações do Sistema
+        this.stmtInsertPushSub = this.sqlite.prepare(`
+            INSERT OR REPLACE INTO push_subscriptions (id, endpoint, p256dh, auth, userAgent, createdAt)
+            VALUES (@id, @endpoint, @p256dh, @auth, @userAgent, @createdAt)
+        `);
+        this.stmtDeletePushSub = this.sqlite.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?');
+        this.stmtGetAllPushSubs = this.sqlite.prepare('SELECT * FROM push_subscriptions ORDER BY createdAt DESC');
+        this.stmtGetSystemConfig = this.sqlite.prepare('SELECT value FROM system_config WHERE key = ?');
+        this.stmtSetSystemConfig = this.sqlite.prepare(`
+            INSERT OR REPLACE INTO system_config (key, value, updatedAt)
+            VALUES (?, ?, ?)
         `);
     }
 
@@ -1536,6 +1565,20 @@ class DbService {
             item,
             fullDb: this.getAll()
         });
+
+        // Disparo automático de Notificação Push nativa no celular (iOS/Android)
+        if (this.pushService && typeof this.pushService.sendPushToAll === 'function') {
+            this.pushService.sendPushToAll({
+                title: item.title,
+                body: item.message,
+                tag: item.id,
+                data: {
+                    url: item.linkTab ? `/#${item.linkTab}` : '/',
+                    tab: item.linkTab
+                }
+            }).catch(e => console.warn('[Push] Falha no push automático:', e.message));
+        }
+
         return item;
     }
 
@@ -1566,6 +1609,50 @@ class DbService {
             fullDb: this.getAll()
         });
         return true;
+    }
+
+    // ==========================================
+    // WEB PUSH SUBSCRIPTIONS & SYSTEM CONFIG
+    // ==========================================
+
+    setPushService(service) {
+        this.pushService = service;
+    }
+
+    getSystemConfig(key) {
+        const row = this.stmtGetSystemConfig.get(key);
+        return row ? row.value : null;
+    }
+
+    setSystemConfig(key, value) {
+        this.stmtSetSystemConfig.run(key, String(value), Date.now());
+    }
+
+    savePushSubscription(subscription, userAgent = '') {
+        if (!subscription || !subscription.endpoint || !subscription.keys) return null;
+        const id = `push-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const record = {
+            id,
+            endpoint: subscription.endpoint,
+            p256dh: subscription.keys.p256dh,
+            auth: subscription.keys.auth,
+            userAgent: userAgent || '',
+            createdAt: Date.now()
+        };
+        this.stmtInsertPushSub.run(record);
+        console.log(`[SQLite] 📲 Nova Push Subscription registrada: ${subscription.endpoint.substring(0, 35)}...`);
+        return record;
+    }
+
+    removePushSubscription(endpoint) {
+        if (!endpoint) return false;
+        this.stmtDeletePushSub.run(endpoint);
+        console.log(`[SQLite] 🗑️ Push Subscription removida: ${endpoint.substring(0, 35)}...`);
+        return true;
+    }
+
+    getAllPushSubscriptions() {
+        return this.stmtGetAllPushSubs.all();
     }
 
     /**

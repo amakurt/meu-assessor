@@ -16,6 +16,7 @@ const dbService = require('./js/db-service');
 const pluggyService = require('./js/pluggy-service');
 const googleCalendarService = require('./js/google-calendar-service');
 const cronService = require('./js/cron-service');
+const pushService = require('./js/push-service');
 const crypto = require('crypto');
 
 const app = express();
@@ -516,6 +517,43 @@ app.post('/api/notifications/whatsapp-alert', async (req, res) => {
         res.json({ success: true, sentWhatsApp: false, reason: 'WhatsApp offline no momento' });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// 17. REST API: Web Push Notifications (W3C Push API para iOS/Android)
+app.get('/api/push/status', (req, res) => {
+    res.json(pushService.getStatus());
+});
+
+app.get('/api/push/public-key', (req, res) => {
+    res.json({ success: true, publicKey: pushService.getPublicKey() });
+});
+
+app.post('/api/push/subscribe', (req, res) => {
+    const { subscription } = req.body;
+    const userAgent = req.headers['user-agent'] || '';
+    if (!subscription || !subscription.endpoint || !subscription.keys) {
+        return res.status(400).json({ success: false, error: 'Objeto de inscrição inválido.' });
+    }
+    const saved = pushService.saveSubscription(subscription, userAgent);
+    res.json({ success: true, subscription: saved });
+});
+
+app.post('/api/push/unsubscribe', (req, res) => {
+    const { endpoint } = req.body;
+    if (!endpoint) {
+        return res.status(400).json({ success: false, error: 'Endpoint obrigatório.' });
+    }
+    const removed = pushService.removeSubscription(endpoint);
+    res.json({ success: true, removed });
+});
+
+app.post('/api/push/test', async (req, res) => {
+    try {
+        const result = await pushService.sendTestNotification();
+        res.json({ success: true, result });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

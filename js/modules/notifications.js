@@ -8,6 +8,7 @@ class NotificationsModule {
     constructor(store) {
         this.store = store;
         this.isOpen = false;
+        this.isPushSubscribed = false;
 
         this.elements = {
             btnNotifications: document.getElementById('btnNotifications'),
@@ -16,7 +17,18 @@ class NotificationsModule {
             notifSubCount: document.getElementById('notifSubCount'),
             notifListContainer: document.getElementById('notifListContainer'),
             btnMarkAllNotifsRead: document.getElementById('btnMarkAllNotifsRead'),
-            btnSendTestWaAlert: document.getElementById('btnSendTestWaAlert')
+            btnSendTestWaAlert: document.getElementById('btnSendTestWaAlert'),
+            // Elementos de Web Push Nativo
+            notifPushControl: document.getElementById('notifPushControl'),
+            btnTogglePush: document.getElementById('btnTogglePush'),
+            btnTogglePushIcon: document.getElementById('btnTogglePushIcon'),
+            btnTogglePushText: document.getElementById('btnTogglePushText'),
+            btnTestPush: document.getElementById('btnTestPush'),
+            pushStatusSub: document.getElementById('pushStatusSub'),
+            pushBadgeStatus: document.getElementById('pushBadgeStatus'),
+            pillPushStatus: document.getElementById('pillPushStatus'),
+            dotPushStatus: document.getElementById('dotPushStatus'),
+            textPushStatus: document.getElementById('textPushStatus')
         };
 
         this.audioCtx = null;
@@ -31,6 +43,14 @@ class NotificationsModule {
             e.stopPropagation();
             this.toggleDropdown();
         });
+
+        // Pill na Visão Geral abre o painel de notificações
+        if (this.elements.pillPushStatus) {
+            this.elements.pillPushStatus.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openDropdown();
+            });
+        }
 
         // Fechar ao clicar fora
         document.addEventListener('click', (e) => {
@@ -81,11 +101,218 @@ class NotificationsModule {
             });
         }
 
+        // Inicialização do Web Push Mobile
+        this.initPushNotifications();
+
         // Escuta atualizações do store
         this.store.subscribe(() => this.render());
 
         // Render inicial
         this.render();
+    }
+
+    // ==========================================
+    // INTEGRAÇÃO NATIVA WEB PUSH (W3C PUSH API)
+    // ==========================================
+
+    _urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    async initPushNotifications() {
+        if (!this.elements.btnTogglePush) return;
+
+        const isPushSupported = ('serviceWorker' in navigator) && ('PushManager' in window);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (!isPushSupported) {
+            if (isIOS && !isStandalone) {
+                if (this.elements.pushStatusSub) {
+                    this.elements.pushStatusSub.textContent = 'Adicione o PWA à Tela de Início para ativar Push no iPhone';
+                }
+                if (this.elements.btnTogglePushText) {
+                    this.elements.btnTogglePushText.textContent = 'Requer PWA no iOS';
+                }
+                this.elements.btnTogglePush.disabled = true;
+            } else {
+                if (this.elements.pushStatusSub) {
+                    this.elements.pushStatusSub.textContent = 'Push não suportado neste navegador';
+                }
+                this.elements.btnTogglePush.disabled = true;
+            }
+            this.updatePushUI(false);
+            return;
+        }
+
+        // Checa inscrição ativa
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+            this.isPushSubscribed = !!sub;
+            this.updatePushUI(this.isPushSubscribed);
+        } catch (e) {
+            console.warn('[Push] Não foi possível verificar inscrição:', e);
+            this.updatePushUI(false);
+        }
+
+        // Listener do botão de ativar/desativar
+        this.elements.btnTogglePush.addEventListener('click', async () => {
+            await this.togglePushSubscription();
+        });
+
+        // Listener do botão de teste de disparo
+        if (this.elements.btnTestPush) {
+            this.elements.btnTestPush.addEventListener('click', async () => {
+                await this.sendTestPushNotification();
+            });
+        }
+    }
+
+    async togglePushSubscription() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            window.showToast?.('Seu navegador não suporta notificações Push.');
+            return;
+        }
+
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const existingSub = await reg.pushManager.getSubscription();
+
+            if (existingSub) {
+                // Desativar Push
+                this.elements.btnTogglePush.disabled = true;
+                if (this.elements.btnTogglePushText) this.elements.btnTogglePushText.textContent = 'Desativando...';
+
+                await existingSub.unsubscribe();
+                await fetch('/api/push/unsubscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: existingSub.endpoint })
+                });
+
+                this.isPushSubscribed = false;
+                this.elements.btnTogglePush.disabled = false;
+                this.updatePushUI(false);
+                window.showToast?.('Notificações Push desativadas no aparelho.');
+                return;
+            }
+
+            // Ativar Push
+            if (Notification.permission === 'denied') {
+                window.showToast?.('Permissão de notificações bloqueada. Habilite nas configurações do navegador.');
+                return;
+            }
+
+            this.elements.btnTogglePush.disabled = true;
+            if (this.elements.btnTogglePushText) this.elements.btnTogglePushText.textContent = 'Solicitando...';
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                this.elements.btnTogglePush.disabled = false;
+                this.updatePushUI(false);
+                window.showToast?.('Permissão de notificações não concedida.');
+                return;
+            }
+
+            // Busca chave pública VAPID do servidor
+            const keyRes = await fetch('/api/push/public-key');
+            const keyData = await keyRes.json();
+            if (!keyData.success || !keyData.publicKey) {
+                throw new Error('Chave pública VAPID indisponível');
+            }
+
+            const applicationServerKey = this._urlBase64ToUint8Array(keyData.publicKey);
+            const newSub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey
+            });
+
+            // Envia subscription para o backend persistir no SQLite
+            await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscription: newSub.toJSON() })
+            });
+
+            this.isPushSubscribed = true;
+            this.elements.btnTogglePush.disabled = false;
+            this.updatePushUI(true);
+            window.showToast?.('📲 Notificações Push nativas ativadas com sucesso!');
+        } catch (err) {
+            console.error('[Push] Falha ao alternar push:', err);
+            this.elements.btnTogglePush.disabled = false;
+            window.showToast?.('Falha ao configurar notificações push: ' + err.message);
+        }
+    }
+
+    async sendTestPushNotification() {
+        try {
+            if (this.elements.btnTestPush) this.elements.btnTestPush.disabled = true;
+            const res = await fetch('/api/push/test', { method: 'POST' });
+            const data = await res.json();
+            if (this.elements.btnTestPush) this.elements.btnTestPush.disabled = false;
+
+            if (data.success && data.result && data.result.sent > 0) {
+                window.showToast?.('⚡ Notificação enviada! Verifique sua tela de bloqueio.');
+            } else {
+                window.showToast?.('Aviso: Nenhum aparelho registrado para envio imediato.');
+            }
+        } catch (e) {
+            if (this.elements.btnTestPush) this.elements.btnTestPush.disabled = false;
+            window.showToast?.('Erro de rede ao disparar teste de push.');
+        }
+    }
+
+    updatePushUI(isActive) {
+        if (this.elements.btnTogglePushText) {
+            this.elements.btnTogglePushText.textContent = isActive ? 'Ativo (Desativar)' : 'Ativar Push';
+        }
+        if (this.elements.btnTogglePushIcon) {
+            this.elements.btnTogglePushIcon.textContent = isActive ? '✓' : '⚡';
+        }
+        if (this.elements.btnTogglePush) {
+            this.elements.btnTogglePush.className = isActive 
+                ? 'btn btn-xs btn-outline notif-push-btn' 
+                : 'btn btn-xs btn-primary notif-push-btn';
+        }
+        if (this.elements.btnTestPush) {
+            this.elements.btnTestPush.style.display = isActive ? 'inline-flex' : 'none';
+        }
+        if (this.elements.notifPushControl) {
+            if (isActive) {
+                this.elements.notifPushControl.classList.add('active');
+            } else {
+                this.elements.notifPushControl.classList.remove('active');
+            }
+        }
+        if (this.elements.pushStatusSub) {
+            this.elements.pushStatusSub.textContent = isActive 
+                ? 'Conectado · Alertas na tela de bloqueio ativos' 
+                : 'Avisos na tela de bloqueio (iOS & Android)';
+        }
+        if (this.elements.pushBadgeStatus) {
+            this.elements.pushBadgeStatus.textContent = isActive ? 'ATIVO' : 'PWA';
+            this.elements.pushBadgeStatus.style.background = isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)';
+            this.elements.pushBadgeStatus.style.color = isActive ? '#10b981' : 'var(--text-muted)';
+            this.elements.pushBadgeStatus.style.borderColor = isActive ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.12)';
+        }
+        if (this.elements.dotPushStatus) {
+            this.elements.dotPushStatus.style.background = isActive ? '#10b981' : '#64748b';
+            this.elements.dotPushStatus.style.boxShadow = isActive ? '0 0 8px rgba(16, 185, 129, 0.6)' : 'none';
+        }
+        if (this.elements.textPushStatus) {
+            this.elements.textPushStatus.textContent = isActive ? 'Push Mobile Ativo 📲' : 'Push Mobile';
+        }
     }
 
     toggleDropdown() {

@@ -221,6 +221,19 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Corrigiu no banco de produção da Oracle e no Google Calendar o evento gravado para `2026-10-25`.
   - Expandiu a bateria de testes automatizados para 37 testes com 100% de aprovação.
 
+### 🔹 Conversa 19: Notificações Push Nativas no Celular (W3C Push API / VAPID / PWA Standalone)
+- **Data:** 25/10/2026
+- **Usuário:** *"o que podemos melhorar agora?"* (Opção selecionada: Notificações Push Nativas no Celular para contas a vencer, agenda e orçamentos)
+- **Assistente:**
+  - Implementou a arquitetura completa de W3C Web Push API sem custos (R$ 0,00) com chaves VAPID geradas automaticamente e salvas no SQLite (`system_config`).
+  - Desenvolveu o serviço `js/push-service.js` para envio de notificações nativas com auto-limpeza em erros 410/404 e método de teste instantâneo.
+  - Atualizou o `js/db-service.js` com tabelas `push_subscriptions` e `system_config`, e acoplamento proativo de disparo automático de push sempre que uma nova notificação ou alerta financeiro for criado via `addNotification()`.
+  - Criou endpoints REST em `server.js` (`/api/push/status`, `/api/push/public-key`, `/api/push/subscribe`, `/api/push/unsubscribe`, `/api/push/test`).
+  - Adicionou listeners de `push` e `notificationclick` no Service Worker (`sw.js`) com vibração tátil e redirecionamento de aba correspondente.
+  - Desenvolveu interface executiva com card de controle no dropdown de notificações (`#notifPushControl`, `#btnTogglePush`, `#btnTestPush`) e pill de status em tempo real na Visão Geral Executiva (`#pillPushStatus`).
+  - Adicionou 3 novos testes automatizados em `tests/test-conversational-flows.js`, atingindo 40 testes com 100% de aprovação.
+  - Realizou deploy na VM da Oracle Cloud com reinício no PM2.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras

@@ -649,3 +649,43 @@ O usuário relatou: *"tentei agendar uma reunião pelo whastsaap ele agendou mai
 6. **Suíte de Testes Expandida (`tests/test-conversational-flows.js`):**
    - Adicionados testes automatizados 7 e 8 cobrindo normalização de datas, auto-healing de ano e agendamento via fallback.
    - **Resultado:** 37 PASSARAM | 0 FALHARAM (100% de sucesso).
+
+---
+
+## 📅 Sessão 25/10/2026 - Notificações Push Nativas no Celular (W3C Push API / VAPID / PWA Standalone)
+
+### 🎯 Objetivos da Sessão
+O usuário perguntou: *"o que podemos melhorar agora?"* e selecionou a funcionalidade de maior impacto e valor prático:
+**"Notificações Push Nativas no Celular (avisos na tela de bloqueio do iOS/Android para contas a vencer, agenda e orçamentos)"**.
+
+### 🛠️ Arquitetura e Implementações Realizadas (Custo Zero / R$ 0,00)
+1. **Motor de Web Push com Criptografia VAPID (`js/push-service.js`):**
+   - Integração com a biblioteca padrão W3C `web-push`.
+   - Geração e persistência automática de chaves criptográficas VAPID no SQLite (`system_config`), com fallback para `.env` (zero configuração manual exigida).
+   - Rotina resiliente de envio assíncrono para todos os dispositivos inscritos com auto-limpeza imediata de inscrições revogadas ou expiradas (erros HTTP 410 Gone / 404 Not Found).
+   - Método `sendTestNotification()` para validação em 1 clique na tela de bloqueio.
+2. **Persistência Transacional no SQLite (`js/db-service.js`):**
+   - Criação da tabela `push_subscriptions` (`id`, `endpoint`, `p256dh`, `auth`, `userAgent`, `createdAt`) com constraints únicas e índices.
+   - Criação da tabela `system_config` para chaves e parâmetros de sistema.
+   - Acoplamento automático do `pushService` ao método `addNotification()`: qualquer notificação gerada (boletos a vencer, estorno, estouro de orçamento ou liquidação) dispara automaticamente um push nativo para a tela de bloqueio dos celulares cadastrados.
+3. **Endpoints REST no Servidor (`server.js`):**
+   - `GET /api/push/status`: Status e contagem de aparelhos conectados.
+   - `GET /api/push/public-key`: Chave pública VAPID para os clientes PWA.
+   - `POST /api/push/subscribe`: Registro de nova push subscription pelo Service Worker.
+   - `POST /api/push/unsubscribe`: Cancelamento limpo de subscription.
+   - `POST /api/push/test`: Disparo de teste imediato.
+4. **Service Worker com Listeners Push & Click (`sw.js`):**
+   - Listeners `push` e `notificationclick` com cache atualizado para `kit-os-cache-v1.3`.
+   - Vibração tátil (`vibrate: [100, 50, 100]`), ícones executivos e navegação inteligente (foca ou abre a aba/módulo correspondente ao tocar na notificação da tela de bloqueio).
+5. **Interface Executiva no Painel Web (`index.html`, `styles/main.css`, `js/modules/notifications.js`):**
+   - Card nativo de controle no dropdown de notificações (`#notifPushControl`, `#btnTogglePush`, `#btnTestPush`, `#pushStatusSub`, `#pushBadgeStatus`).
+   - Status pill dinâmico na Visão Geral Executiva (`#pillPushStatus`) com pulso verde em tempo real quando ativo.
+   - Conversão de chave pública via `urlBase64ToUint8Array`, solicitação de permissão nativa (`Notification.requestPermission`) e tratamento especial para iOS (instruindo instalação via PWA na Tela de Início no Safari 16.4+).
+   - Estilização glassmorphism dark mode com obsidiana, esmeralda e ciano elétrico (respeitando rigorosamente o banimento de roxo).
+6. **Bateria de Testes Automatizados (`tests/test-conversational-flows.js`):**
+   - 3 novos testes adicionados cobrindo:
+     1. Geração de chaves VAPID e status do PushService.
+     2. Persistência, listagem e remoção de subscriptions no SQLite.
+     3. Disparo automático de push via `dbService.addNotification()`.
+   - **Resultado:** 40 PASSARAM | 0 FALHARAM (100% de sucesso).
+

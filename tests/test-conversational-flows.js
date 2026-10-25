@@ -581,6 +581,66 @@ async function runTests() {
         assert(reply.includes('<!--KIT_ACTION:{"type":"event"'), 'Deve emitir ação do tipo event');
     });
 
+    console.log('\n--- 7. TESTES DE NOTIFICAÇÕES PUSH MOBILE (W3C PUSH API) ---');
+
+    test('1. PushService: Inicialização, VAPID Keys e status', () => {
+        const pushService = require('../js/push-service');
+        pushService.init();
+        const status = pushService.getStatus();
+        assert(status.hasKeys, 'Deve possuir chaves VAPID');
+        assert(typeof status.publicKey === 'string' && status.publicKey.length > 20, 'Chave pública VAPID deve ser válida');
+        assert.strictEqual(typeof status.subscriptionsCount, 'number', 'Deve retornar contagem de inscrições');
+    });
+
+    test('2. SQLite & DbService: Persistência e remoção de Push Subscription', () => {
+        const mockSub = {
+            endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint-' + Date.now(),
+            keys: {
+                p256dh: 'BNcRdreALRFXTkOOUHK18WK25ypqU2TtxSulSNWhCGtfKDyPvILAbZL',
+                auth: 'tBHItJI5svbpqpuD'
+            }
+        };
+
+        const saved = testDb.savePushSubscription(mockSub, 'iPhone / Safari 17.2 PWA');
+        assert(saved && saved.id, 'Deve retornar registro com ID criado');
+        assert.strictEqual(saved.endpoint, mockSub.endpoint, 'Endpoint deve corresponder');
+
+        const allSubs = testDb.getAllPushSubscriptions();
+        const found = allSubs.find(s => s.endpoint === mockSub.endpoint);
+        assert(found, 'Subscription deve ser encontrada no SQLite');
+        assert.strictEqual(found.userAgent, 'iPhone / Safari 17.2 PWA', 'UserAgent deve ser persistido');
+
+        // Remoção
+        const removed = testDb.removePushSubscription(mockSub.endpoint);
+        assert.strictEqual(removed, true, 'Deve remover com sucesso');
+        const afterSubs = testDb.getAllPushSubscriptions();
+        assert(!afterSubs.some(s => s.endpoint === mockSub.endpoint), 'Não deve mais existir no banco');
+    });
+
+    test('3. Integração Automática: addNotification dispara push para o PushService', async () => {
+        let pushPayloadReceived = null;
+        const mockPushService = {
+            sendPushToAll: async (payload) => {
+                pushPayloadReceived = payload;
+                return { sent: 1, failed: 0, cleaned: 0 };
+            }
+        };
+
+        testDb.setPushService(mockPushService);
+
+        const notif = testDb.addNotification({
+            title: '⚡ Boleto a Vencer Hoje',
+            message: 'Aluguel do Escritório vence hoje (R$ 2.500)',
+            type: 'financeiro',
+            linkTab: 'financas'
+        });
+
+        assert(notif && notif.id, 'Notificação deve ser salva');
+        assert(pushPayloadReceived, 'pushService.sendPushToAll deve ter sido acionado');
+        assert.strictEqual(pushPayloadReceived.title, '⚡ Boleto a Vencer Hoje');
+        assert.strictEqual(pushPayloadReceived.data.tab, 'financas');
+    });
+
     // Limpeza final do banco de teste
     try {
         testDb.sqlite.close();

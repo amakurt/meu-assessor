@@ -4491,6 +4491,105 @@ html, body {
     background: rgba(255, 255, 255, 0.03);
 }
 
+/* ==========================================================================
+   BANNER DE CONTROLE DE NOTIFICAÇÕES PUSH MOBILE (W3C PUSH API)
+   ========================================================================== */
+.notif-push-banner {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.notif-push-banner.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(6, 182, 212, 0.06) 100%);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.notif-push-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notif-push-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notif-push-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notif-push-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.notif-push-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.notif-push-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted, #94a3b8);
+    margin-top: 2px;
+}
+
+.notif-push-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.notif-push-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.notif-push-btn {
+    flex: 1;
+    min-height: 34px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.notif-push-test-btn {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 0.74rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 8px;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+}
+
+.notif-push-test-btn:hover {
+    color: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .notif-dropdown-body {
     max-height: 380px;
     overflow-y: auto;

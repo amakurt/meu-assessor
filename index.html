@@ -279,6 +279,31 @@
                                 </button>
                             </div>
 
+                            <!-- Controle Nativo de Notificações Push Mobile (W3C Push API) -->
+                            <div class="notif-push-banner" id="notifPushControl">
+                                <div class="notif-push-content">
+                                    <div class="notif-push-header">
+                                        <div class="notif-push-title-wrap">
+                                            <span class="notif-push-icon" id="notifPushIcon">📲</span>
+                                            <div>
+                                                <div class="notif-push-title">Notificações no Celular</div>
+                                                <div class="notif-push-sub" id="pushStatusSub">Avisos na tela de bloqueio (iOS & Android)</div>
+                                            </div>
+                                        </div>
+                                        <span class="notif-push-badge" id="pushBadgeStatus">PWA</span>
+                                    </div>
+                                    <div class="notif-push-actions">
+                                        <button class="btn btn-xs btn-primary notif-push-btn" id="btnTogglePush" title="Ativar ou desativar notificações push no aparelho">
+                                            <span id="btnTogglePushIcon">⚡</span>
+                                            <span id="btnTogglePushText">Ativar Push</span>
+                                        </button>
+                                        <button class="btn btn-xs btn-outline notif-push-test-btn" id="btnTestPush" title="Enviar teste imediato para a tela de bloqueio" style="display: none;">
+                                            <span>🔔 Testar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="notif-dropdown-body" id="notifListContainer">
                                 <!-- Preenchido dinamicamente via JS -->
                             </div>
@@ -312,6 +337,10 @@
                         <span class="status-pill-exec" title="WhatsApp Conectado">
                             <span class="status-dot"></span>
                             <span>WhatsApp Ativo</span>
+                        </span>
+                        <span class="status-pill-exec" id="pillPushStatus" title="Status das Notificações Push na Tela de Bloqueio" style="cursor: pointer;">
+                            <span class="status-dot" id="dotPushStatus"></span>
+                            <span id="textPushStatus">Push Mobile</span>
                         </span>
                         <span class="status-pill-exec" title="Groq Whisper LPU (~300ms)">
                             <span class="status-dot"></span>
