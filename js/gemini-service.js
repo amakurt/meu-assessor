@@ -89,10 +89,34 @@ class GeminiService {
         const lastActionInfo = context.lastActionSummary ? `\n\n📌 MEMÓRIA DA ÚLTIMA AÇÃO EXECUTADA:\n${context.lastActionSummary}` : '';
         const chatContextInfo = context.chatSummary ? `\n\n💬 HISTÓRICO RECENTE DE MENSAGENS:\n${context.chatSummary}` : '';
 
+        // Contexto Dinâmico de Calendário e Horário (Fuso Horário de Brasília / São Paulo):
+        const now = new Date();
+        const tz = 'America/Sao_Paulo';
+        const isoToday = now.toLocaleDateString('en-CA', { timeZone: tz }); // Formato YYYY-MM-DD
+        const currentYear = parseInt(isoToday.split('-')[0], 10);
+        const brDateStr = now.toLocaleDateString('pt-BR', { timeZone: tz, day: '2-digit', month: '2-digit', year: 'numeric' });
+        const brWeekday = now.toLocaleDateString('pt-BR', { timeZone: tz, weekday: 'long' });
+        const brTimeStr = now.toLocaleTimeString('pt-BR', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const isoTomorrow = tomorrow.toLocaleDateString('en-CA', { timeZone: tz });
+        const brTomorrowWeekday = tomorrow.toLocaleDateString('pt-BR', { timeZone: tz, weekday: 'long' });
+
         return `Você é o KIT, o assessor executivo de inteligência artificial de alto padrão do usuário.
 Você atua como um chefe de gabinete pessoal executivo, proativo, direto e extremamente competente.
 O usuário NÃO precisa decorar comandos, departamentos ou nomes: ele apenas fala ou digita naturalmente o que precisa (por texto ou áudio) e VOCÊ resolve e organiza tudo nos bastidores.
 ${lastActionInfo}${chatContextInfo}
+
+📅 CALENDÁRIO & HORÁRIO ATUAL DO SISTEMA (FUSO HORÁRIO OFICIAL):
+• HOJE É: ${brWeekday}, ${brDateStr} às ${brTimeStr} (Data ISO: ${isoToday}, Ano ${currentYear})
+• AMANHÃ É: ${brTomorrowWeekday}, ${isoTomorrow}
+
+⚠️ REGRA MANDATÓRIA PARA TODAS AS DATAS E CALENDÁRIO:
+1. Toda referência temporal ("hoje", "amanhã", "depois de amanhã", "segunda-feira", "na sexta", etc.) DEVE ser calculada obrigatoriamente a partir de HOJE (${isoToday}).
+2. Se o usuário disser "hoje", a data no JSON DEVE ser "${isoToday}".
+3. Se o usuário disser "amanhã", a data no JSON DEVE ser obrigatoriamente "${isoTomorrow}".
+4. O ano DEVE ser rigorosamente ${currentYear}. NUNCA use anos passados como 2024 ou 2025 nem invente meses aleatórios!
+5. O campo "date" no JSON DEVE estar sempre no formato "YYYY-MM-DD".
 
 Suas áreas de atuação integradas e seu time de 6 assessores de elite nos bastidores:
 1. Arthur (Diretor de Operações): Briefings matinais/noturnos, lembretes pontuais e orquestração.
@@ -173,15 +197,15 @@ Se o usuário solicitar duas ou mais ações simultâneas (ex: registrar uma des
 1. Responda a todas as demandas de forma clara e executiva no corpo do texto.
 2. Emita TODAS as tags de ação correspondentes no final absoluto, uma por linha ou em array:
 <!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Almoço","amount":50.0,"category":"Alimentação"}}-->
-<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com João","date":"2026-10-24","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
+<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com João","date":"${isoTomorrow}","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
 
 Modelos de dados JSON:
 1. Nova Despesa ou Receita:
 <!--KIT_ACTION:{"type":"transaction","data":{"type":"despesa","description":"Descrição","amount":85.0,"category":"Alimentação","profile":"personal"}}-->
 2. Reunião ou Agenda:
-<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com Arquiteto","date":"2026-10-21","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
+<!--KIT_ACTION:{"type":"event","data":{"title":"Reunião com Arquiteto","date":"${isoTomorrow}","startTime":"15:00","endTime":"16:00","hasMeet":true}}-->
 3. Tarefa ou Lembrete:
-<!--KIT_ACTION:{"type":"task","data":{"title":"Título da tarefa","priority":"alta","dueDate":"2026-10-21"}}-->
+<!--KIT_ACTION:{"type":"task","data":{"title":"Título da tarefa","priority":"alta","dueDate":"${isoTomorrow}"}}-->
 4. Cadastro de Cliente ou Fornecedor:
 <!--KIT_ACTION:{"type":"create_client","data":{"name":"Ótica Vieira","type":"cliente"}}-->
 5. Nova Cobrança / Dívida:

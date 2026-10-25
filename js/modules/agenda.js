@@ -6,7 +6,7 @@
 class AgendaModule {
     constructor(store) {
         this.store = store;
-        this.currentDate = new Date(2026, 9, 19); // October 2026
+        this.currentDate = new Date();
 
         this.elements = {
             calMonthDisplay: document.getElementById('calMonthDisplay'),
@@ -68,7 +68,7 @@ class AgendaModule {
 
         if (this.elements.calTodayBtn) {
             this.elements.calTodayBtn.addEventListener('click', () => {
-                this.currentDate = new Date(2026, 9, 19);
+                this.currentDate = new Date();
                 this.render();
             });
         }
@@ -78,7 +78,7 @@ class AgendaModule {
             this.elements.btnNewEvent.addEventListener('click', () => {
                 this.elements.modalEvent.showModal();
                 const dateInput = document.getElementById('eventDate');
-                if (dateInput) dateInput.value = '2026-10-19';
+                if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
             });
         }
 
@@ -179,10 +179,7 @@ class AgendaModule {
             const monthStr = (month + 1).toString().padStart(2, '0');
             const dateIso = `${year}-${monthStr}-${dayStr}`;
 
-            const isToday = (
-                (d === now.getDate() && month === now.getMonth() && year === now.getFullYear()) ||
-                (d === 19 && month === 9 && year === 2026)
-            );
+            const isToday = (d === now.getDate() && month === now.getMonth() && year === now.getFullYear());
             cell.className = `calendar-day-cell ${isToday ? 'is-today' : ''}`;
             cell.setAttribute('data-date', dateIso);
 

@@ -765,7 +765,7 @@ class DbService {
 
                 if (target) {
                     const newTitle = updData.title || target.title;
-                    const newDate = updData.date || target.date;
+                    const newDate = updData.date ? this._normalizeDate(updData.date, target.date) : target.date;
                     const newStartTime = updData.startTime || target.startTime;
                     const newEndTime = updData.endTime || (updData.startTime ? this._calcEndTime(updData.startTime) : target.endTime);
                     const newLocation = updData.location || target.location;
@@ -862,7 +862,7 @@ class DbService {
                 applied = {
                     id: evData.id || `ev-${Date.now()}`,
                     title: evData.title || 'Compromisso KIT',
-                    date: evData.date || dateStr,
+                    date: this._normalizeDate(evData.date, dateStr),
                     startTime: evData.startTime || '10:00',
                     endTime: evData.endTime || (evData.startTime ? this._calcEndTime(evData.startTime) : '11:00'),
                     location: evData.location || (evData.hasMeet ? 'Google Meet' : 'Presencial'),
@@ -1032,6 +1032,37 @@ class DbService {
         const m = parts[1] || '00';
         const endH = (h + 1) % 24;
         return `${String(endH).padStart(2, '0')}:${m}`;
+    }
+
+    _normalizeDate(rawDate, fallbackDate) {
+        let d = rawDate || fallbackDate;
+        if (!d) return new Date().toISOString().split('T')[0];
+        if (typeof d === 'string') {
+            d = d.trim();
+            const lower = d.toLowerCase();
+            if (lower === 'amanhã' || lower === 'amanha') {
+                const tom = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                return tom.toISOString().split('T')[0];
+            }
+            if (lower === 'hoje') {
+                return new Date().toISOString().split('T')[0];
+            }
+            if (d.includes('/')) {
+                const parts = d.split('/');
+                if (parts.length === 3) {
+                    d = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+            const currentYear = new Date().getFullYear();
+            if (d.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const evYear = parseInt(d.substring(0, 4), 10);
+                if (evYear < currentYear) {
+                    console.warn(`[SQLite] ⚠️ Ajustando ano do passado (${evYear}) para o ano atual (${currentYear})`);
+                    d = `${currentYear}${d.substring(4)}`;
+                }
+            }
+        }
+        return d;
     }
 
     getLastAction() {

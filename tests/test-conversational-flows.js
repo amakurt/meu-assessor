@@ -555,6 +555,32 @@ async function runTests() {
         assert(reply.includes('settle_debt'), 'Deve conter ação settle_debt');
     });
 
+    test('7. Auto-Healing de Datas: _normalizeDate corrige anos passados, termos relativos e formato brasileiro', () => {
+        const currentYear = new Date().getFullYear();
+        // Ano no passado deve ser trazido para o ano atual
+        const fixedPastYear = testDb._normalizeDate('2025-10-25');
+        assert.strictEqual(fixedPastYear, `${currentYear}-10-25`, 'Ano de 2025 deve ser corrigido para o ano atual');
+
+        // Formato com barra (DD/MM/YYYY)
+        const fixedSlash = testDb._normalizeDate('25/10/2026');
+        assert.strictEqual(fixedSlash, '2026-10-25', 'Formato DD/MM/YYYY deve virar YYYY-MM-DD');
+
+        // Termo relativo 'amanhã'
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const fixedTomorrow = testDb._normalizeDate('amanhã');
+        assert.strictEqual(fixedTomorrow, tomorrow, 'Amanhã deve calcular a data de amanhã corretamente');
+    });
+
+    test('8. Fallback Router: Agendamento com Clara extrai data amanhã, horário 16h e título limpo', () => {
+        const reply = whatsappService.fallbackRouter('Agenda uma reunião para mim amanhã às 16 horas com a cliente Sara.');
+        assert(reply.includes('Clara'), 'Clara deve ser a assessora responsável');
+        assert(reply.includes('16:00'), 'Deve conter horário inicial 16:00');
+        assert(reply.includes('17:00'), 'Deve conter horário final 17:00');
+        assert(reply.includes('Reunião com a cliente Sara'), 'Título deve ser limpo e contextualizado');
+        assert(reply.includes('"hasMeet":true'), 'Deve conter Google Meet');
+        assert(reply.includes('<!--KIT_ACTION:{"type":"event"'), 'Deve emitir ação do tipo event');
+    });
+
     // Limpeza final do banco de teste
     try {
         testDb.sqlite.close();

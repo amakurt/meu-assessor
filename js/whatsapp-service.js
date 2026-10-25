@@ -500,8 +500,57 @@ class WhatsAppService {
             body = `Lançamento registrado com sucesso!\n\n🧾 *Recibo Executivo*\n• Tipo: ${isReceita ? 'Receita' : 'Despesa'}\n• Valor: R$ ${val.toFixed(2)}\n• Categoria: ${category}\n• Status: Conciliado no Open Finance\n• Meta 30 Dias no Azul: Positiva`;
             actionTag = `\n<!--KIT_ACTION:{"type":"transaction","data":{"type":"${isReceita ? 'receita' : 'despesa'}","description":"${text.replace(/"/g, '')}","amount":${val},"category":"${category}"}}-->`;
         } else if (lower.includes('agenda') || lower.includes('reunião') || lower.includes('marcar') || lower.includes('meet')) {
-            body = `Compromisso agendado na sua agenda com sucesso!\n• Tempo de deslocamento reservado\n• Link do Google Meet gerado`;
-            actionTag = `\n<!--KIT_ACTION:{"type":"event","data":{"title":"${text.replace(/"/g, '')}","hasMeet":true}}-->`;
+            advisor = '*Clara* · Secretária Executiva';
+
+            // Extrai data do texto (hoje, amanhã ou padrão)
+            const now = new Date();
+            let targetDate = now.toISOString().split('T')[0];
+            if (lower.includes('amanhã') || lower.includes('amanha')) {
+                const tom = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                targetDate = tom.toISOString().split('T')[0];
+            }
+
+            // Extrai horário
+            const timeMatch = text.match(/(?:às|as|\b)(\d{1,2})(?:[h:](\d{2})?|h\b|\s*horas)/i);
+            let startTime = '10:00';
+            let endTime = '11:00';
+            if (timeMatch) {
+                const h = String(parseInt(timeMatch[1], 10)).padStart(2, '0');
+                const m = timeMatch[2] ? String(timeMatch[2]).padStart(2, '0') : '00';
+                startTime = `${h}:${m}`;
+                const endH = String((parseInt(h, 10) + 1) % 24).padStart(2, '0');
+                endTime = `${endH}:${m}`;
+            }
+
+            // Extrai título amigável
+            let cleanTitle = 'Reunião Executiva';
+            const comMatch = text.match(/com\s+(.+?)(?:\.|$)/i);
+            const sobreMatch = text.match(/sobre\s+(.+?)(?:\.|$)/i);
+            const deMatch = text.match(/reunião\s+de\s+(.+?)(?:\s+(?:amanhã|hoje|às|as|com|\.)|$)/i);
+
+            if (comMatch) {
+                cleanTitle = `Reunião com ${comMatch[1].trim()}`;
+            } else if (sobreMatch) {
+                cleanTitle = `Reunião sobre ${sobreMatch[1].trim()}`;
+            } else if (deMatch) {
+                cleanTitle = `Reunião de ${deMatch[1].trim()}`;
+            } else {
+                let stripped = text
+                    .replace(/agenda(?:r)?|marca(?:r)?|uma reunião|para mim|pra mim|reunião/gi, '')
+                    .replace(/(?:às|as|\b)\s*\d{1,2}(?::\d{2}|h\b|h|\s*horas)?/gi, '')
+                    .replace(/\b(?:amanhã|amanha|hoje)\b/gi, '')
+                    .trim()
+                    .replace(/^[,.\s-]+|[,.\s-]+$/g, '');
+                if (stripped) {
+                    cleanTitle = `Reunião: ${stripped}`;
+                }
+            }
+
+            const parts = targetDate.split('-');
+            const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+            body = `📅 *Compromisso agendado com sucesso!*\n• Título: ${cleanTitle}\n• Data: ${formattedDate}\n• Horário: ${startTime} às ${endTime}\n• Local: Google Meet (link gerado)\n• Sincronizado na Google Agenda`;
+            actionTag = `\n<!--KIT_ACTION:{"type":"event","data":{"title":"${cleanTitle}","date":"${targetDate}","startTime":"${startTime}","endTime":"${endTime}","hasMeet":true}}-->`;
         } else if (lower.includes('tarefa') || lower.includes('lembrete') || lower.includes('lista')) {
             body = `Adicionado à sua Pirâmide de Prioridades!\n• Nível: Alta Prioridade\n• Sincronizado no seu Cloud Drive`;
             actionTag = `\n<!--KIT_ACTION:{"type":"task","data":{"title":"${text.replace(/"/g, '')}","priority":"alta"}}-->`;

@@ -209,6 +209,18 @@ Este documento registra cronologicamente todas as conversas, pedidos do usuário
   - Implementou rotina de migração automática e transparente de `db.json` para `data/kit.db` com backup automático (`db.json.bak`).
   - Manteve 100% de retrocompatibilidade com todas as rotas e módulos do sistema.
 
+### 🔹 Conversa 18: Correção de Agendamentos no WhatsApp & Sincronização de Calendário
+- **Data:** 24/10/2026
+- **Usuário:** *"recomendado e tentei agendar uma reunião pelo whastsaap ele agendou mais não apareceu no calendário"*
+- **Assistente:**
+  - Investigou sistematicamente com `@debugger` a causa raiz: o Gemini não possuía o relógio/ano do sistema no System Prompt e calculava datas relativas ("amanhã") no ano de 2025 (`2025-10-25`), fazendo com que o evento ficasse no passado e não aparecesse no mês de Outubro de 2026 no calendário web nem no Google Calendar.
+  - Injetou contexto dinâmico temporal (data de hoje, amanhã, dia da semana e ano atual no fuso de São Paulo) no prompt do Gemini com diretriz imperativa de cálculo temporal.
+  - Implementou camada de auto-healing `_normalizeDate` no SQLite (`js/db-service.js`) que corrige anos passados, termos relativos e converte formato brasileiro.
+  - Aprimorou o fallbackRouter de agendamento em `js/whatsapp-service.js` para extrair horário, data e títulos limpos.
+  - Atualizou o módulo `js/modules/agenda.js` para usar data dinâmica do sistema em vez de kickoff hardcoded.
+  - Corrigiu no banco de produção da Oracle e no Google Calendar o evento gravado para `2026-10-25`.
+  - Expandiu a bateria de testes automatizados para 37 testes com 100% de aprovação.
+
 ---
 
 ## 📌 Convenções de Registro para Sessões Futuras

@@ -604,3 +604,48 @@ Implementar e homologar as 5 melhorias funcionais estratégicas solicitadas pelo
   - Cache-busting atualizado para `v=3.2`.
 - **Validação:** 35 testes automatizados aprovados (0 falhas).
 - **Deploy:** Commit, push e reinício no PM2 na VPS.
+
+---
+
+## 📅 Sessão 24/10/2026 - Diagnóstico e Correção de Agendamentos no WhatsApp & Sincronização de Calendário (Clara & Google Meet)
+
+### 🎯 Diagnóstico da Queixa do Usuário
+O usuário relatou: *"tentei agendar uma reunião pelo whastsaap ele agendou mais não apareceu no calendário"*.
+Áudio gravado pelo usuário: *"Agenda uma reunião para mim amanhã às 16 horas com a cliente Sara."*
+
+### 🔍 Causa Raiz Identificada (Investigação Sistemática com @debugger)
+1. **Ausência de Contexto Temporal no Prompt do Gemini (`js/gemini-service.js`):**
+   - O System Prompt do Gemini não continha a data, dia da semana ou ano atual do sistema.
+   - Sem saber qual era a data de "hoje", o modelo de IA assumiu o ano do seu corte de treino (2025) e interpretou "amanhã" como **25/10/2025**.
+   - No log do servidor de produção: `date: '2025-10-25'`.
+2. **Descompasso com a Interface do Painel Web (`js/modules/agenda.js`):**
+   - O painel exibe e filtra o calendário no mês corrente de **Outubro de 2026** (`2026-10-25`).
+   - Como o evento foi salvo com data `2025-10-25`, o filtro do dia 25/10/2026 não encontrou o evento e o dia apareceu sem compromisso.
+   - No aplicativo Google Calendar do celular do usuário (que está em 2026), o compromisso também ficou no ano passado (outubro de 2025).
+3. **Hardcoding de Data de Kickoff no Painel (`js/modules/agenda.js`):**
+   - `this.currentDate = new Date(2026, 9, 19);` forçava a data inicial em 19 de outubro em vez da data dinâmica atual do sistema.
+4. **Fallback Router sem Extração de Horário e Data:**
+   - Em caso de fallback offline, o método salvava o texto cru como título sem horário ou data específica.
+
+### 🛠️ Correções Implementadas e Deployed
+1. **Injeção Dinâmica de Calendário e Horário no System Prompt (`js/gemini-service.js`):**
+   - Injetada a data oficial de hoje (`brWeekday`, `brDateStr` às `brTimeStr`, ISO `YYYY-MM-DD` e ano atual) e a data exata de amanhã no fuso de São Paulo (`America/Sao_Paulo`).
+   - Instrução imperativa para o Gemini calcular qualquer termo relativo ("hoje", "amanhã", "segunda-feira") estritamente a partir da data de hoje, garantindo o ano atual sem desvios.
+   - Modelos de JSON no prompt atualizados com variáveis dinâmicas.
+2. **Camada de Auto-Healing e Normalização de Datas no SQLite (`js/db-service.js`):**
+   - Implementado método `_normalizeDate(rawDate, fallbackDate)` que:
+     - Corrige automaticamente qualquer ano passado (< ano atual) para o ano corrente.
+     - Converte formato brasileiro `DD/MM/YYYY` para `YYYY-MM-DD`.
+     - Resolve termos textuais como `"amanhã"` e `"hoje"`.
+   - Aplicado aos métodos `applyAction` para `event`, `update_event`, `task`, `update_task` e `transaction`.
+3. **Aprimoramento do Fallback Router no WhatsApp (`js/whatsapp-service.js`):**
+   - Extrai automaticamente horário (`16:00 às 17:00`), data relativa (`amanhã` ou `hoje`) e título limpo contextualizado (`Reunião com a cliente Sara`).
+4. **Data Dinâmica no Módulo de Agenda Web (`js/modules/agenda.js`):**
+   - Substituída a data hardcoded por `new Date()`, garantindo que o calendário abra sempre no mês e dia atuais e o botão "Hoje" aponte para a data real.
+5. **Correção Direta dos Eventos Afetados na VM Oracle e Google Calendar:**
+   - O evento da Sara (`ev-1792893203287`) foi atualizado no banco SQLite de produção para `2026-10-25` às 16:00.
+   - Sincronizado instantaneamente via `updateEventInGoogle()` na Google Agenda do usuário.
+   - O evento do Aloysio (`ev-1792812079970`) também foi ajustado para `2026-10-23`.
+6. **Suíte de Testes Expandida (`tests/test-conversational-flows.js`):**
+   - Adicionados testes automatizados 7 e 8 cobrindo normalização de datas, auto-healing de ano e agendamento via fallback.
+   - **Resultado:** 37 PASSARAM | 0 FALHARAM (100% de sucesso).
