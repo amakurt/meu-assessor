@@ -103,35 +103,61 @@ class FinancesModule {
             });
         });
 
-        // Instant Search Input (Blindado contra Autofill de gerenciadores de senhas)
+        // Instant Search Input (Blindado contra Autofill indevido de navegadores/gerenciadores)
         if (this.elements.txSearchInput) {
             this.elements.txSearchInput.value = '';
             this.searchTerm = '';
 
+            const isAutofillInjection = (val) => {
+                const clean = (val || '').trim().toLowerCase();
+                return clean === 'amauri' && document.activeElement !== this.elements.txSearchInput;
+            };
+
             let debounceTimer;
             this.elements.txSearchInput.addEventListener('input', (e) => {
+                // Intercepta autofill do navegador que tenta injetar o usuário de login
+                if (isAutofillInjection(e.target.value)) {
+                    this.elements.txSearchInput.value = '';
+                    this.searchTerm = '';
+                    this.renderTransactions();
+                    return;
+                }
+
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
-                    this.searchTerm = e.target.value.trim().toLowerCase();
+                    const currentVal = this.elements.txSearchInput.value;
+                    if (isAutofillInjection(currentVal)) {
+                        this.elements.txSearchInput.value = '';
+                        this.searchTerm = '';
+                    } else {
+                        this.searchTerm = currentVal.trim().toLowerCase();
+                    }
                     this.displayedCount = this.pageSize;
                     this.renderTransactions();
                 }, 120);
             });
 
-            // Se o navegador tentar autofill após o carregamento, neutraliza imediatamente
-            const cleanAutofill = () => {
-                if (this.elements.txSearchInput && this.elements.txSearchInput.value.toLowerCase() === 'amauri' && !this.searchTerm) {
+            // Neutraliza autofill tardio do navegador
+            const purgeAutofill = () => {
+                if (this.elements.txSearchInput && this.elements.txSearchInput.value.toLowerCase() === 'amauri') {
                     this.elements.txSearchInput.value = '';
                     this.searchTerm = '';
                     this.renderTransactions();
                 }
             };
 
-            this.elements.txSearchInput.addEventListener('focus', cleanAutofill);
-            this.elements.txSearchInput.addEventListener('click', cleanAutofill);
-            setTimeout(cleanAutofill, 150);
-            setTimeout(cleanAutofill, 500);
-            setTimeout(cleanAutofill, 1200);
+            this.elements.txSearchInput.addEventListener('focus', () => {
+                if (this.elements.txSearchInput.value.toLowerCase() === 'amauri') {
+                    purgeAutofill();
+                }
+            });
+            this.elements.txSearchInput.addEventListener('click', () => {
+                if (this.elements.txSearchInput.value.toLowerCase() === 'amauri') {
+                    purgeAutofill();
+                }
+            });
+
+            [100, 300, 600, 1200, 2500].forEach(delay => setTimeout(purgeAutofill, delay));
         }
 
         // Month Filter Dropdown
@@ -919,6 +945,14 @@ class FinancesModule {
                 </div>
             `;
         }).join('');
+    }
+
+    purgeAutofill() {
+        if (this.elements.txSearchInput && this.elements.txSearchInput.value.trim().toLowerCase() === 'amauri') {
+            this.elements.txSearchInput.value = '';
+            this.searchTerm = '';
+            this.renderTransactions();
+        }
     }
 }
 

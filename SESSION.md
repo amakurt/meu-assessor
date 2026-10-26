@@ -689,3 +689,28 @@ O usuário perguntou: *"o que podemos melhorar agora?"* e selecionou a funcional
      3. Disparo automático de push via `dbService.addNotification()`.
    - **Resultado:** 40 PASSARAM | 0 FALHARAM (100% de sucesso).
 
+---
+
+## 📅 Sessão 26/10/2026 - Correção de Injeção de Autofill do Navegador no Campo de Busca de Finanças
+
+### 🎯 Objetivos da Sessão
+O usuário relatou: *"sempre que logo no sistema na aba financas e contas no campo de busca já aparece com nome amauri digitado"*.
+
+### 🛠️ Análise Técnica e Correção
+1. **Identificação da Causa Raiz:**
+   - O campo de login possui `id="loginUsername"` e `value="amauri"` com `autocomplete="username"`, levando os gerenciadores de senhas dos navegadores (Chrome, Keychain, etc.) a associarem o nome `amauri` ao domínio.
+   - O campo de busca `#txSearchInput` continha `autocomplete="new-password"`.
+   - Na aba Conexão, o campo `#geminiApiKeyInput` era um `<input type="password">` solto no DOM (fora de `<form>`), acionando a heurística reversa do Chromium que buscava um campo de texto anterior para atuar como usuário e injetava `amauri` em `#txSearchInput`.
+   - O listener `input` definia `this.searchTerm = 'amauri'`, e a condição anterior `if (!this.searchTerm)` falhava em expurgar o valor porque a busca já havia sido populada.
+2. **Implementações Realizadas:**
+   - **`index.html`**:
+     - Substituído `autocomplete="new-password"` por `autocomplete="off"` com atributos de ignore para gerenciadores (`data-lpignore="true"`, `data-1p-ignore="true"`, `data-bwignore="true"`) em `#txSearchInput`, `#globalSearchInput` e `#clientSearchInput`.
+     - Encapsulado `#geminiApiKeyInput` em `<form autocomplete="off" onsubmit="event.preventDefault(); return false;">` dedicado para isolar heurísticas de senhas.
+     - Atualizada versão de cache dos scripts para `?v=3.3`.
+   - **`js/modules/finances.js`**:
+     - Criada validação `isAutofillInjection(val)` para interceptar injeções assíncronas do navegador quando o usuário não estiver com o campo ativamente focado.
+     - Removida condição impeditiva e adicionadas rotinas de expurgo com timeouts em cascata e listeners de `focus`/`click`.
+     - Exposto método `purgeAutofill()` na instância da classe.
+   - **`js/app.js`**:
+     - Atualizada a função `hideLogin()` com rotina de limpeza e expurgo em cascata pós-login para todos os campos de busca.
+

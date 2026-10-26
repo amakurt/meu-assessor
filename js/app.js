@@ -424,6 +424,30 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideLogin() {
         if (!loginOverlay) return;
         loginOverlay.classList.add('d-none');
+
+        // Limpa qualquer injeção indevida de autofill que o navegador faça nos campos de busca pós-login
+        const purgeAllSearchAutofill = () => {
+            const txSearch = document.getElementById('txSearchInput');
+            if (txSearch && txSearch.value.trim().toLowerCase() === 'amauri') {
+                txSearch.value = '';
+                if (window.financesModule) {
+                    window.financesModule.searchTerm = '';
+                    window.financesModule.renderTransactions();
+                }
+            }
+            const globalSearch = document.getElementById('globalSearchInput');
+            if (globalSearch && globalSearch.value.trim().toLowerCase() === 'amauri') {
+                globalSearch.value = '';
+            }
+            const clientSearch = document.getElementById('clientSearchInput');
+            if (clientSearch && clientSearch.value.trim().toLowerCase() === 'amauri') {
+                clientSearch.value = '';
+            }
+        };
+
+        purgeAllSearchAutofill();
+        [150, 400, 800, 1500].forEach(delay => setTimeout(purgeAllSearchAutofill, delay));
+
         if (window.appStore) {
             window.appStore.syncWithBackend();
         }

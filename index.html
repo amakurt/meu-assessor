@@ -241,7 +241,7 @@
                     <!-- Global Search -->
                     <div class="global-search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="search" id="globalSearchInput" placeholder="Buscar lançamentos, reuniões, tarefas..." aria-label="Busca global" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_global" data-lpignore="true">
+                        <input type="search" id="globalSearchInput" placeholder="Buscar lançamentos, reuniões, tarefas..." aria-label="Busca global" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="search_global_query" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                     </div>
 
                     <!-- Report Export Buttons (Desktop Only) -->
@@ -835,7 +835,7 @@
 
                         <!-- Barra de Busca Instantânea -->
                         <div class="table-search-box">
-                            <input type="search" id="txSearchInput" class="table-search-input" placeholder="🔍 Buscar lançamento, valor ou banco..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_tx" data-lpignore="true">
+                            <input type="search" id="txSearchInput" class="table-search-input" placeholder="🔍 Buscar lançamento, valor ou banco..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="search_tx_query" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                         </div>
 
                         <!-- Filtro de Mês e Filtro de Tipo -->
@@ -1418,7 +1418,7 @@
                         </div>
 
                         <div class="clients-toolbar d-flex gap-2 flex-wrap mb-3">
-                            <input type="search" class="form-control form-control-sm" id="clientSearchInput" placeholder="🔍 Buscar por nome, CNPJ/CPF ou categoria..." style="max-width: 320px;" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" name="prevent_autofill_client" data-lpignore="true">
+                            <input type="search" class="form-control form-control-sm" id="clientSearchInput" placeholder="🔍 Buscar por nome, CNPJ/CPF ou categoria..." style="max-width: 320px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="search_client_query" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                             <div class="btn-group" role="group">
                                 <button class="btn btn-outline btn-sm active" data-client-filter="all" id="btnFilterClientAll">Todos</button>
                                 <button class="btn btn-outline btn-sm" data-client-filter="cliente" id="btnFilterClientOnly">Clientes</button>
@@ -1501,14 +1501,13 @@
                                     <span class="badge badge-primary text-xs">gemini-3.5-flash-lite</span>
                                 </div>
                                 <p class="text-xs text-muted mb-3">Motor de IA executiva que processa os 6 assessores, áudios e recibos em milissegundos.</p>
-                                <div class="form-group mb-2">
+                                <form class="form-group mb-2" autocomplete="off" onsubmit="event.preventDefault(); return false;">
                                     <label class="form-label text-xs">Chave de API do Google AI Studio</label>
                                     <div class="input-copy-group">
-                                        <input type="password" class="form-control form-control-sm" id="geminiApiKeyInput" placeholder="Chave ativa salva no servidor (.env)" value="">
-                                        <button class="btn btn-secondary btn-sm" id="btnSaveGeminiKey">Salvar Chave</button>
-
+                                        <input type="password" class="form-control form-control-sm" id="geminiApiKeyInput" placeholder="Chave ativa salva no servidor (.env)" value="" autocomplete="off" name="gemini_key_field" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+                                        <button type="button" class="btn btn-secondary btn-sm" id="btnSaveGeminiKey">Salvar Chave</button>
                                     </div>
-                                </div>
+                                </form>
                             </div>
                         </div>
 
@@ -2089,7 +2088,7 @@
     <script src="js/ai-engine.js?v=3.2"></script>
     <script src="js/whatsapp-simulator.js?v=3.2"></script>
     <script src="js/modules/overview.js?v=3.2"></script>
-    <script src="js/modules/finances.js?v=3.2"></script>
+    <script src="js/modules/finances.js?v=3.3"></script>
     <script src="js/modules/agenda.js?v=3.2"></script>
     <script src="js/modules/tasks.js?v=3.2"></script>
     <script src="js/modules/vault.js?v=3.2"></script>
@@ -2101,7 +2100,7 @@
     <script src="js/modules/reports.js?v=3.2"></script>
     <script src="js/modules/conexao.js?v=3.2"></script>
     <script src="js/modules/notifications.js?v=3.2"></script>
-    <script src="js/app.js?v=3.2"></script>
+    <script src="js/app.js?v=3.3"></script>
 
 </body>
 </html>
