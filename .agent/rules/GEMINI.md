@@ -149,40 +149,30 @@ When user's prompt is NOT in English:
 
 ### 📱 Project Type Routing
 
-| Project Type                           | Primary Agent         | Skills                        |
-| -------------------------------------- | --------------------- | ----------------------------- |
-| **MOBILE** (iOS, Android, RN, Flutter) | `mobile-developer`    | mobile-design                 |
-| **WEB** (Next.js, React web)           | `frontend-specialist` | frontend-design               |
-| **BACKEND** (API, server, DB)          | `backend-specialist`  | api-patterns, database-design |
+| Project Type                           | Primary Agent         | Skills                                                 |
+| -------------------------------------- | --------------------- | ------------------------------------------------------ |
+| **PWA / WEB** (Vanilla JS, Glass UI)   | `frontend-specialist` | frontend-design, glassmorphism-ui                      |
+| **BACKEND** (Node.js, Express, Baileys)| `backend-specialist`  | nodejs-best-practices, baileys-whatsapp, better-sqlite3|
+| **DATABASE** (SQLite, WAL mode)        | `database-architect`  | database-design, better-sqlite3                        |
 
-> 🔴 **Mobile + frontend-specialist = WRONG.** Mobile = mobile-developer ONLY.
+---
 
-### 🛑 Socratic Gate
+### 🛑 Socratic Gate & Fast-Track Execution
 
-**For complex requests, STOP and ASK first:**
+| Cenário                 | Comportamento                                                      |
+| ----------------------- | ------------------------------------------------------------------ |
+| **Novo Recurso / Vago** | **Clarificação:** Perguntar objetivo, escopo e requisitos chave.   |
+| **Aprovado / Direto**   | **Fast-Track:** Executar diretamente sem interromper com perguntas.|
+| **Bug / Correção**      | **Diagnóstico & Fix:** Investigar a causa-raiz, corrigir e testar. |
+| **Orquestração Ampla**  | Apresentar plano claro; após confirmação do usuário, executar.     |
 
-### 🛑 GLOBAL SOCRATIC GATE (TIER 0)
-
-**MANDATORY: Every user request must pass through the Socratic Gate before ANY tool use or implementation.**
-
-| Request Type            | Strategy       | Required Action                                                   |
-| ----------------------- | -------------- | ----------------------------------------------------------------- |
-| **New Feature / Build** | Deep Discovery | ASK minimum 3 strategic questions                                 |
-| **Code Edit / Bug Fix** | Context Check  | Confirm understanding + ask impact questions                      |
-| **Vague / Simple**      | Clarification  | Ask Purpose, Users, and Scope                                     |
-| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details               |
-| **Direct "Proceed"**    | Validation     | **STOP** → Even if answers are given, ask 2 "Edge Case" questions |
-
-**Protocol:**
-
-1. **Never Assume:** If even 1% is unclear, ASK.
-2. **Handle Spec-heavy Requests:** When user gives a list (Answers 1, 2, 3...), do NOT skip the gate. Instead, ask about **Trade-offs** or **Edge Cases** (e.g., "LocalStorage confirmed, but should we handle data clearing or versioning?") before starting.
-3. **Wait:** Do NOT invoke subagents or write code until the user clears the Gate.
-4. **Reference:** Full protocol in `@[skills/brainstorming]`.
+**Diretrizes:**
+1. **Evitar Fricção Artificial:** Não criar perguntas desnecessárias quando o usuário já forneceu parâmetros suficientes ou autorizou o prosseguimento.
+2. **Antecipar Casos de Borda:** Tratar edge cases diretamente no código e nos testes, informando no resumo final.
 
 ### 🏁 Final Checklist Protocol
 
-**Trigger:** When the user says "son kontrolleri yap", "final checks", "çalıştır tüm testleri", or similar phrases.
+**Trigger:** Quando o usuário solicitar "verificação final", "rodar checklist", "final checks", "checar tudo", ou similar.
 
 | Task Stage       | Command                                            | Purpose                        |
 | ---------------- | -------------------------------------------------- | ------------------------------ |
@@ -198,20 +188,20 @@ When user's prompt is NOT in English:
 - **Completion:** A task is NOT finished until `checklist.py` returns success.
 - **Reporting:** If it fails, fix the **Critical** blockers first (Security/Lint).
 
-**Available Scripts (12 total):**
+**Available Scripts:**
 
 | Script                     | Skill                 | When to Use         |
 | -------------------------- | --------------------- | ------------------- |
 | `security_scan.py`         | vulnerability-scanner | Always on deploy    |
-| `dependency_analyzer.py`   | vulnerability-scanner | Weekly / Deploy     |
 | `lint_runner.py`           | lint-and-validate     | Every code change   |
+| `type_coverage.py`         | lint-and-validate     | Type check          |
 | `test_runner.py`           | testing-patterns      | After logic change  |
 | `schema_validator.py`      | database-design       | After DB change     |
 | `ux_audit.py`              | frontend-design       | After UI change     |
 | `accessibility_checker.py` | frontend-design       | After UI change     |
 | `seo_checker.py`           | seo-fundamentals      | After page change   |
-| `bundle_analyzer.py`       | performance-profiling | Before deploy       |
-| `mobile_audit.py`          | mobile-design         | After mobile change |
+| `i18n_checker.py`          | i18n-localization     | Locale check        |
+| `api_validator.py`         | api-patterns          | API route check     |
 | `lighthouse_audit.py`      | performance-profiling | Before deploy       |
 | `playwright_runner.py`     | webapp-testing        | Before deploy       |
 
@@ -221,7 +211,7 @@ When user's prompt is NOT in English:
 
 **Trigger:** AO FINAL DE CADA TAREFA, ou quando o usuário solicitar "git", "push", "salvar tudo" ou "finalizar".
 
-1. **Atualizar SESSION_LOG.md**: 
+1. **Atualizar SESSION.md**: 
     - Documentar todas as mudanças técnicas, novas funcionalidades e correções de bugs.
     - Usar linguagem profissional e clara (em Português, conforme o padrão do projeto).
 2. **Git Commit & Push**:
@@ -256,14 +246,13 @@ When user's prompt is NOT in English:
 
 | Task         | Read                            |
 | ------------ | ------------------------------- |
-| Web UI/UX    | `.agent/frontend-specialist.md` |
-| Mobile UI/UX | `.agent/mobile-developer.md`    |
+| Web & PWA UI | `.agent/frontend-specialist.md` |
 
-**These agents contain:**
+**These guidelines contain:**
 
-- Purple Ban (no violet/purple colors)
-- Template Ban (no standard layouts)
-- Anti-cliché rules
+- Glassmorphism System (translucency, backdrop-filter, cohesive borders)
+- Template Ban (no standard generic layouts)
+- Anti-cliché rules & WCAG contrast compliance
 - Deep Design Thinking protocol
 
 > 🔴 **For design work:** Open and READ the agent file. Rules are there.

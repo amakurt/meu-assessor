@@ -18,58 +18,54 @@ Antigravity Kit is a modular system consisting of:
 
 ```plaintext
 .agent/
-├── ARCHITECTURE.md          # This file
-├── agents/                  # 20 Specialist Agents
-├── skills/                  # 36 Skills
-├── workflows/               # 11 Slash Commands
-├── rules/                   # Global Rules
-└── scripts/                 # Master Validation Scripts
+├── ARCHITECTURE.md          # Visão Geral da Arquitetura
+├── agents/                  # 15 Agentes Especialistas Ativos
+├── skills/                  # Skills Especializadas (incluindo Baileys, SQLite, Pluggy, Glassmorphism)
+├── workflows/               # Procedimentos de Comandos Slash
+├── rules/                   # Regras Globais (GEMINI.md)
+├── scripts/                 # Scripts Mestres de Validação (checklist.py, session_manager.py)
+└── archive/                 # Agentes e Skills Arquivados (não relacionados à stack)
 ```
 
 ---
 
-## 🤖 Agents (20)
+## 🤖 Agentes Especialistas Ativos (15)
 
-Specialist AI personas for different domains.
+Personas de IA calibradas e focadas no ecossistema do **Meu Assessor OS**:
 
-| Agent | Focus | Skills Used |
-| ----- | ----- | ----------- |
-| `orchestrator` | Multi-agent coordination | parallel-agents, behavioral-modes |
-| `project-planner` | Discovery, task planning | brainstorming, plan-writing, architecture |
-| `frontend-specialist` | Web UI/UX | frontend-design, nextjs-react-expert, tailwind-patterns |
-| `backend-specialist` | API, business logic | api-patterns, nodejs-best-practices, database-design |
-| `database-architect` | Schema, SQL | database-design, prisma-expert |
-| `mobile-developer` | iOS, Android, RN | mobile-design |
-| `game-developer` | Game logic, mechanics | game-development |
-| `devops-engineer` | CI/CD, Docker | deployment-procedures, docker-expert |
-| `security-auditor` | Security compliance | vulnerability-scanner, red-team-tactics |
-| `penetration-tester` | Offensive security | red-team-tactics |
-| `test-engineer` | Testing strategies | testing-patterns, tdd-workflow, webapp-testing |
-| `debugger` | Root cause analysis | systematic-debugging |
-| `performance-optimizer` | Speed, Web Vitals | performance-profiling |
-| `seo-specialist` | Ranking, visibility | seo-fundamentals, geo-fundamentals |
-| `documentation-writer` | Manuals, docs | documentation-templates |
-| `product-manager` | Requirements, user stories | plan-writing, brainstorming |
-| `product-owner` | Strategy, backlog, MVP | plan-writing, brainstorming |
-| `qa-automation-engineer` | E2E testing, CI pipelines | webapp-testing, testing-patterns |
-| `code-archaeologist` | Legacy code, refactoring | clean-code, code-review-checklist |
-| `explorer-agent` | Codebase analysis | - |
+| Agente | Foco Principal | Skills Vinculadas |
+| ------ | -------------- | ----------------- |
+| `orchestrator` | Coordenação multi-agente e síntese | parallel-agents, behavioral-modes, architecture |
+| `project-planner` | Descoberta, planejamento e divisão de tarefas | brainstorming, plan-writing, architecture |
+| `backend-specialist` | Node.js, Express, Baileys, Pluggy, APIs REST | nodejs-best-practices, baileys-whatsapp, open-finance-pluggy |
+| `database-architect` | SQLite, WAL Mode, better-sqlite3, schemas | database-design, better-sqlite3 |
+| `frontend-specialist` | Vanilla JS, PWA, Glassmorphism Dark UI | frontend-design, glassmorphism-ui, web-design-guidelines |
+| `debugger` | Análise de causa-raiz e correção de bugs | systematic-debugging, clean-code |
+| `devops-engineer` | PM2, deploy, environment, segurança de runtime | deployment-procedures, server-management |
+| `security-auditor` | Validação de payloads, OWASP, segredos | vulnerability-scanner, red-team-tactics |
+| `test-engineer` | Testes de fluxos conversacionais e APIs | testing-patterns, tdd-workflow, webapp-testing |
+| `performance-optimizer` | Latência sub-milissegundo, cache, assets | performance-profiling |
+| `seo-specialist` | PWA manifest, meta tags executivas | seo-fundamentals, geo-fundamentals |
+| `documentation-writer` | SESSION.md, manuais, referências de API | documentation-templates |
+| `product-owner` | Regras de negócio, paridade de assessores | plan-writing, brainstorming |
+| `code-archaeologist` | Refatoração de legado e descontinuação segura | clean-code, code-review-checklist |
+| `explorer-agent` | Auditoria profunda e mapeamento de código | architecture, systematic-debugging |
+
+*(Nota: Agentes não relacionados como `game-developer` e `mobile-developer` foram arquivados em `.agent/archive/` para eliminar ruído).*
 
 ---
 
-## 🧩 Skills (36)
+## 🧩 Skills Principais do Meu Assessor OS
 
-Modular knowledge domains that agents can load on-demand. based on task context.
-
-### Frontend & UI
-
-| Skill | Description |
-| ----- | ----------- |
-| `nextjs-react-expert` | React & Next.js performance optimization (Vercel - 57 rules) |
-| `web-design-guidelines` | Web UI audit - 100+ rules for accessibility, UX, performance (Vercel) |
-| `tailwind-patterns` | Tailwind CSS v4 utilities |
-| `frontend-design` | UI/UX patterns, design systems |
-| `ui-ux-pro-max` | 50 styles, 21 palettes, 50 fonts |
+| Skill | Descrição e Aplicação |
+| ----- | --------------------- |
+| `baileys-whatsapp` | Conexão WhatsApp, autenticação multi-file, QR Code, recibos de 24h, áudios e anti-ban |
+| `better-sqlite3` | SQLite de alta performance, WAL mode, transações atômicas e prepared statements |
+| `open-finance-pluggy` | Sincronização bancária Pluggy, categorização de lançamentos e webhooks |
+| `glassmorphism-ui` | Sistema de design dark mode, backdrop-filter blur, cards executivos e CSS puro |
+| `clean-code` | Padrões de código enxuto, direto e sem over-engineering |
+| `brainstorming` | Protocolo Socratic Gate para decisões técnicas |
+| `testing-patterns` | Testes unitários e de integração de fluxos conversacionais |
 
 ### Backend & API
 

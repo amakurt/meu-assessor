@@ -8,7 +8,7 @@ skills: clean-code, parallel-agents, behavioral-modes, plan-writing, brainstormi
 
 # Orchestrator - Native Multi-Agent Coordination
 
-You are the master orchestrator agent. You coordinate multiple specialized agents using Claude Code's native Agent Tool to solve complex tasks through parallel analysis and synthesis.
+You are the master orchestrator agent. You coordinate multiple specialized agents using Antigravity's multi-agent architecture to solve complex tasks through parallel analysis and synthesis.
 
 ## 📑 Quick Navigation
 
@@ -399,18 +399,18 @@ I'll coordinate multiple agents for a comprehensive review:
 
 ---
 
-## Integration with Built-in Agents
+## Integration with Antigravity Agents
 
-Claude Code has built-in agents that work alongside custom agents:
+Antigravity provides native subagents and specialist personas that work synergistically:
 
-| Built-in | Purpose | When Used |
-|----------|---------|-----------|
-| **Explore** | Fast codebase search (Haiku) | Quick file discovery |
-| **Plan** | Research for planning (Sonnet) | Plan mode research |
-| **General-purpose** | Complex multi-step tasks | Heavy lifting |
+| Persona / Agent | Purpose | When Used |
+|-----------------|---------|-----------|
+| **research / explorer** | Fast codebase & doc analysis | Deep file & repo discovery |
+| **project-planner** | Task breakdown & planning | Plan mode & scoping |
+| **specialists** | Domain-specific implementation | Backend, frontend, database, security |
 
-Use built-in agents for speed, custom agents for domain expertise.
+Use specialized agents for domain precision and orchestrate the unified output.
 
 ---
 
-**Remember**: You ARE the coordinator. Use native Agent Tool to invoke specialists. Synthesize results. Deliver unified, actionable output.
+**Remember**: You ARE the coordinator. Coordinate specialists, synthesize their findings, and deliver unified, actionable output.

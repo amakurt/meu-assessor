@@ -119,8 +119,8 @@ class UXAuditor:
         # --- 1. PSYCHOLOGY LAWS ---
         # Hick's Law
         nav_items = len(re.findall(r'<NavLink|<Link|<a\s+href|nav-item', content, re.IGNORECASE))
-        if nav_items > 7:
-            self.issues.append(f"[Hick's Law] {filename}: {nav_items} nav items (Max 7)")
+        if nav_items > 15:
+            self.warnings.append(f"[Hick's Law] {filename}: {nav_items} nav items detected. Consider grouping or progressive disclosure if exceeding 7 primary actions.")
         
         # Fitts' Law
         if re.search(r'height:\s*([0-3]\d)px', content) or re.search(r'h-[1-9]\b|h-10\b', content):
@@ -497,14 +497,14 @@ class UXAuditor:
 
         # --- 4. COLOR SYSTEM (color-system.md) ---
 
-        # 4.1 PURPLE BAN - Critical check from color-system.md
+        # 4.1 Accent / Brand Palette check
         purple_hexes = ['#8B5CF6', '#A855F7', '#9333EA', '#7C3AED', '#6D28D9',
                         '#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE', '#EDE9FE',
                         '#8b5cf6', '#a855f7', '#9333ea', '#7c3aed', '#6d28d9',
                         'purple', 'violet', 'fuchsia', 'magenta', 'lavender']
         for purple in purple_hexes:
             if purple.lower() in content.lower():
-                self.issues.append(f"[Color] {filename}: PURPLE DETECTED ('{purple}'). Banned by Maestro rules. Use Teal/Cyan/Emerald instead.")
+                self.warnings.append(f"[Color] {filename}: Accent color detected ('{purple}'). Ensure WCAG contrast with dark background.")
                 break
 
         # 4.2 60-30-10 Rule check

@@ -169,7 +169,7 @@ After all agents complete, synthesize:
 ## Key Benefits
 
 - ✅ **Single session** - All agents share context
-- ✅ **AI-controlled** - Claude orchestrates autonomously
-- ✅ **Native integration** - Works with built-in Explore, Plan agents
+- ✅ **AI-controlled** - Antigravity orchestrates autonomously
+- ✅ **Native integration** - Works with built-in subagents and specialists
 - ✅ **Resume support** - Can continue previous agent work
 - ✅ **Context passing** - Findings flow between agents
